@@ -1,3 +1,6 @@
 [submodule "personal"]
 	path = personal
 	url = git@github.com:juanjodarko/personal.git
+[submodule "git"]
+	path = git
+	url = git@github.com:juanjodarko/git.git
