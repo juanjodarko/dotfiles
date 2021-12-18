@@ -1,0 +1,1 @@
+Plug 'vuciv/vim-bujo'
