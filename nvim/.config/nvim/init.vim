@@ -35,12 +35,10 @@ let loaded_matchparent = 1
 nmap <leader>ve :edit ~/.config/nvim/init.vim<cr>
 nmap <leader>vr :source ~/.config/nvim/init.vim<cr>
 
-
 nmap <silent> <C-h> <C-w>h
 nmap <silent> <C-j> <C-w>j
 nmap <silent> <C-k> <C-w>k
 nmap <silent> <C-l> <C-w>l
-
 
 let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
 if empty(glob(data_dir . '/autoload/plug.vim'))
@@ -69,6 +67,7 @@ source ~/.config/nvim/plugins/undotree.vim
 source ~/.config/nvim/plugins/vim-test.vim
 source ~/.config/nvim/plugins/vim-ripgrep.vim
 source ~/.config/nvim/plugins/vim-man.vim
+source ~/.config/nvim/plugins/vimwiki.vim
 source ~/.config/nvim/plugins/wakatime.vim
 
 call plug#end()
@@ -78,6 +77,6 @@ if executable('rg')
   let g:rg_derive_root="true"
 endif
 
-
+au BufNewFile,BufFilePre,BufRead *.md set filetype=markdown
 nnoremap <leader>ghw :h <C-R>=expand("<cword>")<CR><CR>
 nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30 <CR>
