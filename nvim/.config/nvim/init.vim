@@ -57,6 +57,7 @@ source ~/.config/nvim/plugins/editroconfig.vim
 source ~/.config/nvim/plugins/eunuch.vim
 source ~/.config/nvim/plugins/floaterm.vim
 source ~/.config/nvim/plugins/fugitive.vim
+source ~/.config/nvim/plugins/flog.vim
 source ~/.config/nvim/plugins/gruvbox.vim
 source ~/.config/nvim/plugins/fzf.vim
 source ~/.config/nvim/plugins/markdown-preview.vim
