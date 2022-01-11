@@ -12,19 +12,12 @@ HISTSIZE=100000000
 SAVEHIST=100000000
 
 # Path to your oh-my-zsh installation.
-export ZSH="/Users/juanjo/.oh-my-zsh"
+export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="agnoster"
 
 plugins=(git docker docker-compose docker-machine zsh-autosuggestions tmux)
 
-source $ZSH/oh-my-zsh.sh
 if [ ! "$TMUX" = "" ]; then export TERM=xterm-256color; fi
-
-for i in `find -L $PERSONAL`; do
-  source $i
-done
-source /usr/local/opt/fzf/shell/key-bindings.zsh
-source /usr/local/opt/fzf/completion.zsh
 bindkey -s ^f "tmux-sessionizer\n"
 
 export NVM_DIR="$HOME/.nvm"
@@ -32,3 +25,17 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 export PATH="$PATH:$HOME/.local/bin"
 export PATH="$PATH:$HOME/.rvm/bin"
+
+eval "$(direnv hook zsh)"
+eval "$(rbenv init - zsh)"
+eval "$(nodenv init -)"
+
+DIRENV_WARN_TIMEOUT="30s"
+
+[[ -f .direnv/.direnvrc ]] && source .direnv/direnvrc
+source $ZSH/oh-my-zsh.sh
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+for i in `find -L $PERSONAL`; do
+  source $i
+done
+

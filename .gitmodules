@@ -4,3 +4,6 @@
 [submodule "git"]
 	path = git
 	url = git@github.com:juanjodarko/git.git
+[submodule "mac_personal"]
+	path = mac_personal
+	url = git@github.com:juanjodarko/mac_personal.git
