@@ -21,7 +21,6 @@ source $ZSH/oh-my-zsh.sh
 if [ ! "$TMUX" = "" ]; then export TERM=xterm-256color; fi
 
 for i in `find -L $PERSONAL | sort `; do
-  printf $i
   source $i
 done
 source /usr/share/fzf/key-bindings.zsh
