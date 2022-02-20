@@ -35,7 +35,7 @@ DIRENV_WARN_TIMEOUT="30s"
 [[ -f .direnv/.direnvrc ]] && source .direnv/direnvrc
 source $ZSH/oh-my-zsh.sh
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-for i in `find -L $PERSONAL`; do
+for i in `find -L $PERSONAL | sort`; do
   source $i
 done
 
