@@ -48,7 +48,6 @@ endif
 
 call plug#begin(data_dir . '/plugins')
 
-source ~/.config/nvim/plugins/airline.vim
 source ~/.config/nvim/plugins/barbar.vim
 source ~/.config/nvim/plugins/bujo.vim
 source ~/.config/nvim/plugins/coc.vim
@@ -61,6 +60,7 @@ source ~/.config/nvim/plugins/fugitive.vim
 source ~/.config/nvim/plugins/flog.vim
 source ~/.config/nvim/plugins/fzf.vim
 source ~/.config/nvim/plugins/gruvbox.vim
+source ~/.config/nvim/plugins/lightline.vim
 source ~/.config/nvim/plugins/markdown-preview.vim
 source ~/.config/nvim/plugins/nerdtree.vim
 source ~/.config/nvim/plugins/polyglot.vim
@@ -78,6 +78,17 @@ doautocmd User PlugLoaded
 if executable('rg')
   let g:rg_derive_root="true"
 endif
+
+noremap <leader>1 1gt
+noremap <leader>2 2gt
+noremap <leader>3 3gt
+noremap <leader>4 4gt
+noremap <leader>5 5gt
+noremap <leader>6 6gt
+noremap <leader>7 7gt
+noremap <leader>8 8gt
+noremap <leader>9 9gt
+noremap <leader>0 :tablast<cr>
 
 au BufNewFile,BufFilePre,BufRead *.md set filetype=markdown
 nnoremap <leader>ghw :h <C-R>=expand("<cword>")<CR><CR>
