@@ -1,10 +1,12 @@
 syntax on
 
+set guicursor=
 set noerrorbells
 set tabstop=2 softtabstop=2
 set shiftwidth=2
 set expandtab
 set smartindent
+set hidden
 set nu
 set nowrap
 set smartcase

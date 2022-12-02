@@ -48,7 +48,7 @@ endif
 
 call plug#begin(data_dir . '/plugins')
 
-source ~/.config/nvim/plugins/airline.vim
+source ~/.config/nvim/plugins/barbar.vim
 source ~/.config/nvim/plugins/bujo.vim
 source ~/.config/nvim/plugins/coc.vim
 source ~/.config/nvim/plugins/commentary.vim
@@ -58,14 +58,16 @@ source ~/.config/nvim/plugins/eunuch.vim
 source ~/.config/nvim/plugins/floaterm.vim
 source ~/.config/nvim/plugins/fugitive.vim
 source ~/.config/nvim/plugins/flog.vim
-source ~/.config/nvim/plugins/gruvbox.vim
 source ~/.config/nvim/plugins/fzf.vim
+source ~/.config/nvim/plugins/gruvbox.vim
+source ~/.config/nvim/plugins/lightline.vim
 source ~/.config/nvim/plugins/markdown-preview.vim
 source ~/.config/nvim/plugins/nerdtree.vim
 source ~/.config/nvim/plugins/polyglot.vim
 source ~/.config/nvim/plugins/projectionist.vim
 source ~/.config/nvim/plugins/undotree.vim
 source ~/.config/nvim/plugins/vim-test.vim
+source ~/.config/nvim/plugins/vim-terraform.vim
 source ~/.config/nvim/plugins/vim-ripgrep.vim
 source ~/.config/nvim/plugins/vim-man.vim
 source ~/.config/nvim/plugins/vimwiki.vim
@@ -83,6 +85,16 @@ if has('python')
 elseif has('python3')
   set pyx=3
 endif
+noremap <leader>1 1gt
+noremap <leader>2 2gt
+noremap <leader>3 3gt
+noremap <leader>4 4gt
+noremap <leader>5 5gt
+noremap <leader>6 6gt
+noremap <leader>7 7gt
+noremap <leader>8 8gt
+noremap <leader>9 9gt
+noremap <leader>0 :tablast<cr>
 
 au BufNewFile,BufFilePre,BufRead *.md set filetype=markdown
 nnoremap <leader>ghw :h <C-R>=expand("<cword>")<CR><CR>

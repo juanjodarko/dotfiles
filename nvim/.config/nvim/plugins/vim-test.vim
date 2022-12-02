@@ -10,6 +10,7 @@ let g:test#preserve_screen = 1
 
 " let test#ruby#rspec#executable='docker-compose run --rm -e RAILS_ENV=test app rspec'
 let test#ruby#rspec#executable='bundle exec spring rspec'
+let test#ruby#rspec#executable='docker-compose run --rm -e RAILS_ENV=test app bundle exec rspec'
 
 nmap <leader>tn :TestNearest<CR>
 nmap <leader>tf :TestFile<CR>
