@@ -17,7 +17,7 @@ ZSH_THEME="agnoster"
 
 plugins=(git docker docker-compose docker-machine zsh-autosuggestions tmux)
 
-if [ ! "$TMUX" = "" ]; then export TERM=xterm-256color; fi
+if [ ! "$TMUX" = "" ]; then export TERM=screen-256color; fi
 bindkey -s ^f "tmux-sessionizer\n"
 
 export NVM_DIR="$HOME/.nvm"
@@ -25,6 +25,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 export PATH="$PATH:$HOME/.local/bin"
 export PATH="$PATH:$HOME/.rvm/bin"
+PATH=$(brew --prefix)/opt/findutils/libexec/gnubin:$PATH
 
 eval "$(direnv hook zsh)"
 eval "$(rbenv init - zsh)"
@@ -39,3 +40,5 @@ for i in `find -L $PERSONAL | sort`; do
   source $i
 done
 
+source <(kubectl completion zsh)  # setup autocomplete in zsh into the current shell
+[[ $commands[kubectl] ]] && source <(kubectl completion zsh)

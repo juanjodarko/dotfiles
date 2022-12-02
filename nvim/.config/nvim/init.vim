@@ -78,6 +78,14 @@ if executable('rg')
   let g:rg_derive_root="true"
 endif
 
+if has('python')
+  set pyx=2
+elseif has('python3')
+  set pyx=3
+endif
+
 au BufNewFile,BufFilePre,BufRead *.md set filetype=markdown
 nnoremap <leader>ghw :h <C-R>=expand("<cword>")<CR><CR>
 nnoremap <leader>pv :wincmd v<bar> :Ex <bar> :vertical resize 30 <CR>
+nnoremap <C-S-tab> :bprevious<CR>
+nnoremap <C-tab> :bnext<CR>
