@@ -26,5 +26,13 @@
     "intelephense.environment.phpVersion": "8",
     "tailwindCSS.validate": true,
     "tailwindCSS.emmetCompletions": true,
-    "prettier.requireConfig": true
+    "prettier.requireConfig": true,
+    "languageserver": {
+      "terraform": {
+        "command": "terraform-ls",
+        "args": ["serve"],
+        "filetypes": ["terraform", "tf"],
+        "initializationOptions": {}
+      }
+    }
 }
