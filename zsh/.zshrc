@@ -18,7 +18,7 @@ ZSH_THEME="agnoster"
 plugins=(git docker docker-compose docker-machine zsh-autosuggestions tmux)
 
 source $ZSH/oh-my-zsh.sh
-if [ ! "$TMUX" = "" ]; then export TERM=xterm-256color; fi
+if [ ! "$TMUX" = "" ]; then export TERM=tmux-256color; fi
 
 for i in `find -L $PERSONAL | sort `; do
   source $i

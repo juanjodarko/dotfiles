@@ -67,6 +67,7 @@ source ~/.config/nvim/plugins/polyglot.vim
 source ~/.config/nvim/plugins/projectionist.vim
 source ~/.config/nvim/plugins/undotree.vim
 source ~/.config/nvim/plugins/vim-test.vim
+source ~/.config/nvim/plugins/vim-terraform.vim
 source ~/.config/nvim/plugins/vim-ripgrep.vim
 source ~/.config/nvim/plugins/vim-man.vim
 source ~/.config/nvim/plugins/vimwiki.vim
