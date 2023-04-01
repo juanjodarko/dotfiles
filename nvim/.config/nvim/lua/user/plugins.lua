@@ -289,6 +289,22 @@ use({
 --  end,
 --})
 --
+-- Tab nine
+--use { 'codota/tabnine-nvim', run = "./dl_binaries.sh" }
+use({ 'codota/tabnine-nvim', 
+  run = "./dl_binaries.sh",
+  config = function()
+    require('tabnine').setup({
+      disable_auto_comment=true,
+      accept_keymap="<C-.>",
+      dismiss_keymap = "<C-]>",
+      debounce_ms = 300,
+      suggestion_color = {gui = "#808080", cterm = 244},
+      execlude_filetypes = {"TelescopePrompt"}
+    })
+  end
+})
+--
 ---- Automatically install plugins on first run
 if packer_bootstrap then
   require('packer').sync()

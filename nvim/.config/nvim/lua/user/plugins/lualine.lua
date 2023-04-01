@@ -19,10 +19,11 @@ require('lualine').setup {
   },
   sections = {
     lualine_a = {'mode'},
-    lualine_b = {'branch', 'diff', 'diagnostics'},
-    lualine_c = {'filename'},
+    lualine_b = {'branch', 'diff'},
+    lualine_c = {
+    },
     lualine_x = {'encoding', 'fileformat', 'filetype'},
-    lualine_y = {'progress'},
+    lualine_y = {},
     lualine_z = {'location'}
   },
   inactive_sections = {
@@ -34,7 +35,35 @@ require('lualine').setup {
     lualine_z = {}
   },
   tabline = {},
-  winbar = {},
+  winbar = {
+    lualine_a = {},
+    lualine_b = {
+      {
+        'diagnostics',
+        sources = { 'nvim_lsp', 'vim_lsp' },
+        sections = { 'error', 'warn', 'info', 'hint' },
+        diagnostics_color = {
+          error = 'DiagnosticError',
+          warn = 'DiagnosticWarn',
+          info = 'DiagnosticInfo',
+          hint = 'DiagnosticHint'
+        },
+        symbols = {
+          error = ' ',
+          warn = ' ',
+          info = ' ',
+          hint = ' '
+        },
+        colored = true,
+        update_in_insert = true,
+        always_visible = false
+      }
+    },
+    lualine_c = {},
+    lualine_x = {},
+    lualine_y = {},
+    lualine_z = { {'datetime', style = 'default'}}
+  },
   inactive_winbar = {},
   extensions = {}
 }
