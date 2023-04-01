@@ -35,3 +35,4 @@ export PATH="$PATH:$HOME/.local/bin"
 export PATH="$PATH:$HOME/.rvm/bin"
 eval "$(direnv hook zsh)"
 eval "$(pyenv init -)"
+source /usr/share/nvm/init-nvm.sh
