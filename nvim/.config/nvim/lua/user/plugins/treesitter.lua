@@ -8,7 +8,8 @@ require('nvim-treesitter.configs').setup({
     'markdown',
     'ruby',
     'rust',
-    'typescript'
+    'typescript',
+    'vue'
   },
   highlight = {
     enable = true,

@@ -159,7 +159,7 @@ require('lspconfig').volar.setup({
   capabilities = capabilities,
   -- Enable "Take Over Mode" where volar will provide all TS LSP services
   -- This drastically improves the responsiveness of diagnostic updates on change
-  filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+  filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue', 'ruby' },
 })
 
 vim.fn.sign_define('DiagnosticSignError', { text = '', texthl = 'DiagnosticSignError' })
