@@ -26,8 +26,7 @@ local use = require('packer').use
 
 use('wbthomason/packer.nvim')
 
-use('christoomey/vim-tmux-navigator')
---use('farmergreg/vim-lastplace')
+use { "alexghergh/nvim-tmux-navigation" }
 use('tpope/vim-commentary')
 use('tpope/vim-repeat')
 use('tpope/vim-surround')
@@ -218,6 +217,14 @@ use({
 --
 
 use {
+  'tzachar/cmp-tabnine',
+  run='./install.sh',
+  requires = 'hrsh7th/nvim-cmp',
+  config = function()
+    require('user.plugins.tabnine')
+  end,
+}
+use {
   'VonHeikemen/lsp-zero.nvim',
   branch = 'v1.x',
   requires = {
@@ -314,19 +321,19 @@ use({
 --
 -- Tab nine
 --use { 'codota/tabnine-nvim', run = "./dl_binaries.sh" }
-use({ 'codota/tabnine-nvim', 
-  run = "./dl_binaries.sh",
-  config = function()
-    require('tabnine').setup({
-      disable_auto_comment=true,
-      accept_keymap="<C-.>",
-      dismiss_keymap = "<C-]>",
-      debounce_ms = 300,
-      suggestion_color = {gui = "#808080", cterm = 244},
-      execlude_filetypes = {"TelescopePrompt"}
-    })
-  end
-})
+--use({ 'codota/tabnine-nvim', 
+--  run = "./dl_binaries.sh",
+--  config = function()
+--    require('tabnine').setup({
+--      disable_auto_comment=true,
+--      accept_keymap="<C-S-TAB>",
+--      dismiss_keymap = "<C-]>",
+--      debounce_ms = 150,
+--      suggestion_color = {gui = "#FBFBFB", cterm = 255},
+--      execlude_filetypes = {"TelescopePrompt"}
+--    })
+--  end
+--})
 --
 ---- Automatically install plugins on first run
 if packer_bootstrap then
