@@ -8,13 +8,14 @@ require('nvim-treesitter.configs').setup({
     'markdown',
     'ruby',
     'rust',
-    'typescript',
-    'vue'
+    'typescript'
   },
+  sync_install = true,
+  auto_install = true,
   highlight = {
     enable = true,
     disable = { 'NvimTree' },
-    additional_vim_regex_highlighting = true,
+    additional_vim_regex_highlighting = false,
   },
   context_commentstring = {
     enable = true,
