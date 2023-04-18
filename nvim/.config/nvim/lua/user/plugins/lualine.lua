@@ -64,6 +64,22 @@ require('lualine').setup {
     lualine_y = {},
     lualine_z = { {'datetime', style = 'default'}}
   },
-  inactive_winbar = {},
+  inactive_winbar = {
+    lualine_a = {
+      {
+        'filename',
+        file_status = true,
+        newfile_status = false,
+        path = 0,
+        shorting_target = 40,
+        symbols = {
+          modified = '[+]',
+          readonly = '[-]',
+          unnamed = '[No name]',
+          newfile = '[New]'
+        }
+      }
+    }
+  },
   extensions = {}
 }

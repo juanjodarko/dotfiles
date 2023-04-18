@@ -55,8 +55,12 @@ use({
   config = function()
     vim.o.background = 'dark'
     vim.cmd([[colorscheme nord]])
+    vim.api.nvim_set_hl(0, "Normal", { bg = 'none' })
+    vim.api.nvim_set_hl(0, "NormalFloat", { bg = 'none' })
   end,
 })
+
+use({'theprimeagen/harpoon'})
 --
 --use({
 --  'tommcdo/vim-lion',
@@ -159,8 +163,7 @@ use({
 --
 use({
   'tpope/vim-fugitive',
-  requires = 'tpope/vim-rhubarb',
-  cmd = 'G',
+  requires = 'tpope/vim-rhubarb'
 })
 --
 use({
@@ -216,6 +219,26 @@ use({
 ---- }
 --
 
+--use {
+--  'VonHeikemen/lsp-zero.nvim',
+--  branch = 'v1.x',
+--  requires = {
+--    {'neovim/nvim-lspconfig'},
+--    {'williamboman/mason.nvim'},
+--    {'williamboman/mason-lspconfig.nvim'},
+--    {'hrsh7th/nvim-cmp'},         -- Required
+--    {'hrsh7th/cmp-nvim-lsp'},     -- Required
+--    {'hrsh7th/cmp-buffer'},       -- Optional
+--    {'hrsh7th/cmp-path'},         -- Optional
+--    {'saadparwaiz1/cmp_luasnip'}, -- Optional
+--    {'hrsh7th/cmp-nvim-lua'},     -- Optional
+--
+--    -- Snippets
+--    {'L3MON4D3/LuaSnip'},             -- Required
+--    {'rafamadriz/friendly-snippets'}, -- Optional
+--  }
+--}
+
 use {
   'tzachar/cmp-tabnine',
   run='./install.sh',
@@ -226,26 +249,25 @@ use {
 }
 use {
   'VonHeikemen/lsp-zero.nvim',
-  branch = 'v1.x',
+  branch = 'v2.x',
   requires = {
     -- LSP Support
-    {'neovim/nvim-lspconfig'},             -- Required
-    {'williamboman/mason.nvim'},           -- Optional
-    {'williamboman/mason-lspconfig.nvim'}, -- Optional
+    {'neovim/nvim-lspconfig'},
+    {
+      'williamboman/mason.nvim',
+      run = function()
+        pcall(vim.cmd, 'MasonUpdate')
+      end,
+    },
+    {'williamboman/mason-lspconfig.nvim'},
 
     -- Autocompletion
-    {'hrsh7th/nvim-cmp'},         -- Required
-    {'hrsh7th/cmp-nvim-lsp'},     -- Required
-    {'hrsh7th/cmp-buffer'},       -- Optional
-    {'hrsh7th/cmp-path'},         -- Optional
-    {'saadparwaiz1/cmp_luasnip'}, -- Optional
-    {'hrsh7th/cmp-nvim-lua'},     -- Optional
-
-    -- Snippets
-    {'L3MON4D3/LuaSnip'},             -- Required
-    {'rafamadriz/friendly-snippets'}, -- Optional
+    {'hrsh7th/nvim-cmp'},
+    {'hrsh7th/cmp-nvim-lsp'},
+    {'L3MON4D3/LuaSnip'},
   }
 }
+
 use({
   'L3MON4D3/LuaSnip',
   config = function()

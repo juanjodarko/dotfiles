@@ -1,6 +1,6 @@
 local util = require('lspconfig.util')
 
-vim.api.nvim_create_user_command('Format', vim.lsp.buf.formatting_seq_sync, {})
+--vim.api.nvim_create_user_command('Format', vim.lsp.buf.formatting_seq_sync, {})
 
 vim.keymap.set('n', '<leader>ca', ':CodeActionMenu<CR>')
 vim.keymap.set('v', '<leader>ca', ':CodeActionMenu<CR>')
@@ -107,7 +107,7 @@ require('lspconfig').solang.setup({
   cmd = { 'solang', '--language-server', '--target', 'ewasm', '--importpath', 'node_modules' },
 })
 
-require('lspconfig').sqls.setup({
+require('lspconfig').sqlls.setup({
   on_attach = on_attach,
   capabilities = capabilities,
 })
