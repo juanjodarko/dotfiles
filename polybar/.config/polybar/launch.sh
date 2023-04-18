@@ -1,8 +1,9 @@
-#!/usr/bin/env bash
+#! /bin/bash
 
-polybar-msg cmd quit
-
-echo "---" | tee -a /tmp/polybar1.log
-polybar top 2>&1 | tee -a /tmp/polybar1.log & disown
-
-echo "Bars launched..."
+killall -q polybar
+while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
+for m in $(polybar --list-monitors | cut -d":" -f1); do
+    MONITOR=$m polybar --reload juanjo &
+    MONITOR=$m polybar --reload sidebar &
+done
+echo "Polybar launched..."
