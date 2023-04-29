@@ -9,11 +9,10 @@ vim.g.loaded_matchparent = 1
 vim.api.nvim_set_keymap('n', '<leader>ve', ':edit ~/.config/nvim/init.lua<cr>',{})
 vim.api.nvim_set_keymap('n', '<leader>vr', ':source ~/.config/nvim/init.lua<cr>', {})
 
-vim.api.nvim_set_keymap('n', '<C-h>', '<C-w>h', { silent = true})
-vim.api.nvim_set_keymap('n', '<C-j>', '<C-w>j', { silent = true})
-vim.api.nvim_set_keymap('n', '<C-k>', '<C-w>k', { silent = true})
-vim.api.nvim_set_keymap('n', '<C-l>', '<C-w>l', { silent = true})
-
+vim.api.nvim_set_keymap('n', '<C-h>', 'TmuxNavigateLeft<CR>', { silent = true})
+vim.api.nvim_set_keymap('n', '<C-j>', 'TmuxNavigateDown<CR>', { silent = true})
+vim.api.nvim_set_keymap('n', '<C-k>', 'TmuxNavigateUp<CR>', { silent = true})
+vim.api.nvim_set_keymap('n', '<C-l>', 'TmuxNavigateRight<CR>', { silent = true})
 
 mapper('n', '<leader>ghw', ':h <C-R>=expand("<cword>")<CR><CR>')
 mapper('n', '<leader>pv', ':wincmd v<bar> :Ex <bar> :veritcal resize 30 <CR>')

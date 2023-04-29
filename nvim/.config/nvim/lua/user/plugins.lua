@@ -34,6 +34,7 @@ use('tpope/vim-eunuch') -- Adds :Rename, :SudoWrite
 use('tpope/vim-unimpaired') -- Adds [b and other handy mappings
 use('tpope/vim-sleuth') -- Indent autodetection with editorconfig support
 use('nelstrom/vim-visual-star-search')
+use('christoomey/vim-tmux-navigator')
 --
 use({
   'tpope/vim-projectionist',
