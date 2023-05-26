@@ -26,6 +26,7 @@ export NVM_DIR="$HOME/.nvm"
 export PATH="$PATH:$HOME/.local/bin"
 export PATH="$PATH:$HOME/.rvm/bin"
 PATH=$(brew --prefix)/opt/findutils/libexec/gnubin:$PATH
+PATH=$(brew --prefix)/opt/lua-language-server/bin:$PATH
 
 eval "$(direnv hook zsh)"
 eval "$(rbenv init - zsh)"
@@ -42,3 +43,4 @@ done
 
 source <(kubectl completion zsh)  # setup autocomplete in zsh into the current shell
 [[ $commands[kubectl] ]] && source <(kubectl completion zsh)
+export PATH="/opt/homebrew/opt/postgresql@12/bin:$PATH"

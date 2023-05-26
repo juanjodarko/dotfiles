@@ -51,15 +51,18 @@ use({
 --    vim.cmd([[colorscheme gruvbox]])
 --  end,
 --})
-use({
-  'arcticicestudio/nord-vim',
-  config = function()
-    vim.o.background = 'dark'
-    vim.cmd([[colorscheme nord]])
-    vim.api.nvim_set_hl(0, "Normal", { bg = 'none' })
-    vim.api.nvim_set_hl(0, "NormalFloat", { bg = 'none' })
-  end,
-})
+--use({
+--  'arcticicestudio/nord-vim',
+--  config = function()
+--    vim.o.background = 'dark'
+--    vim.cmd([[colorscheme nord]])
+--    vim.api.nvim_set_hl(0, "Normal", { bg = 'none' })
+--    vim.api.nvim_set_hl(0, "NormalFloat", { bg = 'none' })
+--  end,
+--})
+use({ 
+    "catppuccin/nvim", as = "catppuccin",
+  })
 
 use({'theprimeagen/harpoon'})
 --
