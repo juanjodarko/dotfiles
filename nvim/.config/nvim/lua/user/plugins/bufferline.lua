@@ -1,5 +1,15 @@
+local mocha = require("catppuccin.palettes").get_palette "mocha"
+
 require('bufferline').setup({
   options = {
+    highlights = require('catppuccin.groups.integrations.bufferline').get({
+      styles = { "italic", "bold" },
+      custom = {
+        mocha = {
+            background = { fg = mocha.text },
+        },
+      }
+    }),
     diagnostics = "nvim_lsp",
     diagnostics_indicator = function(count, level, diagnostics_dict, context)
       local icon = level:match("error") and  " " or " "
