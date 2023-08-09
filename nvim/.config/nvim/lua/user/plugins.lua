@@ -412,6 +412,9 @@ use({
 --  end
 --})
 --
+-- SVELTE
+use({'evenleck/vim-svelte'})
+--
 ---- Automatically install plugins on first run
 if packer_bootstrap then
   require('packer').sync()
