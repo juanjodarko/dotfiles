@@ -12,6 +12,7 @@ lsp.ensure_installed({
   'solargraph',
   'terraformls',
   'tsserver',
+  'svelte-languageserver'
 })
 
 local cmp = require('cmp')

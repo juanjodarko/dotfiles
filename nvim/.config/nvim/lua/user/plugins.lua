@@ -103,6 +103,7 @@ use({ "catppuccin/nvim", as = "catppuccin",
           telescope = true,
           notify = false,
           mini = false,
+          bufferline = true,
           -- For more plugins integrations please scroll down (https://github.com/catppuccin/nvim#integrations)
       },
   })
@@ -429,6 +430,9 @@ use {
 --    })
 --  end
 --})
+--
+-- SVELTE
+use({'evenleck/vim-svelte'})
 --
 ---- Automatically install plugins on first run
 if packer_bootstrap then
