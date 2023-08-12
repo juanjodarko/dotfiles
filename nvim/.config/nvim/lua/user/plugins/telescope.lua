@@ -27,6 +27,9 @@ telescope.setup({
       },
     },
     file_ignore_patterns = { '.git/' },
+    preview = {
+      treesitter = false,
+    },
   },
   pickers = {
     find_files = {

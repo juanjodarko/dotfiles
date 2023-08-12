@@ -292,6 +292,16 @@ use({
 --    {'rafamadriz/friendly-snippets'}, -- Optional
 --  }
 --}
+use ({
+  'Exafunction/codeium.vim',
+   config = function ()
+     -- Change '<C-g>' here to any keycode you like.
+     vim.keymap.set('i', '<C-g>', function () return vim.fn['codeium#Accept']() end, { expr = true })
+     vim.keymap.set('i', '<C-;>', function() return vim.fn['codeium#CycleCompletions'](1) end, { expr = true })
+     vim.keymap.set('i', '<C-,>', function() return vim.fn['codeium#CycleCompletions'](-1) end, { expr = true })
+     vim.keymap.set('i', '<C-x>', function() return vim.fn['codeium#Clear']() end, { expr = true })
+   end
+ })
 
 use {
   'tzachar/cmp-tabnine',
@@ -387,6 +397,15 @@ use({
     require('trouble').setup()
   end,
 })
+
+use {
+  'phaazon/hop.nvim',
+  branch = 'v2', -- optional but strongly recommended
+  config = function()
+    -- you can configure Hop the way you like here; see :h hop-config
+    require'hop'.setup { keys = 'etovxqpdygfblzhckisuran' }
+  end
+}
 --
 --use({
 --  'antoinemadec/FixCursorHold.nvim',

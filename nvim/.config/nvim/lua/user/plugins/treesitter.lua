@@ -8,7 +8,8 @@ require('nvim-treesitter.configs').setup({
     'markdown',
     'ruby',
     'rust',
-    'typescript'
+    'typescript',
+    'svelte'
   },
   sync_install = true,
   auto_install = true,
