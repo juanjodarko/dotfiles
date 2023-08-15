@@ -78,6 +78,7 @@ require('lazy').setup({
     end,
   },
   { 'alexghergh/nvim-tmux-navigation' },
+  { 'christoomey/vim-tmux-navigator'},
   { 'tpope/vim-commentary' },
   { 'tpope/vim-repeat' },
   { 'tpope/vim-surround' },
