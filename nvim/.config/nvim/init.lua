@@ -99,6 +99,11 @@ require('lazy').setup({
   {
     'nvim-treesitter/nvim-treesitter',
     build = ":TSUpdate",
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter-textobjects',
+      'JoosepAlviste/nvim-ts-context-commentstring',
+      'RRethy/nvim-treesitter-endwise'
+    },
     config = function ()
       local configs = require('nvim-treesitter.configs')
       configs.setup({
@@ -549,9 +554,8 @@ require('lazy').setup({
      vim.keymap.set('i', '<C-,>', function() return vim.fn['codeium#CycleCompletions'](-1) end, { expr = true })
      vim.keymap.set('i', '<C-x>', function() return vim.fn['codeium#Clear']() end, { expr = true })
     end,
-  }
+  },
 })
-
 
 local lsp = require('lsp-zero').preset({})
 
@@ -561,4 +565,34 @@ lsp.on_attach(function(client, bufnr)
   lsp.default_keymaps({buffer = bufnr})
 end)
 
+lsp.ensure_installed({
+  'angularls',
+  'bashls',
+  'clangd',
+  'cmake',
+  'cssls',
+  'dockerls',
+  'eslint',
+  'grammarly',
+  'html',
+  'jsonls',
+  'tsserver',
+  'ltex',
+  'lua_ls',
+  'marksman',
+  'puppet',
+  'jedi_language_server',
+  'solargraph',
+  'rust_analyzer',
+  'sqlls',
+  'svelte',
+  'tailwindcss',
+  'terraformls',
+  'vuels',
+})
+
 lsp.setup()
+
+vim.o.runtimepath = vim.o.runtimepath .. ",~/workspace/nvim-plugins/nvim-gtd-planner"
+vim.cmd [[command! ShowTasks lua require'nvim-gtd-planner'.show_tasks()]]
+
