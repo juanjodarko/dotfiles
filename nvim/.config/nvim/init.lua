@@ -594,6 +594,10 @@ lsp.ensure_installed({
 
 lsp.setup()
 
-vim.o.runtimepath = vim.o.runtimepath .. ",~/workspace/nvim-plugins/nvim-gtd-planner"
-vim.cmd [[command! ShowTasks lua require'nvim-gtd-planner'.show_tasks()]]
+--vim.o.runtimepath = vim.o.runtimepath .. ",~/workspace/nvim-plugins/nvim-gtd-planner"
+--vim.cmd [[command! ShowTasks lua require'nvim-gtd-planner'.show_tasks()]]
+--vim.cmd [[command! -nargs=1 AddTask :lua require'nvim-gtd-planner'.add_task(<q-args>)]]
+--vim.cmd [[command! -nargs=1 DeleteTask :lua require'nvim-gtd-planner'.delete_task(tonumber(<q-args>))]]
+--vim.cmd [[command! -nargs=1 ToggleComplete :lua require'nvim-gtd-planner'.toggle_complete(tonumber(<q-args>))]]
+
 
