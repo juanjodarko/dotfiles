@@ -8,7 +8,8 @@ local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 local uv = vim.uv or vim.loop
 if not uv.fs_stat(lazypath) then
   uv.fs_mkdir(lazypath, 511)
-  vim.fn.system({ 'git', 'clone', '--filter=blob:none', 'https://github.com/folke/lazy.nvim.git', '--branch=stable', lazypath })
+  vim.fn.system({ 'git', 'clone', '--filter=blob:none', 'https://github.com/folke/lazy.nvim.git', '--branch=stable',
+    lazypath })
 end
 
 vim.opt.rtp:prepend(lazypath)
@@ -28,57 +29,57 @@ require('lazy').setup({
         --  end,
         --},
         flavour = "mocha", -- latte, frappe, macchiato, mocha
-        background = { -- :h background
-            light = "latte",
-            dark = "mocha",
+        background = {     -- :h background
+          light = "latte",
+          dark = "mocha",
         },
         transparent_background = true,
         show_end_of_buffer = false, -- show the '~' characters after the end of buffers
         term_colors = false,
         dim_inactive = {
-            enabled = false,
-            shade = "dark",
-            percentage = 0.15,
+          enabled = false,
+          shade = "dark",
+          percentage = 0.15,
         },
-        no_italic = false, -- Force no italic
-        no_bold = false, -- Force no bold
+        no_italic = false,    -- Force no italic
+        no_bold = false,      -- Force no bold
         no_underline = false, -- Force no underline
         styles = {
-            comments = { "italic" },
-            conditionals = { "italic" },
-            loops = {},
-            functions = {},
-            keywords = {},
-            strings = {},
-            variables = {},
-            numbers = {},
-            booleans = {},
-            properties = {},
-            types = {},
-            operators = {},
+          comments = { "italic" },
+          conditionals = { "italic" },
+          loops = {},
+          functions = {},
+          keywords = {},
+          strings = {},
+          variables = {},
+          numbers = {},
+          booleans = {},
+          properties = {},
+          types = {},
+          operators = {},
         },
         color_overrides = {},
         custom_highlights = {},
         integrations = {
-            cmp = true,
-            gitsigns = true,
-            nvimtree = true,
-            notify = false,
-            mini = false,
-            bufferline = true,
-            mason = true,
-            telescope = {
-              enabled = true,
-              style = 'nvchad'
-            }
-            -- For more plugins integrations please scroll down (https://github.com/catppuccin/nvim#integrations)
+          cmp = true,
+          gitsigns = true,
+          nvimtree = true,
+          notify = false,
+          mini = false,
+          bufferline = true,
+          mason = true,
+          telescope = {
+            enabled = true,
+            style = 'nvchad'
+          }
+          -- For more plugins integrations please scroll down (https://github.com/catppuccin/nvim#integrations)
         },
       })
       vim.cmd([[colorscheme catppuccin]])
     end,
   },
   { 'alexghergh/nvim-tmux-navigation' },
-  { 'christoomey/vim-tmux-navigator'},
+  { 'christoomey/vim-tmux-navigator' },
   { 'tpope/vim-commentary' },
   { 'tpope/vim-repeat' },
   { 'tpope/vim-surround' },
@@ -105,7 +106,7 @@ require('lazy').setup({
       'JoosepAlviste/nvim-ts-context-commentstring',
       'RRethy/nvim-treesitter-endwise'
     },
-    config = function ()
+    config = function()
       local configs = require('nvim-treesitter.configs')
       configs.setup({
         ensure_installed = {
@@ -136,14 +137,14 @@ require('lazy').setup({
     branch = 'v2.x',
     dependencies = {
       -- LSP Support
-      {'neovim/nvim-lspconfig'},             -- Required
-      {'williamboman/mason.nvim'},           -- Optional
-      {'williamboman/mason-lspconfig.nvim'}, -- Optional
+      { 'neovim/nvim-lspconfig' },             -- Required
+      { 'williamboman/mason.nvim' },           -- Optional
+      { 'williamboman/mason-lspconfig.nvim' }, -- Optional
 
       -- Autocompletion
-      {'hrsh7th/nvim-cmp'},     -- Required
-      {'hrsh7th/cmp-nvim-lsp'}, -- Required
-      {'L3MON4D3/LuaSnip'},     -- Required
+      { 'hrsh7th/nvim-cmp' },     -- Required
+      { 'hrsh7th/cmp-nvim-lsp' }, -- Required
+      { 'L3MON4D3/LuaSnip' },     -- Required
     }
   },
   {
@@ -190,19 +191,19 @@ require('lazy').setup({
             styles = { "italic", "bold" },
             custom = {
               mocha = {
-                  background = { fg = mocha.text },
+                background = { fg = mocha.text },
               },
             }
           }),
-          mode = "buffers", -- set to "tabs" to only show tabpages instead
-          themable = true, -- allows highlight groups to be overriden i.e. sets highlights as default
+          mode = "buffers",                    -- set to "tabs" to only show tabpages instead
+          themable = true,                     -- allows highlight groups to be overriden i.e. sets highlights as default
           numbers = "ordinal",
           close_command = "bdelete! %d",       -- can be a string | function, | false see "Mouse actions"
           right_mouse_command = "bdelete! %d", -- can be a string | function | false, see "Mouse actions"
           left_mouse_command = "buffer %d",    -- can be a string | function, | false see "Mouse actions"
           middle_mouse_command = nil,          -- can be a string | function, | false see "Mouse actions"
           indicator = {
-            icon = ' ', -- this should be omitted if indicator style is not 'icon'
+            icon = ' ',                        -- this should be omitted if indicator style is not 'icon'
             style = 'icon',
           },
           buffer_close_icon = '',
@@ -212,12 +213,12 @@ require('lazy').setup({
           right_trunc_marker = '',
           max_name_length = 18,
           max_prefix_length = 15, -- prefix used when a buffer is de-duplicated
-          truncate_names = true, -- whether or not tab names should be truncated
+          truncate_names = true,  -- whether or not tab names should be truncated
           tab_size = 18,
           diagnostics = "nvim_lsp",
           diagnostics_update_in_insert = false,
           diagnostics_indicator = function(count, level, diagnostics_dict, context)
-            local icon = level:match("error") and  " " or " "
+            local icon = level:match("error") and " " or " "
             return " " .. icon .. count
           end,
           offsets = {
@@ -238,8 +239,8 @@ require('lazy').setup({
           show_close_icon = true,
           show_tab_indicators = true,
           show_duplicate_prefix = true, -- whether to show duplicate buffer prefix
-          persist_buffer_sort = true, -- whether or not custom sorted buffers should persist
-          move_wraps_at_ends = false, -- whether or not the move command "wraps" at the first or last position
+          persist_buffer_sort = true,   -- whether or not custom sorted buffers should persist
+          move_wraps_at_ends = false,   -- whether or not the move command "wraps" at the first or last position
           -- can also be a table containing 2 custom separators
           -- [focused and unfocused]. eg: { '|', '|' }
           separator_style = "thick",
@@ -248,7 +249,7 @@ require('lazy').setup({
           hover = {
             enabled = true,
             delay = 200,
-            reveal = {'close'}
+            reveal = { 'close' }
           },
           sort_by = 'insert_at_end',
           groups = {
@@ -288,8 +289,8 @@ require('lazy').setup({
         options = {
           icons_enabled = true,
           theme = 'auto',
-          component_separators = { left = '', right = ''},
-          section_separators = { left = '', right = ''},
+          component_separators = { left = '', right = '' },
+          section_separators = { left = '', right = '' },
           disabled_filetypes = {
             statusline = {},
             winbar = {},
@@ -304,19 +305,19 @@ require('lazy').setup({
           }
         },
         sections = {
-          lualine_a = {'mode'},
-          lualine_b = {'branch', 'diff'},
+          lualine_a = { 'mode' },
+          lualine_b = { 'branch', 'diff' },
           lualine_c = {
           },
-          lualine_x = {'encoding', 'fileformat', 'filetype'},
+          lualine_x = { 'encoding', 'fileformat', 'filetype' },
           lualine_y = {},
-          lualine_z = {'location'}
+          lualine_z = { 'location' }
         },
         inactive_sections = {
           lualine_a = {},
           lualine_b = {},
-          lualine_c = {'filename'},
-          lualine_x = {'location'},
+          lualine_c = { 'filename' },
+          lualine_x = { 'location' },
           lualine_y = {},
           lualine_z = {}
         },
@@ -348,7 +349,7 @@ require('lazy').setup({
           lualine_c = {},
           lualine_x = {},
           lualine_y = {},
-          lualine_z = { {'datetime', style = 'default'}}
+          lualine_z = { { 'datetime', style = 'default' } }
         },
         inactive_winbar = {
           lualine_a = {
@@ -428,7 +429,7 @@ require('lazy').setup({
 
       vim.cmd([[
         let g:test#strategy = 'neovim'
-        let g:test#ruby#rspec#executable='docker compose run --rm -e RAILS_ENV=test app bundle exec rspec'
+        let g:test#ruby#rspec#executable='RAILS_ENV=test bundle exec rspec'
       ]])
     end,
   },
@@ -438,7 +439,8 @@ require('lazy').setup({
     dependencies = {
       'nvim-lua/plenary.nvim',
       'nvim-tree/nvim-web-devicons',
-      'nvim-telescope/telescope-fzf-native.nvim', build = 'make'
+      'nvim-telescope/telescope-fzf-native.nvim',
+      build = 'make'
     },
     config = function()
       local telescope = require('telescope')
@@ -492,7 +494,6 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>g', builtin.live_grep, {})
       vim.keymap.set('n', '<leader>h', builtin.help_tags, {})
       vim.keymap.set('n', '<leader>s', builtin.lsp_document_symbols, {})
-
     end,
   },
   {
@@ -518,31 +519,31 @@ require('lazy').setup({
             if vim.wo.diff then return ']c' end
             vim.schedule(function() gs.next_hunk() end)
             return '<Ignore>'
-          end, {expr=true})
+          end, { expr = true })
 
           map('n', '[c', function()
             if vim.wo.diff then return '[c' end
             vim.schedule(function() gs.prev_hunk() end)
             return '<Ignore>'
-          end, {expr=true})
+          end, { expr = true })
 
           -- Actions
           map('n', '<leader>hs', gs.stage_hunk)
           map('n', '<leader>hr', gs.reset_hunk)
-          map('v', '<leader>hs', function() gs.stage_hunk {vim.fn.line('.'), vim.fn.line('v')} end)
-          map('v', '<leader>hr', function() gs.reset_hunk {vim.fn.line('.'), vim.fn.line('v')} end)
+          map('v', '<leader>hs', function() gs.stage_hunk { vim.fn.line('.'), vim.fn.line('v') } end)
+          map('v', '<leader>hr', function() gs.reset_hunk { vim.fn.line('.'), vim.fn.line('v') } end)
           map('n', '<leader>hS', gs.stage_buffer)
           map('n', '<leader>hu', gs.undo_stage_hunk)
           map('n', '<leader>hR', gs.reset_buffer)
           map('n', '<leader>hp', gs.preview_hunk)
-          map('n', '<leader>hb', function() gs.blame_line{full=true} end)
+          map('n', '<leader>hb', function() gs.blame_line { full = true } end)
           map('n', '<leader>tb', gs.toggle_current_line_blame)
           map('n', '<leader>hd', gs.diffthis)
           map('n', '<leader>hD', function() gs.diffthis('~') end)
           map('n', '<leader>td', gs.toggle_deleted)
 
           -- Text object
-          map({'o', 'x'}, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
+          map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
         end,
       })
     end,
@@ -550,17 +551,17 @@ require('lazy').setup({
   {
     'Exafunction/codeium.vim',
     config = function()
-     vim.keymap.set('i', '<C-g>', function () return vim.fn['codeium#Accept']() end, { expr = true })
-     vim.keymap.set('i', '<C-;>', function() return vim.fn['codeium#CycleCompletions'](1) end, { expr = true })
-     vim.keymap.set('i', '<C-,>', function() return vim.fn['codeium#CycleCompletions'](-1) end, { expr = true })
-     vim.keymap.set('i', '<C-x>', function() return vim.fn['codeium#Clear']() end, { expr = true })
+      vim.keymap.set('i', '<C-g>', function() return vim.fn['codeium#Accept']() end, { expr = true })
+      vim.keymap.set('i', '<C-;>', function() return vim.fn['codeium#CycleCompletions'](1) end, { expr = true })
+      vim.keymap.set('i', '<C-,>', function() return vim.fn['codeium#CycleCompletions'](-1) end, { expr = true })
+      vim.keymap.set('i', '<C-x>', function() return vim.fn['codeium#Clear']() end, { expr = true })
     end,
   },
   {
     "folke/todo-comments.nvim",
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = {
-      signs = true, -- show icons in the signs column
+      signs = true,      -- show icons in the signs column
       sign_priority = 8, -- sign priority
       -- keywords recognized as todo comments
       keywords = {
@@ -578,8 +579,8 @@ require('lazy').setup({
         TEST = { icon = "⏲ ", color = "test", alt = { "TESTING", "PASSED", "FAILED" } },
       },
       gui_style = {
-        fg = "NONE", -- The gui style to use for the fg highlight group.
-        bg = "BOLD", -- The gui style to use for the bg highlight group.
+        fg = "NONE",         -- The gui style to use for the fg highlight group.
+        bg = "BOLD",         -- The gui style to use for the bg highlight group.
       },
       merge_keywords = true, -- when true, custom keywords will be merged with the defaults
       -- highlighting of the line containing the todo comment
@@ -587,26 +588,26 @@ require('lazy').setup({
       -- * keyword: highlights of the keyword
       -- * after: highlights after the keyword (todo text)
       highlight = {
-        multiline = true, -- enable multine todo comments
-        multiline_pattern = "^.", -- lua pattern to match the next multiline from the start of the matched keyword
-        multiline_context = 10, -- extra lines that will be re-evaluated when changing a line
-        before = "", -- "fg" or "bg" or empty
-        keyword = "wide", -- "fg", "bg", "wide", "wide_bg", "wide_fg" or empty. (wide and wide_bg is the same as bg, but will also highlight surrounding characters, wide_fg acts accordingly but with fg)
-        after = "fg", -- "fg" or "bg" or empty
+        multiline = true,                -- enable multine todo comments
+        multiline_pattern = "^.",        -- lua pattern to match the next multiline from the start of the matched keyword
+        multiline_context = 10,          -- extra lines that will be re-evaluated when changing a line
+        before = "",                     -- "fg" or "bg" or empty
+        keyword = "wide",                -- "fg", "bg", "wide", "wide_bg", "wide_fg" or empty. (wide and wide_bg is the same as bg, but will also highlight surrounding characters, wide_fg acts accordingly but with fg)
+        after = "fg",                    -- "fg" or "bg" or empty
         pattern = [[.*<(KEYWORDS)\s*:]], -- pattern or table of patterns, used for highlighting (vim regex)
-        comments_only = true, -- uses treesitter to match keywords in comments only
-        max_line_len = 400, -- ignore lines longer than this
-        exclude = {}, -- list of file types to exclude highlighting
+        comments_only = true,            -- uses treesitter to match keywords in comments only
+        max_line_len = 400,              -- ignore lines longer than this
+        exclude = {},                    -- list of file types to exclude highlighting
       },
       -- list of named colors where we try to extract the guifg from the
       -- list of highlight groups or use the hex color if hl not found as a fallback
       colors = {
-        error= { "DiagnosticError", "ErrorMsg", "#f38ba8" },
-        warning= { "DiagnosticWarn", "WarningMsg", "#f9e2af" },
-        info= { "DiagnosticInfo", "#89b4fa" },
-        hint= { "DiagnosticHint", "#a6e3a1" },
-        default= { "Identifier", "#f5e0dc" },
-        test= { "Identifier", "#a6adc8" }
+        error = { "DiagnosticError", "ErrorMsg", "#f38ba8" },
+        warning = { "DiagnosticWarn", "WarningMsg", "#f9e2af" },
+        info = { "DiagnosticInfo", "#89b4fa" },
+        hint = { "DiagnosticHint", "#a6e3a1" },
+        default = { "Identifier", "#f5e0dc" },
+        test = { "Identifier", "#a6adc8" }
       },
       search = {
         command = "rg",
@@ -631,7 +632,7 @@ local lsp = require('lsp-zero').preset({})
 lsp.on_attach(function(client, bufnr)
   -- see :help lsp-zero-keybindings
   -- to learn the available actions
-  lsp.default_keymaps({buffer = bufnr})
+  lsp.default_keymaps({ buffer = bufnr })
 end)
 
 lsp.ensure_installed({
@@ -666,14 +667,24 @@ lsp.format_on_save({
     timeout_ms = 10000,
   },
   servers = {
-    ['lua_ls'] = {'lua'},
-    ['rust_analyzer'] = {'rust'},
-    ['prettier'] = {'svelte'},
+    ['lua_ls'] = { 'lua' },
+    ['rust_analyzer'] = { 'rust' },
+    ['prettierd'] = { 'svelte' },
+    ['eslint'] = { 'typescript', 'javascript', 'svelte' }
     -- if you have a working setup with null-ls
     -- you can specify filetypes it can format.
     -- ['null-ls'] = {'javascript', 'typescript'},
   }
 })
+
+lsp.on_attach(function(client, bufnr)
+  lsp.default_keymaps({ buffer = bufnr })
+  local opts = { buffer = bufnr }
+
+  vim.keymap.set({ 'n', 'x' }, 'gq', function()
+    vim.lsp.buf.format({ async = false, timeout_ms = 10000 })
+  end, opts)
+end)
 
 lsp.setup()
 
@@ -682,5 +693,3 @@ lsp.setup()
 --vim.cmd [[command! -nargs=1 AddTask :lua require'nvim-gtd-planner'.add_task(<q-args>)]]
 --vim.cmd [[command! -nargs=1 DeleteTask :lua require'nvim-gtd-planner'.delete_task(tonumber(<q-args>))]]
 --vim.cmd [[command! -nargs=1 ToggleComplete :lua require'nvim-gtd-planner'.toggle_complete(tonumber(<q-args>))]]
-
-
