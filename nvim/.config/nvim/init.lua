@@ -408,7 +408,7 @@ require('lazy').setup({
 
       vim.cmd([[
         let g:test#strategy = 'neovim'
-        let g:test#ruby#rspec#executable='docker compose run --rm -e RAILS_MASTER_KEY=${TEST_MASTER_KEY} -e RAILS_ENV=test page bundle exec rspec'
+        let g:test#ruby#rspec#executable='docker compose run --rm -e RAILS_ENV=test app bundle exec rspec'
       ]])
     end,
   },
@@ -649,12 +649,22 @@ lsp.format_on_save({
   servers = {
     ['lua_ls'] = { 'lua' },
     ['rust_analyzer'] = { 'rust' },
-    ['prettier'] = { 'svelte' },
+    ['prettierd'] = { 'svelte' },
+    ['eslint'] = { 'typescript', 'javascript', 'svelte' }
     -- if you have a working setup with null-ls
     -- you can specify filetypes it can format.
     -- ['null-ls'] = {'javascript', 'typescript'},
   }
 })
+
+lsp.on_attach(function(client, bufnr)
+  lsp.default_keymaps({ buffer = bufnr })
+  local opts = { buffer = bufnr }
+
+  vim.keymap.set({ 'n', 'x' }, 'gq', function()
+    vim.lsp.buf.format({ async = false, timeout_ms = 10000 })
+  end, opts)
+end)
 
 lsp.setup()
 
