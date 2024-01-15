@@ -643,6 +643,7 @@ require('lazy').setup({
       },
     }
   }
+  -- { 'juanjodarko/nvim-gtd-planner' }
 })
 
 local lsp = require('lsp-zero').preset({})
@@ -891,6 +892,7 @@ require "octo".setup({
   },
 })
 vim.treesitter.language.register('markdown', 'octo')
+require("ibl").setup()
 
 --vim.o.runtimepath = vim.o.runtimepath .. ",~/workspace/nvim-plugins/nvim-gtd-planner"
 --vim.cmd [[command! ShowTasks lua require'nvim-gtd-planner'.show_tasks()]]
