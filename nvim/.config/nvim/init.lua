@@ -86,6 +86,7 @@ require('lazy').setup({
   { 'tpope/vim-eunuch' },
   { 'tpope/vim-unimpaired' },
   { 'tpope/vim-sleuth' },
+  { 'wakatime/vim-wakatime',          lazy = false },
   {
     'tpope/vim-fugitive',
     dependencies = {
@@ -572,8 +573,11 @@ require('lazy').setup({
       'nvim-tree/nvim-web-devicons',
     },
     config = function()
-      require "octo".setup()
-    end
+      require("octo").setup()
+    end,
+    keys = {
+      { "<leader>O", "<cmd>Octo<cr>", desc = "Octo" },
+    }
   },
   {
     "folke/todo-comments.nvim",
@@ -709,7 +713,7 @@ lsp.setup()
 
 require "octo".setup({
   use_local_fs = false,                      -- use local files on right side of reviews
-  enable_builtin = false,                    -- shows a list of builtin actions when no action is provided
+  enable_builtin = true,                     -- shows a list of builtin actions when no action is provided
   default_remote = { "upstream", "origin" }, -- order to try remotes
   ssh_aliases = {},                          -- SSH aliases. e.g. `ssh_aliases = {["github.com-work"] = "github.com"}`
   picker = "telescope",                      -- or "fzf-lua"
