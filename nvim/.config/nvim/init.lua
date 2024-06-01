@@ -646,9 +646,13 @@ require('lazy').setup({
         -- pattern = [[\b(KEYWORDS)\b]], -- match without the extra colon. You'll likely get false positives
       },
     }
-  }
+  },
+  { 'diepm/vim-rest-console' }
   -- { 'juanjodarko/nvim-gtd-planner' }
 })
+
+require('plugins.pomodoro')
+
 
 local lsp = require('lsp-zero').preset({})
 
@@ -897,6 +901,13 @@ require "octo".setup({
 })
 vim.treesitter.language.register('markdown', 'octo')
 require("ibl").setup()
+
+vim.g.vrc_set_default_mapping = 0
+vim.g.vrc_response_default_content_type = 'application/json'
+vim.g.vrc_output_buffer_name = '_OUTPUT.json'
+vim.g.vrc_auto_format_response_patterns = {
+  json = 'jq',
+}
 
 --vim.o.runtimepath = vim.o.runtimepath .. ",~/workspace/nvim-plugins/nvim-gtd-planner"
 --vim.cmd [[command! ShowTasks lua require'nvim-gtd-planner'.show_tasks()]]
