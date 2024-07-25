@@ -24,17 +24,19 @@ export NVM_DIR="$HOME/.nvm"
 
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 export PATH="$PATH:$HOME/.local/bin"
-export PATH="$PATH:$HOME/.rvm/bin"
 PATH=$(brew --prefix)/opt/findutils/libexec/gnubin:$PATH
 PATH=$(brew --prefix)/opt/lua-language-server/bin:$PATH
 
-eval "$(direnv hook zsh)"
+# eval "$(direnv hook zsh)"
 eval "$(rbenv init - zsh)"
 eval "$(nodenv init -)"
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
 
-DIRENV_WARN_TIMEOUT="30s"
+# DIRENV_WARN_TIMEOUT="30s"
 
-[[ -f .direnv/.direnvrc ]] && source .direnv/direnvrc
+# [[ -f .direnv/.direnvrc ]] && source .direnv/direnvrc
 source $ZSH/oh-my-zsh.sh
 eval "$(fzf --zsh)"
 for i in `find -L $PERSONAL | sort`; do
@@ -64,6 +66,8 @@ _fzf_compgen_dir() {
 
 source ~/Applications/fzf-git.sh/fzf-git.sh
 
+export FREEDESKTOP_MIME_TYPES_PATH=/opt/homebrew/share/mime/packages/freedesktop.org.xml
+
 export FZF_CTRL_T_OPTS="--preview 'bat -n --color=always --line-range :500 {}"
 export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always {} | head -200'"
 
@@ -78,3 +82,4 @@ _fzf_comprun() {
     *)            fzf "$@" --preview "--preview 'bat -b -color=always --line-range :500 {}'";;
   esac
 }
+source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
