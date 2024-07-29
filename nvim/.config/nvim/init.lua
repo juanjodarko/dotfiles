@@ -68,6 +68,8 @@ require('lazy').setup({
           mini = false,
           bufferline = true,
           mason = true,
+          octo = true,
+          lsp_trouble = true,
           telescope = {
             enabled = true,
             style = 'nvchad'
@@ -295,7 +297,7 @@ require('lazy').setup({
       require('lualine').setup({
         options = {
           icons_enabled = true,
-          theme = 'auto',
+          theme = 'catppuccin',
           component_separators = { left = '', right = '' },
           section_separators = { left = '', right = '' },
           disabled_filetypes = {
@@ -647,7 +649,8 @@ require('lazy').setup({
       },
     }
   },
-  { 'diepm/vim-rest-console' }
+  { 'diepm/vim-rest-console' },
+  { 'norcalli/nvim-colorizer.lua' }
   -- { 'juanjodarko/nvim-gtd-planner' }
 })
 
@@ -714,6 +717,7 @@ lsp.on_attach(function(client, bufnr)
 end)
 
 lsp.setup()
+require 'colorizer'.setup()
 
 require "octo".setup({
   use_local_fs = false,                      -- use local files on right side of reviews
