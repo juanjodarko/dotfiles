@@ -10,3 +10,6 @@
 [submodule "awesome"]
 	path = awesome
 	url = git@github.com:juanjodarko/awesome.git
+[submodule "polybar/.config/polybar/pomobar"]
+	path = polybar/.config/polybar/pomobar
+	url = git@github.com:juanjodarko/pomobar.git
