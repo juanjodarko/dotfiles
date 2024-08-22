@@ -15,7 +15,7 @@ SAVEHIST=100000000
 export ZSH="/home/juanjo/.oh-my-zsh"
 ZSH_THEME="agnoster"
 
-plugins=(git docker docker-compose docker-machine zsh-autosuggestions tmux)
+plugins=(git docker docker-compose zsh-autosuggestions tmux)
 
 source $ZSH/oh-my-zsh.sh
 if [ ! "$TMUX" = "" ]; then export TERM=tmux-256color; fi
