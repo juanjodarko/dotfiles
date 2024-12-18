@@ -1,3 +1,4 @@
+local hostname = vim.loop.os_gethostname()
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 require("user.settings")
@@ -78,21 +79,3 @@ require("config.mason")
 --
 --require "octo".setup({
 --})
-vim.treesitter.language.register('markdown', 'octo')
---require("ibl").setup()
---
-vim.g.vrc_set_default_mapping = 0
-vim.g.vrc_response_default_content_type = 'application/json'
-vim.g.vrc_output_buffer_name = '_OUTPUT.json'
-vim.g.vrc_auto_format_response_patterns = {
-  json = 'jq',
-}
-require("notify").setup({
-  background_colour = "#000000",
-})
---
-----vim.o.runtimepath = vim.o.runtimepath .. ",~/workspace/nvim-plugins/nvim-gtd-planner"
-----vim.cmd [[command! ShowTasks lua require'nvim-gtd-planner'.show_tasks()]]
-----vim.cmd [[command! -nargs=1 AddTask :lua require'nvim-gtd-planner'.add_task(<q-args>)]]
-----vim.cmd [[command! -nargs=1 DeleteTask :lua require'nvim-gtd-planner'.delete_task(tonumber(<q-args>))]]
-----vim.cmd [[command! -nargs=1 ToggleComplete :lua require'nvim-gtd-planner'.toggle_complete(tonumber(<q-args>))]]

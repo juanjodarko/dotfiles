@@ -15,7 +15,7 @@ SAVEHIST=100000000
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="agnoster"
 
-plugins=(git docker docker-compose docker-machine zsh-autosuggestions tmux)
+plugins=(git docker docker-compose zsh-autosuggestions tmux)
 
 if [ ! "$TMUX" = "" ]; then export TERM=screen-256color; fi
 bindkey -s ^f "tmux-sessionizer\n"
@@ -83,3 +83,5 @@ _fzf_comprun() {
   esac
 }
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
