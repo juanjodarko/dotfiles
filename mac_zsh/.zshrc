@@ -11,11 +11,8 @@ PERSONAL=$XDG_CONFIG_HOME/personal
 HISTSIZE=100000000
 SAVEHIST=100000000
 
-# Path to your oh-my-zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="agnoster"
+eval "$(starship init zsh)"
 
-plugins=(git docker docker-compose docker-machine zsh-autosuggestions tmux)
 
 if [ ! "$TMUX" = "" ]; then export TERM=screen-256color; fi
 bindkey -s ^f "tmux-sessionizer\n"
@@ -37,7 +34,6 @@ eval "$(pyenv init -)"
 # DIRENV_WARN_TIMEOUT="30s"
 
 # [[ -f .direnv/.direnvrc ]] && source .direnv/direnvrc
-source $ZSH/oh-my-zsh.sh
 eval "$(fzf --zsh)"
 for i in `find -L $PERSONAL | sort`; do
   source $i
@@ -83,3 +79,13 @@ _fzf_comprun() {
   esac
 }
 source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+eval "$(zoxide init zsh)"
+export FZF_DEFAULT_OPTS=" \
+--color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
+--color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
+--color=marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8 \
+--color=selected-bg:#45475a \
+--multi"
