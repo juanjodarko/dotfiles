@@ -74,13 +74,8 @@ require("config.mason")
 --end)
 --
 --lsp.setup()
---require 'colorizer'.setup()
 --
---require "octo".setup({
---})
 vim.treesitter.language.register('markdown', 'octo')
---require("ibl").setup()
---
 vim.g.vrc_set_default_mapping = 0
 vim.g.vrc_response_default_content_type = 'application/json'
 vim.g.vrc_output_buffer_name = '_OUTPUT.json'
