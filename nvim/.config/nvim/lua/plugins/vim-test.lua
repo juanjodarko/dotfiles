@@ -9,7 +9,7 @@ return {
 
         vim.cmd([[
       let g:test#strategy = 'neovim'
-      let g:test#ruby#rspec#executable='docker compose -f compose.yml run --rm -e RAILS_ENV=test app bundle exec rspec'
+      let g:test#ruby#rspec#executable='bundle exec rspec'
       let g:test#ruby#minitest#executable='RAILS_ENV=test bundle exec rails test'
     ]])
     end,
