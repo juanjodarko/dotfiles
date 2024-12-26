@@ -92,3 +92,5 @@ require("notify").setup({
 ----vim.cmd [[command! -nargs=1 AddTask :lua require'nvim-gtd-planner'.add_task(<q-args>)]]
 ----vim.cmd [[command! -nargs=1 DeleteTask :lua require'nvim-gtd-planner'.delete_task(tonumber(<q-args>))]]
 ----vim.cmd [[command! -nargs=1 ToggleComplete :lua require'nvim-gtd-planner'.toggle_complete(tonumber(<q-args>))]]
+vim.api.nvim_set_keymap('n', '<leader>cc', ':Gen<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('v', '<leader>ce', ':GenExplain<CR>', { noremap = true, silent = true })
