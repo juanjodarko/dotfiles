@@ -75,7 +75,22 @@ require("config.mason")
 --end)
 --
 --lsp.setup()
---require 'colorizer'.setup()
 --
---require "octo".setup({
---})
+vim.treesitter.language.register('markdown', 'octo')
+vim.g.vrc_set_default_mapping = 0
+vim.g.vrc_response_default_content_type = 'application/json'
+vim.g.vrc_output_buffer_name = '_OUTPUT.json'
+vim.g.vrc_auto_format_response_patterns = {
+  json = 'jq',
+}
+require("notify").setup({
+  background_colour = "#000000",
+})
+--
+----vim.o.runtimepath = vim.o.runtimepath .. ",~/workspace/nvim-plugins/nvim-gtd-planner"
+----vim.cmd [[command! ShowTasks lua require'nvim-gtd-planner'.show_tasks()]]
+----vim.cmd [[command! -nargs=1 AddTask :lua require'nvim-gtd-planner'.add_task(<q-args>)]]
+----vim.cmd [[command! -nargs=1 DeleteTask :lua require'nvim-gtd-planner'.delete_task(tonumber(<q-args>))]]
+----vim.cmd [[command! -nargs=1 ToggleComplete :lua require'nvim-gtd-planner'.toggle_complete(tonumber(<q-args>))]]
+vim.api.nvim_set_keymap('n', '<leader>cc', ':Gen<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('v', '<leader>ce', ':GenExplain<CR>', { noremap = true, silent = true })
