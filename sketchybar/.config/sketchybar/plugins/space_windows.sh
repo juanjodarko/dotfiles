@@ -34,31 +34,31 @@ reload_workspace_icon() {
 
 if [ "$SENDER" = "aerospace_workspace_change" ]; then
 
-  # if [ $i = "$FOCUSED_WORKSPACE" ]; then
-  #   sketchybar --set space.$FOCUSED_WORKSPACE background.drawing=on
-  # else
-  #   sketchybar --set space.$FOCUSED_WORKSPACE background.drawing=off
-  # fi
-  #echo 'space_windows_change: '$AEROSPACE_FOCUSED_WORKSPACE >> ~/aaaa
-  #echo space: $space >> ~/aaaa
-  #space="$(echo "$INFO" | jq -r '.space')"
-  #apps="$(echo "$INFO" | jq -r '.apps | keys[]')"
-  # apps=$(aerospace list-windows --workspace $AEROSPACE_FOCUSED_WORKSPACE | awk -F'|' '{gsub(/^ *| *$/, "", $2); print $2}')
-  #
-  # icon_strip=" "
-  # if [ "${apps}" != "" ]; then
-  #   while read -r app
-  #   do
-  #     icon_strip+=" $($CONFIG_DIR/plugins/icon_map.sh "$app")"
-  #   done <<< "${apps}"
-  # else
-  #   icon_strip=" —"
-  # fi
+   if [ $i = "$FOCUSED_WORKSPACE" ]; then
+     sketchybar --set space.$FOCUSED_WORKSPACE background.drawing=on
+   else
+     sketchybar --set space.$FOCUSED_WORKSPACE background.drawing=off
+   fi
+  echo 'space_windows_change: '$AEROSPACE_FOCUSED_WORKSPACE >> ~/aaaa
+  echo space: $space >> ~/aaaa
+  space="$(echo "$INFO" | jq -r '.space')"
+  apps="$(echo "$INFO" | jq -r '.apps | keys[]')"
+   apps=$(aerospace list-windows --workspace $AEROSPACE_FOCUSED_WORKSPACE | awk -F'|' '{gsub(/^ *| *$/, "", $2); print $2}')
+  
+   icon_strip=" "
+   if [ "${apps}" != "" ]; then
+     while read -r app
+     do
+       icon_strip+=" $($CONFIG_DIR/plugins/icon_map.sh "$app")"
+     done <<< "${apps}"
+   else
+     icon_strip=" —"
+   fi
 
   reload_workspace_icon "$AEROSPACE_PREV_WORKSPACE"
   reload_workspace_icon "$AEROSPACE_FOCUSED_WORKSPACE"
 
-  #sketchybar --animate sin 10 --set space.$space label="$icon_strip"
+  sketchybar --animate sin 10 --set space.$space label="$icon_strip"
 
   # current workspace space border color
   sketchybar --set space.$AEROSPACE_FOCUSED_WORKSPACE icon.highlight=true \

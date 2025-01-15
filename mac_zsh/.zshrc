@@ -12,6 +12,7 @@ HISTSIZE=100000000
 SAVEHIST=100000000
 
 eval "$(starship init zsh)"
+autoload -Uz compinit && compinit
 
 
 if [ ! "$TMUX" = "" ]; then export TERM=screen-256color; fi

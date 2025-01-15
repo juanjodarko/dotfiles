@@ -69,13 +69,13 @@ space_creator=(
   icon.color=$WHITE
 )
 
-# sketchybar --add item space_creator left               \
-#            --set space_creator "${space_creator[@]}"   \
-#            --subscribe space_creator space_windows_change
 sketchybar --add item space_creator left               \
            --set space_creator "${space_creator[@]}"   \
-           --subscribe space_creator aerospace_workspace_change
-
+           --subscribe space_creator space_windows_change
+#sketchybar --add item space_creator left               \
+#           --set space_creator "${space_creator[@]}"   \
+#           --subscribe space_creator aerospace_workspace_change
+#
 # sketchybar  --add item change_windows left \
 #             --set change_windows script="$PLUGIN_DIR/change_windows.sh" \
 #             --subscribe change_windows space_changes

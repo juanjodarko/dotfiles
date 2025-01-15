@@ -3,9 +3,9 @@ sketchybar --set $NAME \
   icon.color=0xff5edaff
 
 # fetch weather data
-LOCATION="Seoul"
-REGION=""
-LANG="ko"
+LOCATION="Naucalpan de Juarez"
+REGION="Mexico"
+LANG="es-MX"
 
 # Line below replaces spaces with +
 LOCATION_ESCAPED="${LOCATION// /+}+${REGION// /+}"
@@ -18,8 +18,8 @@ if [ -z $WEATHER_JSON ]; then
 fi
 
 TEMPERATURE=$(echo $WEATHER_JSON | jq '.current_condition[0].temp_C' | tr -d '"')
-#WEATHER_DESCRIPTION=$(echo $WEATHER_JSON | jq '.current_condition[0].weatherDesc[0].value' | tr -d '"' | sed 's/\(.\{16\}\).*/\1.../')
-WEATHER_DESCRIPTION=$(echo $WEATHER_JSON | jq '.current_condition[0].lang_ko[0].value' | tr -d '"' | sed 's/\(.\{16\}\).*/\1.../')
+WEATHER_DESCRIPTION=$(echo $WEATHER_JSON | jq '.current_condition[0].weatherDesc[0].value' | tr -d '"' | sed 's/\(.\{16\}\).*/\1.../')
+# WEATHER_DESCRIPTION=$(echo $WEATHER_JSON | jq '.current_condition[0].lang_ko[0].value' | tr -d '"' | sed 's/\(.\{16\}\).*/\1.../')
 
 sketchybar --set $NAME \
   label="$TEMPERATURE$(echo '°')C • $WEATHER_DESCRIPTION"
