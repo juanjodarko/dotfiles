@@ -1,4 +1,4 @@
-local hostname = vim.loop.os_gethostname()
+-- local hostname = vim.loop.os_gethostname()
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 require("user.settings")
