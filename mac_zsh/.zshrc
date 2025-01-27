@@ -12,6 +12,7 @@ HISTSIZE=100000000
 SAVEHIST=100000000
 
 eval "$(starship init zsh)"
+autoload -Uz compinit && compinit
 
 
 if [ ! "$TMUX" = "" ]; then export TERM=screen-256color; fi
@@ -34,7 +35,7 @@ eval "$(pyenv init -)"
 # DIRENV_WARN_TIMEOUT="30s"
 
 # [[ -f .direnv/.direnvrc ]] && source .direnv/direnvrc
-eval "$(fzf --zsh)"
+source <(fzf --zsh)
 for i in `find -L $PERSONAL | sort`; do
   source $i
 done
