@@ -35,7 +35,7 @@ eval "$(pyenv init -)"
 # DIRENV_WARN_TIMEOUT="30s"
 
 # [[ -f .direnv/.direnvrc ]] && source .direnv/direnvrc
-eval "$(fzf --zsh)"
+source <(fzf --zsh)
 for i in `find -L $PERSONAL | sort`; do
   source $i
 done

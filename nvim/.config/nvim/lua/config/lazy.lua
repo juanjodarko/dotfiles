@@ -33,3 +33,5 @@ require("lazy").setup({
     -- automatically check for plugin updates
     checker = { enabled = true },
 })
+vim.keymap.set("n", "gpp", "<cmd>lua require('goto-preview').goto_preview_definition()<CR>", {noremap=true})
+

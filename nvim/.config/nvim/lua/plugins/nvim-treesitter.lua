@@ -22,7 +22,8 @@ return {
                 "dockerfile",
                 "markdown",
                 "rust",
-                "svelte"
+                "svelte",
+                "regex"
             },
             sync_install = true,
             auto_install = true,
