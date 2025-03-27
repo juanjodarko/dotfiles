@@ -9,14 +9,14 @@ return {
   config = function() 
     require("obsidian").setup({
       workspaces = {
-        --{
-        --  name = "personal",
-        --  path = "~/Documents/obsidian-notes",
-        --},
         {
-          name = "workshop",
-          path = "~/Documents/notes",
+          name = "personal",
+          path = "~/Documents/obsidian-notes",
         },
+        --{
+        --  name = "workshop",
+        --  path = "~/Documents/notes",
+        --},
       },
       completion = {
         nvim_cmp = true,
