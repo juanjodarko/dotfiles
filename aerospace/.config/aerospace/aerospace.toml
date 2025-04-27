@@ -200,7 +200,7 @@ automatically-unhide-macos-hidden-apps = false
     B = [2, 1]
     M = [2, 1]
     N = [2, 1]
-    T = 1
+    T = [2, 1]
 
 [[on-window-detected]]
 if.app-id = 'com.github.wez.wezterm'
@@ -221,3 +221,8 @@ run = 'move-node-to-workspace M'
 [[on-window-detected]]
 if.app-id = 'md.obsidian'
 run = 'move-node-to-workspace N'
+
+[[on-window-detected]]
+if.app-id = 'org.mozilla.firefox'
+if.window-title-regex-substring = 'Picture-in-Picture'
+run = 'layout floating'

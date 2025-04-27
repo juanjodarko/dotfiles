@@ -9,7 +9,7 @@ lsp.ensure_installed({
   'eslint',
   'jsonls',
   'lua_ls',
-  'solargraph',
+  'standardrb'
   'terraformls',
   'tsserver',
   'svelte-languageserver'
@@ -33,9 +33,10 @@ require'lspconfig'.dockerls.setup{}
 require'lspconfig'.eslint.setup{}
 require'lspconfig'.jsonls.setup{}
 require'lspconfig'.lua_ls.setup{}
-require'lspconfig'.solargraph.setup({
-  solargraph = {
-    diagnostics = true
+require'lspconfig'.ruby_lsp.setup({
+  init_options = {
+    formatter = "standard",
+    linters = { 'standard' }
   }
 })
 require'lspconfig'.terraformls.setup{}
