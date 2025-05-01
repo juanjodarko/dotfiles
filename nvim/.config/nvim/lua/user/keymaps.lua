@@ -26,4 +26,4 @@ mapper("n", "<leader>ttxq", ":TroubleToggle quickfix<CR>", { silent = true, nore
 mapper("n", "gR", ":TroubleToggle lsp_references<CR>", { silent = true, noremap = true })
 
 -- VCR
-mapper('n', '<leader>xr', ':call VrcQuery()<CR>')
+mapper('n', '<leader>xr', ':call VcrQuery()<CR>')
