@@ -9,7 +9,7 @@ return {
 
         vim.cmd([[
           let g:test#strategy = 'neovim'
-          let g:test#ruby#rspec#executable='rspec'
+          let g:test#ruby#rspec#executable='bundle exec rspec'
           let g:test#ruby#minitest#executable='RAILS_ENV=test bundle exec rails test'
         ]])
         -- transformation -------------------------------------------------------

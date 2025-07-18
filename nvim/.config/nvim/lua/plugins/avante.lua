@@ -6,13 +6,17 @@ return {
     -- add any opts here
     -- for example
     provider = "openai",
-    openai = {
-      endpoint = "https://api.openai.com/v1",
-      model = "gpt-4o", -- Ensure this is the desired model
-      timeout = 15000, -- Adjusted timeout for better performance
-      temperature = 0.7, -- Adjusted temperature for more creative responses
-      max_completion_tokens = 4096, -- Adjusted token limit for efficiency
-      --reasoning_effort = "medium", -- low|medium|high, only used for reasoning models
+    providers = {
+      openai = {
+        endpoint = "https://api.openai.com/v1",
+        model = "gpt-4o", -- your desired model (or use gpt-4o, etc.)
+        extra_request_body = {
+          timeout = 30000, -- Timeout in milliseconds, increase this for reasoning models
+          temperature = 0.75,
+          max_completion_tokens = 8192, -- Increase this to include reasoning tokens (for reasoning models)
+          --reasoning_effort = "medium", -- low|medium|high, only used for reasoning models
+        },
+      },
     },
   },
   -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
@@ -20,17 +24,17 @@ return {
   -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
   dependencies = {
     "nvim-treesitter/nvim-treesitter",
-    "stevearc/dressing.nvim",
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
     --- The below dependencies are optional,
-    -- Ensure these dependencies are necessary for your setup
-    "echasnovski/mini.pick", -- Optional: for file_selector provider mini.pick
-    "nvim-telescope/telescope.nvim", -- Optional: for file_selector provider telescope
-    "hrsh7th/nvim-cmp", -- Optional: autocompletion for avante commands and mentions
-    "ibhagwan/fzf-lua", -- Optional: for file_selector provider fzf
-    "nvim-tree/nvim-web-devicons", -- Optional: or echasnovski/mini.icons
-    "zbirenbaum/copilot.lua", -- Optional: for providers='copilot'
+    "echasnovski/mini.pick", -- for file_selector provider mini.pick
+    "nvim-telescope/telescope.nvim", -- for file_selector provider telescope
+    "hrsh7th/nvim-cmp", -- autocompletion for avante commands and mentions
+    "ibhagwan/fzf-lua", -- for file_selector provider fzf
+    "stevearc/dressing.nvim", -- for input provider dressing
+    "folke/snacks.nvim", -- for input provider snacks
+    "nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
+    "zbirenbaum/copilot.lua", -- for providers='copilot'
     {
       -- support for image pasting
       "HakonHarnes/img-clip.nvim",
