@@ -33,26 +33,32 @@ vim.api.nvim_create_autocmd('LspAttach', {
 
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "ruby",
-  group = vim.api.nvim_create_augroup("RubyLSP", { clear = true }), -- also this is not /needed/ but it's good practice 
+  group = vim.api.nvim_create_augroup("RubyLSP", { clear = true }),
   callback = function()
-    vim.lsp.start {
-      name = "standard",
-      cmd = { "~/.rbenv/shims/standardrb", "--lsp" },
+    -- Dynamically find standardrb binary, checking multiple version managers
+    local standardrb_cmd = nil
+    
+    -- Check common version manager locations
+    local possible_paths = {
+      vim.fn.expand("~/.rbenv/shims/standardrb"),  -- rbenv
+      vim.fn.expand("~/.asdf/shims/standardrb"),   -- asdf
+      "standardrb"  -- system PATH or other version managers
     }
+    
+    for _, path in ipairs(possible_paths) do
+      if vim.fn.executable(path) == 1 then
+        standardrb_cmd = path
+        break
+      end
+    end
+    
+    if standardrb_cmd then
+      vim.lsp.start {
+        name = "standard",
+        cmd = { standardrb_cmd, "--lsp" },
+      }
+    end
   end,
 })
 
-local cmp = require('cmp')
-
-cmp.setup({
-    sources = {
-        { name = 'nvim_lsp' },
-    },
-    snippet = {
-        expand = function(args)
-            -- You need Neovim v0.10 to use vim.snippet
-            vim.snippet.expand(args.body)
-        end,
-    },
-    mapping = cmp.mapping.preset.insert({}),
-})
+-- CMP configuration moved to dedicated plugin file for better organization
