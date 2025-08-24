@@ -32,15 +32,20 @@ echo "# Auto-generated hyprpaper config" > "$CONFIG_FILE" || {
 WALLPAPER_COUNT=0
 echo "Scanning for wallpapers in $WALLPAPER_DIR..."
 
-while IFS= read -r -d '' wallpaper; do
-    # Validate file is readable
-    if [[ -r "$wallpaper" ]]; then
+# Create array of wallpapers first
+mapfile -t wallpapers < <(find -L "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) 2>/dev/null)
+
+# Process each wallpaper
+for wallpaper in "${wallpapers[@]}"; do
+    # Validate file is readable and not empty
+    if [[ -r "$wallpaper" && -s "$wallpaper" ]]; then
         echo "preload = $wallpaper" >> "$CONFIG_FILE"
-        ((WALLPAPER_COUNT++))
+        WALLPAPER_COUNT=$((WALLPAPER_COUNT + 1))
+        echo "Preloaded: $(basename "$wallpaper")"
     else
         echo "Warning: Cannot read file $wallpaper, skipping..."
     fi
-done < <(find -L "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) -print0)
+done
 
 if [[ $WALLPAPER_COUNT -eq 0 ]]; then
     echo "Warning: No wallpapers found in $WALLPAPER_DIR"
@@ -48,11 +53,14 @@ else
     echo "Found and preloaded $WALLPAPER_COUNT wallpapers"
 fi
 
-# Set a default wallpaper (random selection)
+# Set wallpaper for all monitors (random selection)
 DEFAULT_WALLPAPER=$(find -L "$WALLPAPER_DIR" -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.jpeg" \) | shuf -n 1)
 
 if [[ -n "$DEFAULT_WALLPAPER" ]]; then
+    # Set wallpaper for all monitors
     echo "wallpaper = ,$DEFAULT_WALLPAPER" >> "$CONFIG_FILE"
+    echo "wallpaper = eDP-1,$DEFAULT_WALLPAPER" >> "$CONFIG_FILE"  
+    echo "wallpaper = DP-1,$DEFAULT_WALLPAPER" >> "$CONFIG_FILE"
     echo "Set default wallpaper: $(basename "$DEFAULT_WALLPAPER")"
 else
     echo "Error: No wallpapers found to set as default"
@@ -65,15 +73,8 @@ echo "Restarting hyprpaper..."
 # Check if hyprpaper is running and kill it gracefully
 if pgrep hyprpaper > /dev/null; then
     echo "Stopping existing hyprpaper process..."
-    killall hyprpaper
-    sleep 2
-    
-    # Force kill if still running
-    if pgrep hyprpaper > /dev/null; then
-        echo "Force killing hyprpaper..."
-        killall -9 hyprpaper
-        sleep 1
-    fi
+    killall hyprpaper 2>/dev/null || true
+    sleep 1
 fi
 
 # Validate config file before starting hyprpaper
@@ -82,20 +83,9 @@ if [[ ! -s "$CONFIG_FILE" ]]; then
     exit 1
 fi
 
-# Start hyprpaper
+# Start hyprpaper in background
 echo "Starting hyprpaper..."
-hyprpaper > /dev/null 2>&1 &
-HYPRPAPER_PID=$!
-
-# Give hyprpaper a moment to start
-sleep 2
-
-# Verify hyprpaper started successfully
-if kill -0 $HYPRPAPER_PID 2>/dev/null; then
-    echo "Hyprpaper started successfully (PID: $HYPRPAPER_PID)"
-else
-    echo "Error: Failed to start hyprpaper"
-    echo "Check hyprpaper logs for details"
-    exit 1
-fi
+nohup hyprpaper > /dev/null 2>&1 &
+echo "Hyprpaper started successfully"
+echo "Wallpaper configuration complete!"
 

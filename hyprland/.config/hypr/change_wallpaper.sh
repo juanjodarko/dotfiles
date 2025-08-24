@@ -51,8 +51,8 @@ if ! pgrep hyprpaper > /dev/null; then
     fi
 fi
 
-# Set wallpaper using hyprctl
-if hyprctl hyprpaper wallpaper ",$WALLPAPER" 2>/dev/null; then
+# Set wallpaper using hyprctl for all monitors
+if hyprctl hyprpaper wallpaper "eDP-1,$WALLPAPER" && hyprctl hyprpaper wallpaper "DP-1,$WALLPAPER" 2>/dev/null; then
     echo "Wallpaper changed successfully to: $(basename "$WALLPAPER")"
 else
     echo "Error: Failed to change wallpaper"
