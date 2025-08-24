@@ -8,14 +8,13 @@ require('mason').setup({
     }
 })
 
--- LSP servers for all target languages
+-- LSP servers for all target languages (only include stable ones)
 local lsp_servers = {
     -- Lua (for Neovim config)
     'lua_ls',
     -- Ruby & Rails  
     'solargraph',      -- Ruby LSP
-    'ruby_ls',         -- Alternative Ruby LSP
-    'sorbet',          -- Shopify's Ruby type checker (optional)
+    -- Note: ruby_ls and sorbet might not be available in Mason, removing for stability
     -- JavaScript/TypeScript/Node.js
     'tsserver',        -- TypeScript/JavaScript
     'eslint',          -- JavaScript/TypeScript linting
@@ -23,8 +22,8 @@ local lsp_servers = {
     'cssls',           -- CSS
     'tailwindcss',     -- Tailwind CSS
     'emmet_ls',        -- Emmet for HTML/CSS
-    -- Go
-    'gopls',           -- Official Go LSP
+    -- Go - install manually if Mason fails
+    -- 'gopls',        -- Official Go LSP (moved to manual installation)
     -- Elixir
     'elixirls',        -- Elixir LSP
     -- C++
@@ -45,12 +44,12 @@ local tools = {
     -- JavaScript/TypeScript
     'prettier',        -- Code formatter
     'eslint_d',        -- Fast ESLint daemon
-    -- Go
-    'gofumpt',         -- Go formatter
-    'golangci-lint',   -- Go linter
+    -- Go tools - install manually if needed
+    -- 'gofumpt',      -- Go formatter (install with: go install mvdan.cc/gofumpt@latest)
+    -- 'golangci-lint', -- Go linter (install with: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
     -- C++
     'clang-format',    -- C++ formatter
-    'cppcheck',        -- C++ static analysis
+    -- Note: cppcheck removed as it's not available in Mason
     -- General
     'shellcheck',      -- Shell script linter
     'yamllint',        -- YAML linter
@@ -69,5 +68,11 @@ if has_mason_tool_installer then
         ensure_installed = tools,
         auto_update = false,
         run_on_start = true,
+        -- Add error handling for missing packages
+        integrations = {
+            ['mason-lspconfig'] = true,
+            ['mason-null-ls'] = false,
+            ['mason-nvim-dap'] = false,
+        },
     })
 end
