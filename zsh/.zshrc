@@ -10,6 +10,7 @@ VIM="nvim"
 PERSONAL=$XDG_CONFIG_HOME/personal
 HISTSIZE=100000000
 SAVEHIST=100000000
+HISTFILE=~/.histfile
 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
@@ -37,3 +38,8 @@ export FZF_DEFAULT_OPTS=" \
 --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
 --color=marker:#f5e0dc,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8"
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+
+# Task Master aliases added on 9/8/2025
+alias tm='task-master'
+alias taskmaster='task-master'
