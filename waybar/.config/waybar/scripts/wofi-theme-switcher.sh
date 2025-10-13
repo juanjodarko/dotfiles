@@ -168,8 +168,9 @@ if [ -f "$STARSHIP_CONFIG" ] && [ -f "$CURRENT_STARSHIP" ]; then
     rm -f "$temp_file.step1"
 fi
 
-# Reload waybar
-pkill -SIGUSR2 waybar
+# Restart Waybar (full restart prevents workspace module freezing)
+killall -q waybar
+hyprctl dispatch exec waybar &
 
 # Reload Ghostty (terminal emulator)
 pkill -SIGUSR2 ghostty 2>/dev/null
