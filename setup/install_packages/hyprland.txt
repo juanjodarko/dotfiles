@@ -10,6 +10,5 @@ dunst
 wl-clipboard
 grim
 slurp
-brightnessctl
 playerctl
 qt6ct

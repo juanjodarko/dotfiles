@@ -4,4 +4,5 @@ pipewire-pulse
 wireplumber
 alsa-utils
 sof-firmware
+razer-nari-pipewire-profile
 

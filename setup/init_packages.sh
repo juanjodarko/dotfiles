@@ -54,11 +54,113 @@ if [ ! -d "$PKG_DIR" ]; then
     exit 1
 fi
 
-# Collect all packages from lists
-PACKAGE_LISTS=("base" "dev" "audio" "gpu" "battery" "hyprland" "fonts")
+# Detect system type (laptop vs desktop)
+IS_LAPTOP=false
+
+print_step "Detecting system type..."
+
+# Check for battery (most reliable laptop indicator)
+if ls /sys/class/power_supply/BAT* &> /dev/null; then
+    IS_LAPTOP=true
+    print_success "Detected: Laptop (battery found)"
+elif [ -d /sys/class/power_supply/AC ] || [ -d /sys/class/power_supply/ADP* ]; then
+    # Has AC adapter, likely laptop
+    IS_LAPTOP=true
+    print_success "Detected: Laptop (AC adapter found)"
+else
+    # No battery detected, ask user
+    echo -e "${YELLOW}Could not auto-detect system type${NC}"
+    read -p "$(echo -e ${BLUE}Is this a laptop?${NC} [y/N]: )" response
+    response=${response:-n}
+    if [[ "$response" =~ ^[Yy] ]]; then
+        IS_LAPTOP=true
+        print_success "User selected: Laptop"
+    else
+        print_success "User selected: Desktop"
+    fi
+fi
+
+echo ""
+
+# Build package list based on system type
+PACKAGE_LISTS=("base" "dev" "audio" "hyprland" "fonts")
+
+# Add laptop-specific packages
+if [ "$IS_LAPTOP" = true ]; then
+    PACKAGE_LISTS+=("laptop")
+    print_step "Including laptop-specific packages"
+else
+    print_step "Skipping laptop-specific packages (desktop system)"
+fi
+
+# Check for conflicting audio packages (PulseAudio vs PipeWire)
+print_step "Checking for conflicting audio packages..."
+
+CONFLICTING_PACKAGES=()
+SAFE_PA_TOOLS=("pavucontrol" "pavucontrol-qt" "pulsemixer" "pamixer" "paprefs")
+
+# Check for PulseAudio packages (exclude safe control tools)
+while IFS= read -r pkg; do
+    pkg_name=$(echo "$pkg" | awk '{print $1}')
+    # Skip if it's a safe PA tool
+    if [[ " ${SAFE_PA_TOOLS[@]} " =~ " ${pkg_name} " ]]; then
+        continue
+    fi
+    # Check if it's a PulseAudio package
+    if [[ "$pkg_name" =~ ^pulseaudio ]]; then
+        CONFLICTING_PACKAGES+=("$pkg_name")
+    fi
+done < <(pacman -Q 2>/dev/null | grep -E '^pulseaudio' || true)
+
+# Check for razer-nari-pulseaudio-profile specifically
+if pacman -Qi razer-nari-pulseaudio-profile &> /dev/null; then
+    CONFLICTING_PACKAGES+=("razer-nari-pulseaudio-profile")
+fi
+
+# If conflicts found, offer to remove them
+if [ ${#CONFLICTING_PACKAGES[@]} -gt 0 ]; then
+    echo ""
+    print_error "Found ${#CONFLICTING_PACKAGES[@]} conflicting PulseAudio packages:"
+    for pkg in "${CONFLICTING_PACKAGES[@]}"; do
+        echo "  - $pkg"
+    done
+    echo ""
+    echo -e "${YELLOW}These packages conflict with PipeWire and should be removed.${NC}"
+    echo ""
+
+    read -p "$(echo -e ${BLUE}Remove conflicting packages?${NC} [Y/n]: )" response
+    response=${response:-y}
+
+    if [[ "$response" =~ ^[Yy] ]]; then
+        print_step "Removing conflicting packages..."
+        if sudo pacman -Rns --noconfirm "${CONFLICTING_PACKAGES[@]}"; then
+            print_success "Conflicting packages removed successfully"
+        else
+            print_error "Failed to remove some packages"
+            echo "You may need to remove them manually:"
+            echo "  sudo pacman -Rns ${CONFLICTING_PACKAGES[*]}"
+        fi
+    else
+        print_skip "Keeping conflicting packages (may cause audio issues)"
+    fi
+    echo ""
+else
+    print_success "No conflicting PulseAudio packages found"
+fi
+
+echo ""
+
+# Ask about optional packages
+echo ""
+read -p "$(echo -e ${BLUE}Install GPU packages \(NVIDIA/Vulkan\)?${NC} [y/N]: )" response
+if [[ "$response" =~ ^[Yy] ]]; then
+    PACKAGE_LISTS+=("gpu")
+fi
+
 ALL_PACKAGES=()
 MISSING_PACKAGES=()
 
+echo ""
 print_step "Reading package lists..."
 echo ""
 
