@@ -73,18 +73,13 @@ process_notifications() {
     local new_last_id=""
 
     # Parse JSON and process each notification
-    echo "$notifications" | jq -c '.[]' 2>/dev/null | while read -r notif; do
+    while read -r notif; do
         local id=$(echo "$notif" | jq -r '.id')
         local type=$(echo "$notif" | jq -r '.type')
         local created_at=$(echo "$notif" | jq -r '.created_at')
         local username=$(echo "$notif" | jq -r '.account.username')
         local display_name=$(echo "$notif" | jq -r '.account.display_name // .account.username')
         local status_id=$(echo "$notif" | jq -r '.status.id // empty')
-
-        # Update new_last_id
-        if [[ -z "$new_last_id" ]]; then
-            new_last_id="$id"
-        fi
 
         # Skip if we've already seen this notification
         if [[ -n "$last_id" && "$id" -le "$last_id" ]]; then
@@ -129,7 +124,12 @@ process_notifications() {
                     fi
                 done &
         fi
-    done
+
+        # Track the highest notification ID seen
+        if [[ -z "$new_last_id" ]] || [[ "$id" -gt "$new_last_id" ]]; then
+            new_last_id="$id"
+        fi
+    done < <(echo "$notifications" | jq -c '.[]' 2>/dev/null)
 
     # Update last seen ID
     if [[ -n "$new_last_id" ]]; then

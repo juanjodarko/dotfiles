@@ -4,7 +4,7 @@
 # Switch between Catppuccin flavor themes using central theme system
 
 WOFI_STYLE="$HOME/.config/wofi/theme-switcher.css"
-THEMES_DIR="$HOME/dotfiles/themes"
+THEMES_DIR="$HOME/.config/themes"
 CURRENT_CSS="$THEMES_DIR/current.css"
 CURRENT_RASI="$THEMES_DIR/current.rasi"
 CURRENT_GHOSTTY="$THEMES_DIR/current.ghostty"
@@ -15,19 +15,19 @@ CURRENT_FLAVOR="$THEMES_DIR/current_flavor.txt"
 GHOSTTY_CONFIG="$HOME/.config/ghostty/config"
 TMUX_CONFIG="$HOME/.config/tmux/tmux.conf"
 STARSHIP_CONFIG="$HOME/.config/starship.toml"
-HYPR_DIR="$HOME/dotfiles/hyprland/.config/hypr"
 
 # Initialize theme files with defaults if they don't exist
 function init_theme_files() {
     local default_theme="mocha"
 
-    # Create symlinks if missing
-    [ ! -L "$CURRENT_CSS" ] && ln -sf "catppuccin/${default_theme}.css" "$CURRENT_CSS"
-    [ ! -L "$CURRENT_RASI" ] && ln -sf "catppuccin/${default_theme}.rasi" "$CURRENT_RASI"
-    [ ! -L "$CURRENT_GHOSTTY" ] && ln -sf "catppuccin/${default_theme}.ghostty" "$CURRENT_GHOSTTY"
-    [ ! -L "$CURRENT_TMUX" ] && ln -sf "catppuccin/${default_theme}.tmux" "$CURRENT_TMUX"
-    [ ! -L "$CURRENT_HYPR" ] && ln -sf "${HYPR_DIR}/${default_theme}.conf" "$CURRENT_HYPR"
-    [ ! -L "$CURRENT_STARSHIP" ] && ln -sf "catppuccin/${default_theme}.starship" "$CURRENT_STARSHIP"
+    # Create symlinks if missing (using relative paths)
+    cd "$THEMES_DIR"
+    [ ! -L "$CURRENT_CSS" ] && ln -sf "catppuccin/${default_theme}.css" current.css
+    [ ! -L "$CURRENT_RASI" ] && ln -sf "catppuccin/${default_theme}.rasi" current.rasi
+    [ ! -L "$CURRENT_GHOSTTY" ] && ln -sf "catppuccin/${default_theme}.ghostty" current.ghostty
+    [ ! -L "$CURRENT_TMUX" ] && ln -sf "catppuccin/${default_theme}.tmux" current.tmux
+    [ ! -L "$CURRENT_HYPR" ] && ln -sf "../../../hyprland/.config/hypr/${default_theme}.conf" current.conf
+    [ ! -L "$CURRENT_STARSHIP" ] && ln -sf "catppuccin/${default_theme}.starship" current.starship
 
     # Create flavor file if missing
     [ ! -f "$CURRENT_FLAVOR" ] && echo "$default_theme" > "$CURRENT_FLAVOR"
@@ -106,13 +106,14 @@ if [ "$current_theme" == "$theme_name" ]; then
     exit 0
 fi
 
-# Update central theme symlinks
-ln -sf "catppuccin/${theme_file}.css" "$CURRENT_CSS"
-ln -sf "catppuccin/${theme_file}.rasi" "$CURRENT_RASI"
-ln -sf "catppuccin/${theme_file}.ghostty" "$CURRENT_GHOSTTY"
-ln -sf "catppuccin/${theme_file}.tmux" "$CURRENT_TMUX"
-ln -sf "${HYPR_DIR}/${theme_file}.conf" "$CURRENT_HYPR"
-ln -sf "catppuccin/${theme_file}.starship" "$CURRENT_STARSHIP"
+# Update central theme symlinks (using relative paths)
+cd "$THEMES_DIR"
+ln -sf "catppuccin/${theme_file}.css" current.css
+ln -sf "catppuccin/${theme_file}.rasi" current.rasi
+ln -sf "catppuccin/${theme_file}.ghostty" current.ghostty
+ln -sf "catppuccin/${theme_file}.tmux" current.tmux
+ln -sf "../../../hyprland/.config/hypr/${theme_file}.conf" current.conf
+ln -sf "catppuccin/${theme_file}.starship" current.starship
 
 # Update Neovim flavor file
 echo "$theme_file" > "$CURRENT_FLAVOR"
@@ -198,6 +199,11 @@ fi
 # Reload waybar
 pkill -SIGUSR2 waybar
 
+# Reload swaync (notification daemon)
+if command -v swaync-client &> /dev/null; then
+    swaync-client -rs 2>/dev/null &
+fi
+
 # Reload tmux if running
 if [ -n "$TMUX" ]; then
     # Running inside tmux, reload config
@@ -222,6 +228,6 @@ if pgrep -x Hyprland > /dev/null; then
 fi
 
 # Notify user
-notify-send "Theme Changed" "Switched to Catppuccin $theme_name\nStarship updates automatically\nRestart Ghostty for terminal colors" -i preferences-desktop-theme
+notify-send "Theme Changed" "Switched to Catppuccin $theme_name\nWaybar, SwayNC & Starship updated\nRestart Ghostty for terminal colors" -i preferences-desktop-theme
 
 exit 0

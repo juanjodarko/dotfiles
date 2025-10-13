@@ -28,21 +28,30 @@ The centralized theme system provides instant theme switching for all applicatio
 ## Architecture
 
 ```
-themes/
-├── catppuccin/
-│   ├── mocha.css          # Waybar/Wofi colors
-│   ├── mocha.rasi         # Rofi theme
-│   ├── mocha.ghostty      # Terminal palette (16 ANSI + base colors)
-│   ├── mocha.tmux         # Tmux flavor setting
-│   ├── latte.{css,rasi,ghostty,tmux}
-│   ├── frappe.{css,rasi,ghostty,tmux}
-│   └── macchiato.{css,rasi,ghostty,tmux}
-├── current.css            # Symlink → catppuccin/{flavor}.css
-├── current.rasi           # Symlink → catppuccin/{flavor}.rasi
-├── current.ghostty        # Symlink → catppuccin/{flavor}.ghostty
-├── current.tmux           # Symlink → catppuccin/{flavor}.tmux
-└── current_flavor.txt     # Plain text: "mocha", "latte", "frappe", or "macchiato"
+dotfiles/
+└── themes/
+    └── .config/
+        └── themes/
+            ├── catppuccin/
+            │   ├── mocha.css          # Waybar/Wofi colors
+            │   ├── mocha.rasi         # Rofi theme
+            │   ├── mocha.ghostty      # Terminal palette (16 ANSI + base colors)
+            │   ├── mocha.tmux         # Tmux flavor setting
+            │   ├── latte.{css,rasi,ghostty,tmux}
+            │   ├── frappe.{css,rasi,ghostty,tmux}
+            │   └── macchiato.{css,rasi,ghostty,tmux}
+            ├── current.css            # Symlink → catppuccin/{flavor}.css
+            ├── current.rasi           # Symlink → catppuccin/{flavor}.rasi
+            ├── current.ghostty        # Symlink → catppuccin/{flavor}.ghostty
+            ├── current.tmux           # Symlink → catppuccin/{flavor}.tmux
+            ├── current.conf           # Symlink → ../../../hyprland/.config/hypr/{flavor}.conf (relative)
+            └── current_flavor.txt     # Plain text: "mocha", "latte", "frappe", or "macchiato"
+
+After initialization:
+~/.config/themes/ → ~/dotfiles/themes/.config/themes/ (direct symlink)
 ```
+
+**Note:** The themes module creates a direct symlink instead of using stow for better compatibility.
 
 ## Auto-Generated Files
 
@@ -58,12 +67,13 @@ The `current.*` symlinks and `current_flavor.txt` file are **automatically gener
 When the theme switcher runs for the first time, it checks if these files exist. If they don't, it creates them with Mocha defaults:
 
 ```bash
-# Automatically created by wofi-theme-switcher.sh
-~/dotfiles/themes/current.css → catppuccin/mocha.css
-~/dotfiles/themes/current.rasi → catppuccin/mocha.rasi
-~/dotfiles/themes/current.ghostty → catppuccin/mocha.ghostty
-~/dotfiles/themes/current.tmux → catppuccin/mocha.tmux
-~/dotfiles/themes/current_flavor.txt → contains "mocha"
+# Automatically created by init_themes.sh during setup
+~/.config/themes/current.css → catppuccin/mocha.css
+~/.config/themes/current.rasi → catppuccin/mocha.rasi
+~/.config/themes/current.ghostty → catppuccin/mocha.ghostty
+~/.config/themes/current.tmux → catppuccin/mocha.tmux
+~/.config/themes/current.conf → ../../../hyprland/.config/hypr/mocha.conf (relative path)
+~/.config/themes/current_flavor.txt → contains "mocha"
 ```
 
 **Manual initialization (if needed):**
@@ -71,13 +81,15 @@ When the theme switcher runs for the first time, it checks if these files exist.
 If you need to manually initialize the theme system (e.g., after cloning the repo), run:
 
 ```bash
-cd ~/dotfiles/themes
-ln -sf catppuccin/mocha.css current.css
-ln -sf catppuccin/mocha.rasi current.rasi
-ln -sf catppuccin/mocha.ghostty current.ghostty
-ln -sf catppuccin/mocha.tmux current.tmux
-echo "mocha" > current_flavor.txt
+# Run the setup script which handles everything automatically
+cd ~/dotfiles/setup
+./init_themes.sh
 ```
+
+This will:
+- Restructure the directory if needed (creates themes/.config/themes/)
+- Create proper relative symlinks for theme files
+- Create `~/.config/themes` symlink directly to the theme directory
 
 Or simply open the theme switcher menu once (`Alt+Space` → Settings → Theme) and it will initialize automatically.
 
@@ -172,11 +184,12 @@ cat ~/.config/themes/current_flavor.txt
 **Manual theme switch:**
 
 ```bash
-cd ~/dotfiles/themes
+cd ~/.config/themes
 ln -sf catppuccin/latte.css current.css
 ln -sf catppuccin/latte.rasi current.rasi
 ln -sf catppuccin/latte.ghostty current.ghostty
 ln -sf catppuccin/latte.tmux current.tmux
+ln -sf ../../../hyprland/.config/hypr/latte.conf current.conf
 echo "latte" > current_flavor.txt
 ```
 

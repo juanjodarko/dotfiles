@@ -7,10 +7,10 @@ nvim/.config/nvim/lazy-lock.json
 hyprland/.config/hypr/hyprpaper.conf
 
 # Dynamic theme files (created by theme switcher)
-themes/current.css
-themes/current.rasi
-themes/current.ghostty
-themes/current.tmux
-themes/current.starship
-themes/current.conf
-themes/current_flavor.txt
+themes/.config/themes/current.css
+themes/.config/themes/current.rasi
+themes/.config/themes/current.ghostty
+themes/.config/themes/current.tmux
+themes/.config/themes/current.starship
+themes/.config/themes/current.conf
+themes/.config/themes/current_flavor.txt
