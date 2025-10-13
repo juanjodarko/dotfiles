@@ -5,6 +5,8 @@ hyprlock
 hyprshot
 waybar
 rofi
+rofi-calc
+rofi-emoji
 wofi
 dunst
 wl-clipboard

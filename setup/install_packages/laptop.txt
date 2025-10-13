@@ -8,3 +8,6 @@ acpi
 
 # Display brightness control
 brightnessctl
+
+# Fingerprint reader support
+fprintd

@@ -78,6 +78,7 @@ tooltip label {
 #clock,
 #custom-wifi,
 #bluetooth,
+#custom-fingerprint,
 #custom-update,
 #custom-notification,
 #custom-media,
@@ -281,6 +282,17 @@ tooltip label {
   color: @crust;
 }
 #bluetooth:hover {
+  color: @mantle;
+  text-shadow: none;
+  box-shadow: none;
+}
+
+#custom-fingerprint {
+  padding-right: 5px;
+  background: @tray;
+  color: @crust;
+}
+#custom-fingerprint:hover {
   color: @mantle;
   text-shadow: none;
   box-shadow: none;

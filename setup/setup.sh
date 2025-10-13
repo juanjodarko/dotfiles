@@ -172,6 +172,18 @@ main() {
     print_header "Step 1/6: System Packages"
     if command -v pacman &> /dev/null; then
         run_script "init_packages.sh" "Checking and installing missing packages" "true"
+
+        # Configure hybrid GPU if supergfxctl was installed
+        if command -v supergfxctl &> /dev/null; then
+            echo ""
+            run_script "init_supergfx.sh" "Configuring hybrid GPU management" "true"
+        fi
+
+        # Configure fingerprint if fprintd was installed and device detected
+        if command -v fprintd-list &> /dev/null && lsusb | grep -qiE '(finger|print|biometric|validity|synaptics|elan|goodix|chipsailing)'; then
+            echo ""
+            run_script "init_fingerprint.sh" "Configuring fingerprint authentication" "true"
+        fi
     else
         print_warning "pacman not found, skipping package installation"
     fi

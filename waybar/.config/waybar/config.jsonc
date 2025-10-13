@@ -46,6 +46,7 @@
 
     "custom/wifi",          // wi-fi
     "bluetooth",            // bluetooth
+    "custom/fingerprint",   // fingerprint manager
     "custom/update",        // system update
     "custom/notification",  // notifications (SwayNC)
     "custom/right5"
@@ -329,6 +330,15 @@
     "on-click": "~/.config/waybar/scripts/bluetooth-menu.sh",
     "on-click-right": "ghostty --title '󰂯  Bluetooth TUI' bash -c bluetui",
     "interval": 5, // Reduced from 1s for better battery life
+    "min-length": 1,
+    "max-length": 1
+  },
+
+  "custom/fingerprint": {
+    "format": "󰈷",
+    "tooltip": true,
+    "tooltip-format": "Fingerprint Manager\n\nClick to manage fingerprints",
+    "on-click": "~/.config/waybar/scripts/wofi-fingerprint-manager.sh",
     "min-length": 1,
     "max-length": 1
   },

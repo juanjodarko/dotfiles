@@ -150,12 +150,110 @@ fi
 
 echo ""
 
-# Ask about optional packages
-echo ""
-read -p "$(echo -e ${BLUE}Install GPU packages \(NVIDIA/Vulkan\)?${NC} [y/N]: )" response
-if [[ "$response" =~ ^[Yy] ]]; then
-    PACKAGE_LISTS+=("gpu")
+# Detect GPU configuration
+print_step "Detecting GPU configuration..."
+
+GPU_OUTPUT=$(lspci -nn 2>/dev/null | grep -iE '(vga|3d|display)' || true)
+GPU_COUNT=$(echo "$GPU_OUTPUT" | grep -c . || echo "0")
+
+HAS_INTEL=false
+HAS_AMD=false
+HAS_NVIDIA=false
+IS_HYBRID=false
+
+# Detect GPU vendors
+if echo "$GPU_OUTPUT" | grep -iq 'intel'; then
+    HAS_INTEL=true
 fi
+if echo "$GPU_OUTPUT" | grep -iq 'amd\|ati\|radeon'; then
+    HAS_AMD=true
+fi
+if echo "$GPU_OUTPUT" | grep -iq 'nvidia'; then
+    HAS_NVIDIA=true
+fi
+
+# Check for hybrid setup (iGPU + NVIDIA dGPU)
+# Also check if supergfxctl is installed and reports a vendor
+if command -v supergfxctl &> /dev/null; then
+    DGPU_VENDOR=$(supergfxctl --vendor 2>/dev/null || true)
+    if [[ -n "$DGPU_VENDOR" ]]; then
+        if [[ "$DGPU_VENDOR" =~ "Nvidia" ]]; then
+            HAS_NVIDIA=true
+            IS_HYBRID=true
+        fi
+    fi
+fi
+
+# Determine if hybrid (Intel/AMD iGPU + NVIDIA dGPU)
+if [[ "$IS_HYBRID" == false ]]; then
+    if [[ "$HAS_NVIDIA" == true ]] && [[ "$HAS_INTEL" == true || "$HAS_AMD" == true ]]; then
+        IS_HYBRID=true
+    fi
+fi
+
+# Display detection results
+echo ""
+if [ "$GPU_COUNT" -eq 0 ]; then
+    print_skip "No GPU detected or lspci unavailable"
+    echo ""
+else
+    if [ "$IS_HYBRID" == true ]; then
+        print_success "Detected: Hybrid GPU system"
+        if [ "$HAS_INTEL" == true ]; then
+            echo "  - Intel integrated GPU (iGPU)"
+        elif [ "$HAS_AMD" == true ]; then
+            echo "  - AMD integrated GPU (iGPU)"
+        fi
+        echo "  - NVIDIA dedicated GPU (dGPU)"
+        echo ""
+        echo "Hybrid GPUs will be managed by supergfxctl"
+        echo ""
+
+        read -p "$(echo -e ${BLUE}Install packages for hybrid GPU system?${NC} [Y/n]: )" response
+        response=${response:-y}
+
+        if [[ "$response" =~ ^[Yy] ]]; then
+            PACKAGE_LISTS+=("gpu-base")
+            PACKAGE_LISTS+=("gpu-nvidia")
+            if [ "$HAS_INTEL" == true ]; then
+                PACKAGE_LISTS+=("gpu-intel")
+            elif [ "$HAS_AMD" == true ]; then
+                PACKAGE_LISTS+=("gpu-amd")
+            fi
+            PACKAGE_LISTS+=("gpu-hybrid")
+        fi
+    else
+        # Single GPU system
+        if [ "$HAS_NVIDIA" == true ]; then
+            print_success "Detected: NVIDIA GPU"
+        elif [ "$HAS_AMD" == true ]; then
+            print_success "Detected: AMD/ATI GPU"
+        elif [ "$HAS_INTEL" == true ]; then
+            print_success "Detected: Intel GPU"
+        else
+            print_step "Detected: Unknown GPU"
+        fi
+        echo ""
+
+        read -p "$(echo -e ${BLUE}Install GPU packages?${NC} [Y/n]: )" response
+        response=${response:-y}
+
+        if [[ "$response" =~ ^[Yy] ]]; then
+            PACKAGE_LISTS+=("gpu-base")
+            if [ "$HAS_NVIDIA" == true ]; then
+                PACKAGE_LISTS+=("gpu-nvidia")
+            fi
+            if [ "$HAS_AMD" == true ]; then
+                PACKAGE_LISTS+=("gpu-amd")
+            fi
+            if [ "$HAS_INTEL" == true ]; then
+                PACKAGE_LISTS+=("gpu-intel")
+            fi
+        fi
+    fi
+fi
+
+echo ""
 
 ALL_PACKAGES=()
 MISSING_PACKAGES=()
