@@ -167,6 +167,7 @@ check_file "$HOME/.config/nvim/init.lua" "Neovim config"
 check_file "$HOME/.config/tmux/tmux.conf" "Tmux config"
 check_file "$HOME/.config/starship.toml" "Starship config"
 check_file "$HOME/.gitconfig" "Git config"
+check_file "$HOME/.config/ghostty/config" "Ghostty config"
 
 if [ -d "$HOME/.config/hypr" ]; then
     check_file "$HOME/.config/hypr/hyprland.conf" "Hyprland config"
@@ -192,6 +193,18 @@ check_file "$HOME/.config/themes/current_flavor.txt" "Current flavor"
 if [ -f "$HOME/.config/themes/current_flavor.txt" ]; then
     FLAVOR=$(cat "$HOME/.config/themes/current_flavor.txt" 2>/dev/null | tr -d '\n')
     print_info "Active theme: $FLAVOR"
+fi
+
+# Check if Ghostty config uses centralized theme system
+if [ -f "$HOME/.config/ghostty/config" ]; then
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+    if grep -q "config-file.*current.ghostty" "$HOME/.config/ghostty/config" 2>/dev/null; then
+        print_success "Ghostty uses centralized theme system"
+        PASSED_CHECKS=$((PASSED_CHECKS + 1))
+    else
+        print_warning "Ghostty config doesn't import centralized theme"
+        WARNING_CHECKS=$((WARNING_CHECKS + 1))
+    fi
 fi
 
 echo ""

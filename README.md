@@ -22,7 +22,7 @@ This is my personal dotfiles repository for a modern Linux development environme
 
 - **One-click theme switching** across all applications
 - **4 Catppuccin flavors**: Mocha (dark), Latte (light), Frappé (dark), Macchiato (dark)
-- **Instant updates** - no application restarts needed (except Ghostty)
+- **Instant updates** - no application restarts needed
 - Synchronized themes: Neovim, Tmux, Waybar, Wofi, Rofi, Ghostty, Hyprland
 - Settings menu integration with visual theme picker
 
@@ -353,7 +353,7 @@ Press `Alt+Space` → Settings → Theme, then select from 4 Catppuccin flavors:
 - **Waybar** - Reloads with new colors
 - **Wofi** - All 7 menus (WiFi, Bluetooth, Power, Settings, Theme, Update Manager)
 - **Rofi** - Main application launcher
-- **Ghostty** - Terminal colors (requires new window)
+- **Ghostty** - Terminal colors (reloads via SIGUSR2)
 - **Hyprland** - Border colors and window decorations
 
 **Architecture:**
@@ -424,9 +424,9 @@ echo "latte" > current_flavor.txt
 
 # Reload applications
 pkill -SIGUSR2 waybar  # Waybar
+pkill -SIGUSR2 ghostty  # Ghostty
 tmux source ~/.config/tmux/tmux.conf  # Tmux
 # Neovim reloads automatically via server sockets
-# Ghostty: open new terminal window
 ```
 
 **Add new themes:**

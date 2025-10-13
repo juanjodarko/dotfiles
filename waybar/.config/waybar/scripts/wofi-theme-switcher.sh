@@ -118,34 +118,6 @@ ln -sf "catppuccin/${theme_file}.starship" current.starship
 # Update Neovim flavor file
 echo "$theme_file" > "$CURRENT_FLAVOR"
 
-# Update ghostty config with new theme colors
-if [ -f "$GHOSTTY_CONFIG" ] && [ -f "$CURRENT_GHOSTTY" ]; then
-    # Extract theme colors from the current.ghostty file
-    theme_colors=$(cat "$CURRENT_GHOSTTY")
-
-    # Create temporary file with updated theme
-    temp_file=$(mktemp)
-
-    # Use awk to replace content between markers
-    awk -v theme="$theme_colors" '
-        /^# === THEME COLORS START ===/ {
-            print
-            print "# This section is automatically managed by the theme switcher"
-            print "# Do not manually edit between THEME COLORS START and END markers"
-            print theme
-            skip=1
-            next
-        }
-        /^# === THEME COLORS END ===/ {
-            skip=0
-        }
-        !skip
-    ' "$GHOSTTY_CONFIG" > "$temp_file"
-
-    # Replace config file
-    mv "$temp_file" "$GHOSTTY_CONFIG"
-fi
-
 # Update starship config with new theme
 if [ -f "$STARSHIP_CONFIG" ] && [ -f "$CURRENT_STARSHIP" ]; then
     # Extract theme colors from the current.starship file
@@ -199,6 +171,9 @@ fi
 # Reload waybar
 pkill -SIGUSR2 waybar
 
+# Reload Ghostty (terminal emulator)
+pkill -SIGUSR2 ghostty 2>/dev/null
+
 # Reload swaync (notification daemon)
 if command -v swaync-client &> /dev/null; then
     swaync-client -rs 2>/dev/null &
@@ -228,6 +203,6 @@ if pgrep -x Hyprland > /dev/null; then
 fi
 
 # Notify user
-notify-send "Theme Changed" "Switched to Catppuccin $theme_name\nWaybar, SwayNC & Starship updated\nRestart Ghostty for terminal colors" -i preferences-desktop-theme
+notify-send "Theme Changed" "Switched to Catppuccin $theme_name\nAll applications updated instantly" -i preferences-desktop-theme
 
 exit 0
