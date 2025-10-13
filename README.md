@@ -4,7 +4,7 @@
 
 [![Neovim](https://img.shields.io/badge/Neovim-10.0%2F10-57A143?style=flat&logo=neovim)](nvim/.config/nvim)
 [![Hyprland](https://img.shields.io/badge/Hyprland-Wayland-5BCEFA?style=flat)](hyprland/.config/hypr)
-[![Theme](https://img.shields.io/badge/Theme-Catppuccin%20(4%20flavors)-CBA6F7?style=flat)](themes)
+[![Theme](<https://img.shields.io/badge/Theme-Catppuccin%20(4%20flavors)-CBA6F7?style=flat>)](themes)
 [![Centralized](https://img.shields.io/badge/Theme%20System-Centralized-89B4FA?style=flat)](themes)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -16,16 +16,18 @@ This is my personal dotfiles repository for a modern Linux development environme
 
 ---
 
-## ✨ Features
+## Features
 
-### 🎨 Centralized Theme System
+### Centralized Theme System
+
 - **One-click theme switching** across all applications
 - **4 Catppuccin flavors**: Mocha (dark), Latte (light), Frappé (dark), Macchiato (dark)
 - **Instant updates** - no application restarts needed (except Ghostty)
 - Synchronized themes: Neovim, Tmux, Waybar, Wofi, Rofi, Ghostty, Hyprland
 - Settings menu integration with visual theme picker
 
-### 💻 Professional Neovim (10/10)
+### Professional Neovim (10/10)
+
 - **Smart Docker detection** for testing and debugging (unique feature!)
 - Full DAP (Debug Adapter Protocol) support with breakpoints
 - Neotest with inline results and watch mode
@@ -34,7 +36,8 @@ This is my personal dotfiles repository for a modern Linux development environme
 - Comprehensive snippet library
 - See [nvim/.config/nvim](nvim/.config/nvim) for details
 
-### 🪟 Modern Wayland Desktop
+### Modern Wayland Desktop
+
 - **Hyprland** compositor with split-monitor workspaces
 - **Waybar** status bar with custom scripts
 - **SwayNC** notification center
@@ -42,14 +45,16 @@ This is my personal dotfiles repository for a modern Linux development environme
 - Automated wallpaper management
 - Multi-monitor aware
 
-### 🐚 Optimized Shell
+### Optimized Shell
+
 - **ZSH** with starship prompt
 - mise for version management (Node, Ruby, Python, etc.)
 - FZF with fuzzy finding
 - Zoxide for smart directory jumping
 - Custom helper functions
 
-### 🔧 Developer Tools
+### Developer Tools
+
 - **Tmux** with Catppuccin theme and plugins
 - **Git** with Delta (side-by-side diffs)
 - **Toot** Mastodon CLI with notification daemon
@@ -59,28 +64,28 @@ This is my personal dotfiles repository for a modern Linux development environme
 
 ## 📂 Module Overview
 
-| Module | Description | Status |
-|--------|-------------|--------|
-| [themes](themes) | Centralized theme system for all applications | 🎨 Complete |
-| [nvim](nvim/.config/nvim) | Professional Neovim config with Docker-aware testing/debugging | ⭐ 10/10 |
-| [hyprland](hyprland/.config/hypr) | Wayland compositor with dual-monitor support | ✅ Complete |
-| [waybar](waybar/.config/waybar) | Status bar with custom scripts and theme integration | ✅ Complete |
-| [wofi](wofi/.config/wofi) | Menu system (WiFi, Bluetooth, Power, Settings, Theme) | ✅ Complete |
-| [rofi](rofi/.config/rofi) | Application launcher with Catppuccin theme | ✅ Complete |
-| [swaync](swaync/.config/swaync) | Notification center | ✅ Complete |
-| [zsh](zsh) | Shell configuration with optimization | ✅ Complete |
-| [starship](starship/.config) | Cross-shell prompt | ✅ Complete |
-| [tmux](tmux/.config/tmux) | Terminal multiplexer with theme support | ✅ Complete |
-| [git](git) | Version control with Delta | ✅ Complete |
-| [toot](toot) | Mastodon CLI with notification daemon | ✅ Complete |
-| [mise](mise/.config) | Polyglot version manager | ✅ Complete |
-| personal | Machine-specific configurations | ✅ Complete |
+| Module                            | Description                                                    | Status      |
+| --------------------------------- | -------------------------------------------------------------- | ----------- |
+| [themes](themes)                  | Centralized theme system for all applications                  | 🎨 Complete |
+| [nvim](nvim/.config/nvim)         | Professional Neovim config with Docker-aware testing/debugging | ⭐ 10/10    |
+| [hyprland](hyprland/.config/hypr) | Wayland compositor with dual-monitor support                   | ✅ Complete |
+| [waybar](waybar/.config/waybar)   | Status bar with custom scripts and theme integration           | ✅ Complete |
+| [wofi](wofi/.config/wofi)         | Menu system (WiFi, Bluetooth, Power, Settings, Theme)          | ✅ Complete |
+| [rofi](rofi/.config/rofi)         | Application launcher with Catppuccin theme                     | ✅ Complete |
+| [swaync](swaync/.config/swaync)   | Notification center                                            | ✅ Complete |
+| [zsh](zsh)                        | Shell configuration with optimization                          | ✅ Complete |
+| [starship](starship/.config)      | Cross-shell prompt                                             | ✅ Complete |
+| [tmux](tmux/.config/tmux)         | Terminal multiplexer with theme support                        | ✅ Complete |
+| [git](git)                        | Version control with Delta                                     | ✅ Complete |
+| [toot](toot)                      | Mastodon CLI with notification daemon                          | ✅ Complete |
+| [mise](mise/.config)              | Polyglot version manager                                       | ✅ Complete |
+| personal                          | Machine-specific configurations                                | ✅ Complete |
 
 See [DEPENDENCIES.md](DEPENDENCIES.md) for full dependency list.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -91,6 +96,7 @@ See [DEPENDENCIES.md](DEPENDENCIES.md) for full dependency list.
 ### Installation
 
 1. **Clone this repository:**
+
    ```bash
    git clone https://github.com/yourusername/dotfiles.git ~/dotfiles
    cd ~/dotfiles
@@ -108,6 +114,7 @@ chmod +x install.sh
 ```
 
 **What it does:**
+
 - Detects your OS and installs dependencies
 - Backs up any existing configurations to timestamped directory
 - Deploys dotfiles using GNU Stow with `--adopt` for quick setup
@@ -128,6 +135,7 @@ chmod +x install.sh
 ```
 
 **What it does:**
+
 - Checks **each module individually** for conflicts before deploying
 - Shows you exactly which files will conflict
 - For each conflicting module, asks you to:
@@ -140,6 +148,7 @@ chmod +x install.sh
 **Use this when:** You already have `.zshrc`, `.config/nvim`, etc. and want safe migration
 
 **Example workflow:**
+
 ```bash
 ./install.sh --migrate
 
@@ -169,6 +178,7 @@ chmod +x install.sh
 ```
 
 **What it does:**
+
 - **Idempotent** - Only installs missing components
 - Checks and installs missing system packages
 - Initializes required directories
@@ -179,6 +189,7 @@ chmod +x install.sh
 - Runs verification checks
 
 **Use this when:**
+
 - Running the script again after initial installation
 - Updating to latest changes from git
 - Fixing missing dependencies or plugins
@@ -187,11 +198,11 @@ chmod +x install.sh
 
 ### Quick Comparison
 
-| Mode | Command | Best For | Safety Level |
-|------|---------|----------|--------------|
-| **Fresh Install** | `./install.sh` | New systems | ⚠️ Uses `--adopt` |
-| **Migration** | `./install.sh --migrate` | Existing configs | ✅ Interactive & safe |
-| **Update** | `./setup/setup.sh` | Already installed | ✅ Idempotent |
+| Mode              | Command                  | Best For          | Safety Level          |
+| ----------------- | ------------------------ | ----------------- | --------------------- |
+| **Fresh Install** | `./install.sh`           | New systems       | ⚠️ Uses `--adopt`     |
+| **Migration**     | `./install.sh --migrate` | Existing configs  | ✅ Interactive & safe |
+| **Update**        | `./setup/setup.sh`       | Already installed | ✅ Idempotent         |
 
 ---
 
@@ -200,24 +211,28 @@ chmod +x install.sh
 After running any installation mode:
 
 1. **Restart your terminal:**
+
    ```bash
    source ~/.zshrc
    # Or open a new terminal
    ```
 
 2. **Verify installation:**
+
    ```bash
    # Run comprehensive health check
    ./setup/verify.sh
    ```
 
 3. **Open Neovim to finish plugin installation:**
+
    ```bash
    nvim
    # Plugins will install automatically via Lazy.nvim
    ```
 
 4. **Install Tmux plugins (if using Tmux):**
+
    ```bash
    tmux
    # Press Prefix + I (default: Ctrl+b then I)
@@ -254,31 +269,37 @@ stow tmux toot mise personal  # Additional
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 ### Neovim
+
 <!-- TODO: Add screenshot -->
+
 - Catppuccin Mocha theme
 - LSP with inline diagnostics
 - Neotest with inline test results
 - DAP debugging with UI
 
 ### Hyprland Desktop
+
 <!-- TODO: Add screenshot -->
+
 - Waybar status bar
 - SwayNC notifications
 - Rofi launcher
 - Multi-monitor setup
 
 ### Terminal
+
 <!-- TODO: Add screenshot -->
+
 - Starship prompt
 - FZF fuzzy finder
 - Catppuccin colors
 
 ---
 
-## 🎯 Highlights
+## Highlights
 
 ### Neovim: Docker-Aware Testing & Debugging
 
@@ -296,6 +317,7 @@ services:
 **Result:** Tests automatically run with `docker compose run --rm app bundle exec rspec` ✅
 
 **Features:**
+
 - Automatic Docker Compose detection
 - Smart service name detection (app, frontend, backend, api)
 - Path mapping for debugging
@@ -303,6 +325,7 @@ services:
 - Supports RSpec, Jest, Vitest, Go, Python
 
 **Usage:**
+
 ```vim
 <leader>tr     " Run nearest test (auto-detects Docker)
 <leader>dc     " Debug in Docker (attach) - automatic path mapping!
@@ -324,6 +347,7 @@ Press `Alt+Space` → Settings → Theme, then select from 4 Catppuccin flavors:
 ```
 
 **What gets updated:**
+
 - **Neovim** - Instant colorscheme change (no restart)
 - **Tmux** - Status bar updates automatically
 - **Waybar** - Reloads with new colors
@@ -335,6 +359,7 @@ Press `Alt+Space` → Settings → Theme, then select from 4 Catppuccin flavors:
 **Architecture:**
 
 Central theme files in `~/dotfiles/themes/`:
+
 ```bash
 themes/
 ├── catppuccin/
@@ -350,12 +375,14 @@ themes/
 ```
 
 **How it works:**
+
 1. Theme switcher updates symlinks and flavor file
 2. Applications read from central `current.*` files
 3. Running instances receive reload commands via socket/signal
 4. New instances automatically use correct theme
 
 **All colors follow [Catppuccin style guide](https://github.com/catppuccin/catppuccin/blob/main/docs/style-guide.md):**
+
 - Mocha: `#1e1e2e` (base), `#cdd6f4` (text), `#cba6f7` (mauve)
 - Latte: `#eff1f5` (base), `#4c4f69` (text), `#8839ef` (mauve)
 - Frappé: `#303446` (base), `#c6d0f5` (text), `#ca9ee6` (mauve)
@@ -364,6 +391,7 @@ themes/
 ### Mastodon Integration
 
 Custom notification daemon for Mastodon:
+
 - Polls `toot` CLI every 60 seconds
 - Shows notifications via SwayNC
 - Clickable actions (View Post, Open TUI)
@@ -372,19 +400,7 @@ Custom notification daemon for Mastodon:
 
 ---
 
-## 🛠️ Customization
-
-### Personal Configurations
-
-Machine-specific settings go in `personal/.config/personal/`:
-
-```
-personal/.config/personal/
-├── aliases.zsh    # Custom aliases
-├── env.zsh        # Environment variables
-├── paths.zsh      # PATH modifications
-└── secrets.zsh    # API keys, tokens (not tracked)
-```
+## Customization
 
 ### Theme Switching
 
@@ -422,6 +438,7 @@ tmux source ~/.config/tmux/tmux.conf  # Tmux
    - `mytheme.tmux` (Tmux flavor setting)
 
 2. Update theme switcher menu:
+
    ```bash
    vim waybar/.config/waybar/scripts/wofi-theme-switcher.sh
    ```
@@ -489,11 +506,12 @@ Use the provided scripts for safe configuration management:
 
 ---
 
-## 🧪 Testing
+## Testing
 
 Before deploying to your main system:
 
 1. **Test in VM or container:**
+
    ```bash
    # Podman/Docker
    podman run -it --rm archlinux bash
@@ -501,6 +519,7 @@ Before deploying to your main system:
    ```
 
 2. **Selective deployment:**
+
    ```bash
    # Test one module first
    stow --no nvim  # Dry run
@@ -516,9 +535,10 @@ Before deploying to your main system:
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 See [DEPENDENCIES.md](DEPENDENCIES.md) for:
+
 - Core dependencies (stow, git, zsh)
 - Per-module dependencies
 - Optional dependencies
@@ -526,24 +546,26 @@ See [DEPENDENCIES.md](DEPENDENCIES.md) for:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 This is my personal dotfiles repository, but feel free to:
+
 - Fork and adapt for your own use
 - Open issues for bugs or questions
 - Submit PRs for improvements
 
 ---
 
-## 📄 License
+## License
 
 MIT License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 Credits
+## Credits
 
 **Inspiration and tools from:**
+
 - [Catppuccin](https://github.com/catppuccin/catppuccin) - Beautiful pastel theme
 - [Neovim](https://neovim.io/) - Hyperextensible Vim-based text editor
 - [Hyprland](https://hyprland.org/) - Dynamic tiling Wayland compositor
@@ -553,17 +575,16 @@ MIT License - See [LICENSE](LICENSE) file for details.
 - [Folke](https://github.com/folke) - Multiple Neovim plugins
 
 **Similar dotfiles repositories:**
+
 - [mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles)
 - [thoughtbot/dotfiles](https://github.com/thoughtbot/dotfiles)
 - [holman/dotfiles](https://github.com/holman/dotfiles)
 
 ---
 
-## 📞 Contact
+## Contact
 
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
-- Mastodon: @yourhandle@ruby.social
+- GitHub: [@juanjodarko``](https://github.com/juanjodarko)
 
 ---
 

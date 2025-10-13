@@ -48,10 +48,10 @@ themes/
 
 The `current.*` symlinks and `current_flavor.txt` file are **automatically generated** and should not be manually edited or committed to git:
 
-- ✅ **Created automatically** on first theme switch
-- ✅ **Default theme:** Mocha (dark)
-- ✅ **Git ignored** (listed in `.gitignore`)
-- ✅ **Self-initializing** via theme switcher script
+- **Created automatically** on first theme switch
+- **Default theme:** Mocha (dark)
+- **Git ignored** (listed in `.gitignore`)
+- **Self-initializing** via theme switcher script
 
 **What happens on first run:**
 
