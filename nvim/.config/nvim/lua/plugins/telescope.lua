@@ -52,12 +52,18 @@ return {
                 },
             },
         })
+
+        -- Standard keymap helper
+        local function map(mode, lhs, rhs, desc)
+            vim.keymap.set(mode, lhs, rhs, { desc = desc, silent = true })
+        end
+
         local builtin = require('telescope.builtin')
-        vim.keymap.set('n', '<leader>f', builtin.find_files, {})
-        -- vim.keymap.set('n', '<leader>F', builtin.find_files, { no_ignore = true, prompt_title = 'All files' })
-        vim.keymap.set('n', '<leader>b', builtin.buffers, {})
-        vim.keymap.set('n', '<leader>g', builtin.live_grep, {})
-        vim.keymap.set('n', '<leader>h', builtin.help_tags, {})
-        vim.keymap.set('n', '<leader>s', builtin.lsp_document_symbols, {})
+        map('n', '<leader>f', builtin.find_files, "Find files")
+        map('n', '<leader>b', builtin.buffers, "Find buffers")
+        map('n', '<leader>g', builtin.live_grep, "Live grep")
+        map('n', '<leader>h', builtin.help_tags, "Help tags")
+        map('n', '<leader>s', builtin.lsp_document_symbols, "Document symbols")
+        map('n', '<leader>sk', builtin.keymaps, "Search keymaps")
     end,
 }

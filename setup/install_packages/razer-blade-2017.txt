@@ -1,0 +1,12 @@
+openrazer-meta
+polychromatic
+supergfxctl
+tlp
+powertop
+auto-cpufreq
+pipewire
+pipewire-pulse
+wireplumber
+alsa-utils
+sof-firmware
+

@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+
+# Rofi-based Package Update Manager for Waybar
+# Provides a menu interface for system updates
+
+set -euo pipefail
+
+TERMINAL="ghostty"
+UPDATE_SCRIPT="$HOME/.config/waybar/scripts/system-update.sh"
+ROFI_CONFIG="$HOME/.config/rofi/update-manager.rasi"
+
+# Get AUR helper
+get_aur_helper() {
+    if command -v yay &>/dev/null; then
+        echo "yay"
+    elif command -v paru &>/dev/null; then
+        echo "paru"
+    else
+        echo ""
+    fi
+}
+
+AUR_HELPER=$(get_aur_helper)
+
+# Function to get update counts
+get_update_counts() {
+    # Check for official repository updates
+    if command -v checkupdates &>/dev/null; then
+        official_updates=$(checkupdates 2>/dev/null | wc -l)
+        official_updates=${official_updates:-0}
+    else
+        official_updates=0
+    fi
+
+    # Check for AUR updates
+    if [ -n "$AUR_HELPER" ]; then
+        aur_updates=$($AUR_HELPER -Qua 2>/dev/null | wc -l)
+        aur_updates=${aur_updates:-0}
+    else
+        aur_updates=0
+    fi
+
+    # Check for Flatpak updates
+    if command -v flatpak &>/dev/null; then
+        flatpak_updates=$(flatpak remote-ls --updates 2>/dev/null | wc -l)
+        flatpak_updates=${flatpak_updates:-0}
+    else
+        flatpak_updates=0
+    fi
+
+    # Ensure all values are numbers
+    official_updates=${official_updates//[^0-9]/}
+    aur_updates=${aur_updates//[^0-9]/}
+    flatpak_updates=${flatpak_updates//[^0-9]/}
+
+    # Set defaults if empty
+    official_updates=${official_updates:-0}
+    aur_updates=${aur_updates:-0}
+    flatpak_updates=${flatpak_updates:-0}
+
+    total_updates=$((official_updates + aur_updates + flatpak_updates))
+}
+
+# Function to list available updates
+list_updates() {
+    local output=""
+
+    # Official packages
+    if [ "${official_updates:-0}" -gt 0 ] && command -v checkupdates &>/dev/null; then
+        output+="<b>Official Packages ($official_updates):</b>\n"
+        output+="$(checkupdates 2>/dev/null | awk '{print "  • " $1 " " $2 " → " $4}' || echo "  Error fetching updates")\n\n"
+    fi
+
+    # AUR packages
+    if [ "${aur_updates:-0}" -gt 0 ] && [ -n "$AUR_HELPER" ]; then
+        output+="<b>AUR Packages ($aur_updates):</b>\n"
+        output+="$($AUR_HELPER -Qua 2>/dev/null | awk '{print "  • " $1 " " $2 " → " $4}' || echo "  Error fetching updates")\n\n"
+    fi
+
+    # Flatpak packages
+    if [ "${flatpak_updates:-0}" -gt 0 ]; then
+        output+="<b>Flatpak Packages ($flatpak_updates):</b>\n"
+        output+="$(flatpak remote-ls --updates 2>/dev/null | awk '{print "  • " $2}' || echo "  Error fetching updates")\n\n"
+    fi
+
+    if [ "${total_updates:-0}" -eq 0 ]; then
+        output="<b>System is up to date!</b>\n\nNo updates available."
+    fi
+
+    echo -e "$output" | rofi -dmenu -markup-rows \
+        -config "${ROFI_CONFIG}" \
+        -p "Available Updates" \
+        -mesg "Total: ${total_updates:-0} updates" \
+        -theme-str 'window {width: 800px;} listview {lines: 15;}'
+}
+
+# Function to run updates in terminal
+run_update() {
+    local cmd=$1
+    local title=$2
+
+    # Refresh waybar after update
+    trap 'pkill -RTMIN+20 waybar' EXIT
+
+    # Run the update command in ghostty
+    $TERMINAL --title "$title" bash -c "
+        echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+        echo '  $title'
+        echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+        echo ''
+        $UPDATE_SCRIPT upgrade
+        $cmd
+        echo ''
+        echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+        echo '  Update Complete!'
+        echo '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━'
+        echo ''
+        read -n 1 -p 'Press any key to close...'
+    "
+}
+
+# Get current update counts
+get_update_counts
+
+# Build menu options
+menu_options=()
+
+if [ "$total_updates" -gt 0 ]; then
+    menu_options+=("🔄 Update All ($total_updates total)")
+
+    if [ "$official_updates" -gt 0 ]; then
+        menu_options+=("📦 Update Official Packages Only ($official_updates)")
+    fi
+
+    if [ "$aur_updates" -gt 0 ] && [ -n "$AUR_HELPER" ]; then
+        menu_options+=("🔧 Update AUR Packages Only ($aur_updates)")
+    fi
+
+    if [ "$flatpak_updates" -gt 0 ]; then
+        menu_options+=("📱 Update Flatpak Only ($flatpak_updates)")
+    fi
+
+    menu_options+=("📋 View Available Updates")
+else
+    menu_options+=("✓ System is up to date")
+fi
+
+menu_options+=("❌ Cancel")
+
+# Show rofi menu
+selected=$(printf '%s\n' "${menu_options[@]}" | rofi -dmenu \
+    -i \
+    -markup-rows \
+    -config "${ROFI_CONFIG}" \
+    -p "System Updates" \
+    -mesg "Official: $official_updates | AUR: $aur_updates | Flatpak: $flatpak_updates")
+
+# Handle selection
+case "$selected" in
+    "🔄 Update All"*)
+        if [ -n "$AUR_HELPER" ]; then
+            run_update "sudo $AUR_HELPER -Syu && flatpak update -y" "󰞒  System Update - All Packages"
+        else
+            run_update "sudo pacman -Syu && flatpak update -y" "󰞒  System Update - All Packages"
+        fi
+        ;;
+    "📦 Update Official Packages Only"*)
+        run_update "sudo pacman -Syu" "󰞒  System Update - Official Packages"
+        ;;
+    "🔧 Update AUR Packages Only"*)
+        run_update "sudo $AUR_HELPER -Sua" "󰞒  System Update - AUR Packages"
+        ;;
+    "📱 Update Flatpak Only"*)
+        run_update "flatpak update -y" "󰞒  System Update - Flatpak"
+        ;;
+    "📋 View Available Updates")
+        list_updates
+        ;;
+    "✓ System is up to date"|"❌ Cancel"|"")
+        exit 0
+        ;;
+esac

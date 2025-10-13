@@ -1,22 +1,36 @@
 vim.g.mapleader = ' '
 vim.g.loaded_matchparent = 1
 
--- Config editing keymaps
-vim.keymap.set('n', '<leader>ve', ':edit ~/.config/nvim/init.lua<cr>')
-vim.keymap.set('n', '<leader>vr', ':source ~/.config/nvim/init.lua<cr>')
+-- Standard keymap helper
+local function map(mode, lhs, rhs, desc)
+    vim.keymap.set(mode, lhs, rhs, { desc = desc, silent = true })
+end
 
--- File navigation  
-vim.keymap.set('', 'gf', ':edit <cfile><cr>')
+-- Config editing keymaps
+map('n', '<leader>ve', ':edit ~/.config/nvim/init.lua<cr>', "Edit init.lua")
+map('n', '<leader>vr', ':source ~/.config/nvim/init.lua<cr>', "Reload init.lua")
+
+-- File navigation
+map('', 'gf', ':edit <cfile><cr>', "Go to file")
 
 -- Tmux navigation
-vim.keymap.set('n', '<C-h>', 'TmuxNavigateLeft<CR>', { silent = true })
-vim.keymap.set('n', '<C-j>', 'TmuxNavigateDown<CR>', { silent = true })
-vim.keymap.set('n', '<C-k>', 'TmuxNavigateUp<CR>', { silent = true })
-vim.keymap.set('n', '<C-l>', 'TmuxNavigateRight<CR>', { silent = true })
+map('n', '<C-h>', 'TmuxNavigateLeft<CR>', "Navigate left (tmux)")
+map('n', '<C-j>', 'TmuxNavigateDown<CR>', "Navigate down (tmux)")
+map('n', '<C-k>', 'TmuxNavigateUp<CR>', "Navigate up (tmux)")
+map('n', '<C-l>', 'TmuxNavigateRight<CR>', "Navigate right (tmux)")
+
+-- Terminal mode navigation (exit terminal mode + move to window)
+map('t', '<C-h>', '<C-\\><C-n><C-w>h', "Navigate left from terminal")
+map('t', '<C-j>', '<C-\\><C-n><C-w>j', "Navigate down from terminal")
+map('t', '<C-k>', '<C-\\><C-n><C-w>k', "Navigate up from terminal")
+map('t', '<C-l>', '<C-\\><C-n><C-w>l', "Navigate right from terminal")
+
+-- Quick escape from terminal mode
+map('t', '<Esc><Esc>', '<C-\\><C-n>', "Exit terminal mode")
 
 -- Utility keymaps
-vim.keymap.set('n', '<leader>ghw', ':h <C-R>=expand("<cword>")<CR><CR>')
-vim.keymap.set('n', '<leader>pv', ':wincmd v<bar> :Ex <bar> :vertical resize 30 <CR>')
+map('n', '<leader>ghw', ':h <C-R>=expand("<cword>")<CR><CR>', "Help for word under cursor")
+map('n', '<leader>pv', ':wincmd v<bar> :Ex <bar> :vertical resize 30 <CR>', "Open file explorer")
 
 -- VCR
-vim.keymap.set('n', '<leader>xr', ':call VcrQuery()<CR>')
+map('n', '<leader>xr', ':call VcrQuery()<CR>', "VCR Query")

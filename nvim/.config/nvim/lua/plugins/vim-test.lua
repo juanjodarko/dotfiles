@@ -1,11 +1,16 @@
 return {
     'vim-test/vim-test',
     config = function()
-        vim.keymap.set('n', '<Leader>tn', ':TestNearest<CR>')
-        vim.keymap.set('n', '<Leader>tf', ':TestFile<CR>')
-        vim.keymap.set('n', '<Leader>ts', ':TestSuite<CR>')
-        vim.keymap.set('n', '<Leader>tl', ':TestLast<CR>')
-        vim.keymap.set('n', '<Leader>tv', ':TestVisit<CR>')
+        -- Standard keymap helper
+        local function map(mode, lhs, rhs, desc)
+            vim.keymap.set(mode, lhs, rhs, { desc = desc, silent = true })
+        end
+
+        map('n', '<Leader>tn', ':TestNearest<CR>', "Test nearest")
+        map('n', '<Leader>tf', ':TestFile<CR>', "Test file")
+        map('n', '<Leader>ts', ':TestSuite<CR>', "Test suite")
+        map('n', '<Leader>tl', ':TestLast<CR>', "Test last")
+        map('n', '<Leader>tv', ':TestVisit<CR>', "Test visit")
 
         vim.cmd([[
           let g:test#strategy = 'neovim'

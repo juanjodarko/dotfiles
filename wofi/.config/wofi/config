@@ -1,0 +1,49 @@
+# Wofi Configuration
+# Application launcher for Hyprland
+
+# Display Settings
+width=40%
+height=50%
+location=center
+orientation=vertical
+halign=fill
+line_wrap=off
+
+# Layout
+columns=2
+insensitive=true
+prompt=Search Applications...
+filter_rate=100
+
+# Search Behavior
+matching=fuzzy
+search=
+exec_search=false
+hide_search=false
+parse_search=false
+show=drun
+
+# Appearance
+normal_window=false
+layer=overlay
+term=ghostty
+hide_scroll=false
+no_actions=false
+show_all=false
+
+# Performance
+cache_file=/home/juanjo/.cache/wofi-drun
+allow_markup=true
+allow_images=true
+image_size=32
+gtk_dark=true
+
+# Icons
+show_icons=true
+icon_theme=Papirus-Dark
+
+# Behavior
+sort_order=default
+dynamic_lines=true
+key_expand=Tab
+key_exit=Escape

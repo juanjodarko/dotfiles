@@ -1,0 +1,8 @@
+supergfxctl
+nvidia
+nvidia-utils
+nvidia-settings
+mesa
+vulkan-tools
+vulkan-intel
+

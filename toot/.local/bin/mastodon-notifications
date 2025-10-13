@@ -1,0 +1,173 @@
+#!/bin/bash
+# Mastodon notification daemon for swaync integration
+# Polls toot for new notifications and displays them via notify-send
+
+CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/toot"
+LAST_ID_FILE="$CACHE_DIR/last_notification_id"
+CHECK_INTERVAL="${MASTODON_CHECK_INTERVAL:-60}" # seconds
+
+# Create cache directory
+mkdir -p "$CACHE_DIR"
+
+# Icon mapping for notification types
+get_icon() {
+    case "$1" in
+        mention) echo "mail-message-new" ;;
+        reblog) echo "emblem-shared" ;;
+        favourite) echo "emblem-favorite" ;;
+        follow) echo "contact-new" ;;
+        follow_request) echo "system-users" ;;
+        poll) echo "view-list-icons" ;;
+        status) echo "document-new" ;;
+        update) echo "document-edit" ;;
+        *) echo "dialog-information" ;;
+    esac
+}
+
+# Get notification summary based on type
+get_summary() {
+    local type="$1"
+    local username="$2"
+
+    case "$type" in
+        mention) echo "💬 $username mentioned you" ;;
+        reblog) echo "🔁 $username boosted your post" ;;
+        favourite) echo "⭐ $username favourited your post" ;;
+        follow) echo "👤 $username followed you" ;;
+        follow_request) echo "👥 $username wants to follow you" ;;
+        poll) echo "📊 A poll you voted in has ended" ;;
+        status) echo "📝 New post from $username" ;;
+        update) echo "✏️ $username edited a post" ;;
+        *) echo "🔔 New notification from $username" ;;
+    esac
+}
+
+# Open toot TUI to notifications
+open_notifications() {
+    ghostty -e toot tui &
+}
+
+# Show specific status in terminal
+view_status() {
+    local status_id="$1"
+    ghostty -e bash -c "toot status '$status_id' && toot thread '$status_id' && read -p 'Press enter to close...'" &
+}
+
+# Process notifications
+process_notifications() {
+    # Get last seen notification ID
+    local last_id=""
+    if [[ -f "$LAST_ID_FILE" ]]; then
+        last_id=$(cat "$LAST_ID_FILE")
+    fi
+
+    # Fetch notifications in JSON format
+    local notifications
+    notifications=$(toot notifications --json --reverse 2>/dev/null)
+
+    if [[ -z "$notifications" || "$notifications" == "[]" ]]; then
+        return
+    fi
+
+    # Track new last_id
+    local new_last_id=""
+
+    # Parse JSON and process each notification
+    echo "$notifications" | jq -c '.[]' 2>/dev/null | while read -r notif; do
+        local id=$(echo "$notif" | jq -r '.id')
+        local type=$(echo "$notif" | jq -r '.type')
+        local created_at=$(echo "$notif" | jq -r '.created_at')
+        local username=$(echo "$notif" | jq -r '.account.username')
+        local display_name=$(echo "$notif" | jq -r '.account.display_name // .account.username')
+        local status_id=$(echo "$notif" | jq -r '.status.id // empty')
+
+        # Update new_last_id
+        if [[ -z "$new_last_id" ]]; then
+            new_last_id="$id"
+        fi
+
+        # Skip if we've already seen this notification
+        if [[ -n "$last_id" && "$id" -le "$last_id" ]]; then
+            continue
+        fi
+
+        # Get notification details
+        local summary=$(get_summary "$type" "$display_name")
+        local icon=$(get_icon "$type")
+
+        # Get body text (status content if available)
+        local body=""
+        if [[ -n "$status_id" ]]; then
+            body=$(echo "$notif" | jq -r '.status.content // ""' | sed 's/<[^>]*>//g' | head -c 200)
+        fi
+
+        # Send desktop notification with action
+        if [[ -n "$status_id" ]]; then
+            # Notification with status - allow viewing it
+            notify-send -u normal \
+                -i "$icon" \
+                -c "im.received" \
+                -A "view=View Post" \
+                -A "open=Open Toot" \
+                "$summary" \
+                "$body" | while read -r action; do
+                    case "$action" in
+                        view) view_status "$status_id" ;;
+                        open) open_notifications ;;
+                    esac
+                done &
+        else
+            # Simple notification (like follow)
+            notify-send -u normal \
+                -i "$icon" \
+                -c "im.received" \
+                -A "open=Open Toot" \
+                "$summary" \
+                "@$username" | while read -r action; do
+                    if [[ "$action" == "open" ]]; then
+                        open_notifications
+                    fi
+                done &
+        fi
+    done
+
+    # Update last seen ID
+    if [[ -n "$new_last_id" ]]; then
+        echo "$new_last_id" > "$LAST_ID_FILE"
+    fi
+}
+
+# Main loop
+main() {
+    echo "Mastodon notification daemon started (checking every ${CHECK_INTERVAL}s)"
+
+    # Initial check
+    process_notifications
+
+    # Polling loop
+    while true; do
+        sleep "$CHECK_INTERVAL"
+        process_notifications
+    done
+}
+
+# Handle script arguments
+case "${1:-daemon}" in
+    daemon)
+        main
+        ;;
+    check)
+        process_notifications
+        ;;
+    reset)
+        rm -f "$LAST_ID_FILE"
+        echo "Reset notification tracking"
+        ;;
+    *)
+        echo "Usage: $0 {daemon|check|reset}"
+        echo "  daemon - Run as background daemon (default)"
+        echo "  check  - Check for notifications once"
+        echo "  reset  - Reset notification tracking"
+        exit 1
+        ;;
+esac

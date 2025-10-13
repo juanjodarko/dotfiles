@@ -41,20 +41,25 @@ return {
       
       -- Go
       go = { "gofumpt", "goimports" },
-      
+
       -- Elixir
       elixir = { "mix" },
-      
+
+      -- Rust
+      rust = { "rustfmt" },
+
       -- C++
       cpp = { "clang_format" },
       c = { "clang_format" },
-      
+
       -- Other languages
       lua = { "stylua" },
       python = { "isort", "black" },
       sh = { "shfmt" },
       yaml = { "prettier" },
       markdown = { "prettier" },
+      -- GraphQL
+      graphql = { "prettier" },
     },
     
     -- Format on save configuration

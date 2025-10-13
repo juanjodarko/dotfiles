@@ -119,7 +119,8 @@ class PlayerManager:
     player_name = player.props.player_name
     artist = player.get_artist()
     title = player.get_title()
-    title = title.replace("&", "&amp;")
+    # Sanitize HTML entities for Pango markup
+    title = title.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
     # Construct track info based on player type and status
     if player_name == "spotify" and "mpris:trackid" in metadata and ":ad:" in player.props.metadata["mpris:trackid"]:
@@ -132,6 +133,7 @@ class PlayerManager:
     if track_info:
       track_info = (
         f"<span color='#a6e3a1'>󰓇  </span>" if player.props.status == "Playing" and player_name == "spotify" else
+        f"<span color='#74c7ec'>󰎆  </span>" if player.props.status == "Playing" and player_name in ["tidal-hifi", "tidal"] else
         f"<span color='#f38ba8'>󰗃  </span>" if player.props.status == "Playing" and player_name == "firefox" else
         f"<span color='#b4befe'>\u200A󰏤 \u2009\u2009\u200A</span>"
       ) + track_info

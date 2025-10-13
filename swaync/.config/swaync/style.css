@@ -1,0 +1,443 @@
+/* Catppuccin Mocha Theme for SwayNC */
+
+/* Color Palette - Catppuccin Mocha */
+@define-color base #1e1e2e;
+@define-color mantle #181825;
+@define-color crust #11111b;
+
+@define-color text #cdd6f4;
+@define-color subtext0 #a6adc8;
+@define-color subtext1 #bac2de;
+
+@define-color surface0 #313244;
+@define-color surface1 #45475a;
+@define-color surface2 #585b70;
+
+@define-color overlay0 #6c7086;
+@define-color overlay1 #7f849c;
+@define-color overlay2 #9399b2;
+
+@define-color blue #89b4fa;
+@define-color lavender #b4befe;
+@define-color sapphire #74c7ec;
+@define-color sky #89dceb;
+@define-color teal #94e2d5;
+@define-color green #a6e3a1;
+@define-color yellow #f9e2af;
+@define-color peach #fab387;
+@define-color maroon #eba0ac;
+@define-color red #f38ba8;
+@define-color mauve #cba6f7;
+@define-color pink #f5c2e7;
+@define-color flamingo #f2cdcd;
+@define-color rosewater #f5e0dc;
+
+* {
+  font-family: "JetBrainsMono Nerd Font";
+  font-weight: 500;
+  font-size: 13px;
+}
+
+/* Control Center */
+.control-center {
+  background-color: alpha(@base, 0.95);
+  border: 2px solid @mauve;
+  border-radius: 10px;
+  margin: 10px;
+  padding: 0;
+}
+
+.control-center-list {
+  background-color: transparent;
+  padding: 8px;
+}
+
+.control-center-list-placeholder {
+  color: @overlay0;
+  font-size: 1.2em;
+  padding: 20px;
+}
+
+/* Notification Window */
+.notification-row {
+  margin: 8px 0;
+  padding: 0;
+}
+
+.notification {
+  background-color: alpha(@base, 0.95);
+  border: 2px solid @surface2;
+  border-radius: 10px;
+  margin: 0 10px 10px 10px;
+  padding: 0;
+}
+
+.notification:hover {
+  border-color: @mauve;
+}
+
+/* Low Priority */
+.low {
+  border-color: @green;
+}
+
+.low .notification-content {
+  background-color: alpha(@green, 0.1);
+}
+
+.low .notification-default-action:hover {
+  background-color: alpha(@green, 0.15);
+}
+
+/* Normal Priority */
+.notification-content {
+  background-color: transparent;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 0;
+}
+
+.notification-default-action:hover .notification-content {
+  background-color: alpha(@surface0, 0.6);
+}
+
+/* Critical Priority */
+.critical {
+  border-color: @red;
+}
+
+.critical .notification-content {
+  background-color: alpha(@red, 0.1);
+}
+
+.critical .notification-default-action:hover {
+  background-color: alpha(@red, 0.15);
+}
+
+/* Notification Header */
+.summary {
+  color: @text;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.time {
+  color: @overlay1;
+  font-size: 11px;
+  font-weight: normal;
+  margin-left: 8px;
+}
+
+.body {
+  color: @subtext0;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+/* App Icon */
+.notification-icon {
+  border-radius: 8px;
+  margin: 12px;
+  min-width: 64px;
+  min-height: 64px;
+}
+
+/* Close Button */
+.close-button {
+  background-color: @red;
+  color: @crust;
+  border-radius: 50%;
+  padding: 4px;
+  margin: 8px;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+.close-button:hover {
+  background-color: @maroon;
+}
+
+/* Action Buttons */
+.notification-action {
+  background-color: @surface0;
+  color: @text;
+  border: 1px solid @surface2;
+  border-radius: 6px;
+  margin: 4px 8px 8px 8px;
+  padding: 8px 16px;
+}
+
+.notification-action:hover {
+  background-color: @surface1;
+  border-color: @mauve;
+}
+
+.notification-action:active {
+  background-color: @surface2;
+}
+
+/* Widget - Title */
+.widget-title {
+  background-color: @mantle;
+  color: @text;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 10px 10px 0 0;
+  padding: 12px;
+  margin: 0;
+}
+
+.widget-title > button {
+  background-color: @surface0;
+  color: @text;
+  border: 1px solid @surface2;
+  border-radius: 6px;
+  padding: 6px 12px;
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.widget-title > button:hover {
+  background-color: @surface1;
+  border-color: @mauve;
+}
+
+.widget-title > button:active {
+  background-color: @mauve;
+  color: @base;
+}
+
+/* Widget - DND (Do Not Disturb) */
+.widget-dnd {
+  background-color: @mantle;
+  color: @text;
+  border-radius: 0;
+  padding: 12px;
+  margin: 0;
+  border-top: 1px solid @surface0;
+  border-bottom: 1px solid @surface0;
+}
+
+.widget-dnd > switch {
+  background-color: @surface0;
+  border: 1px solid @surface2;
+  border-radius: 12px;
+  min-width: 48px;
+  min-height: 24px;
+}
+
+.widget-dnd > switch:checked {
+  background-color: @mauve;
+  border-color: @mauve;
+}
+
+.widget-dnd > switch slider {
+  background-color: @text;
+  border-radius: 50%;
+  margin: 2px;
+}
+
+/* Widget - MPRIS */
+.widget-mpris {
+  background-color: @mantle;
+  color: @text;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 8px;
+}
+
+.widget-mpris-player {
+  background-color: @surface0;
+  border: 1px solid @surface2;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 4px 0;
+}
+
+.widget-mpris-title {
+  color: @text;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.widget-mpris-subtitle {
+  color: @subtext0;
+  font-size: 12px;
+}
+
+.widget-mpris > button {
+  background-color: @surface0;
+  color: @text;
+  border: 1px solid @surface2;
+  border-radius: 50%;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 6px;
+}
+
+.widget-mpris > button:hover {
+  background-color: @surface1;
+  border-color: @mauve;
+}
+
+/* Widget - Volume */
+.widget-volume {
+  background-color: @mantle;
+  padding: 12px;
+}
+
+.widget-volume > box > button {
+  background-color: transparent;
+  border: none;
+  color: @text;
+}
+
+.widget-volume scale trough {
+  background-color: @surface0;
+  border-radius: 6px;
+  min-height: 8px;
+}
+
+.widget-volume scale highlight {
+  background-color: @mauve;
+  border-radius: 6px;
+}
+
+.widget-volume scale slider {
+  background-color: @text;
+  border-radius: 50%;
+  min-width: 16px;
+  min-height: 16px;
+}
+
+/* Widget - Buttons Grid */
+.widget-buttons-grid {
+  background-color: @mantle;
+  padding: 8px;
+  border-radius: 0 0 10px 10px;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button {
+  background-color: @surface0;
+  color: @text;
+  border: 1px solid @surface2;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 4px;
+  min-width: 60px;
+  min-height: 60px;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button:hover {
+  background-color: @surface1;
+  border-color: @mauve;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button:active {
+  background-color: @mauve;
+  color: @base;
+}
+
+/* Widget - Menubar */
+.widget-menubar {
+  background-color: @mantle;
+  padding: 8px;
+}
+
+.widget-menubar > box > button {
+  background-color: @surface0;
+  color: @text;
+  border: 1px solid @surface2;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 2px;
+}
+
+.widget-menubar > box > button:hover {
+  background-color: @surface1;
+  border-color: @mauve;
+}
+
+/* Widget - Inhibitors */
+.widget-inhibitors {
+  background-color: @mantle;
+  color: @text;
+  padding: 12px;
+  border-top: 1px solid @surface0;
+}
+
+.widget-inhibitors > button {
+  background-color: @surface0;
+  color: @text;
+  border: 1px solid @surface2;
+  border-radius: 6px;
+  padding: 6px 12px;
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.widget-inhibitors > button:hover {
+  background-color: @surface1;
+  border-color: @mauve;
+}
+
+/* Scrollbar */
+scrollbar {
+  background-color: transparent;
+}
+
+scrollbar trough {
+  background-color: transparent;
+  border-radius: 8px;
+}
+
+scrollbar slider {
+  background-color: @surface1;
+  border-radius: 8px;
+  min-width: 8px;
+}
+
+scrollbar slider:hover {
+  background-color: @surface2;
+}
+
+/* Image */
+.notification-image,
+.widget-mpris-album-art {
+  border-radius: 8px;
+}
+
+/* Progress Bar */
+progressbar {
+  background-color: @surface0;
+  border-radius: 6px;
+  min-height: 8px;
+}
+
+progressbar progress {
+  background-color: @mauve;
+  border-radius: 6px;
+}
+
+/* Blank Window */
+.blank-window {
+  background-color: transparent;
+}
+
+/* Mastodon Notifications (IM category) */
+.notification.im\.received {
+  border-color: @teal;
+}
+
+.notification.im\.received .notification-content {
+  background-color: alpha(@teal, 0.1);
+}
+
+.notification.im\.received:hover {
+  border-color: @blue;
+}
+
+.notification.im\.received .notification-default-action:hover {
+  background-color: alpha(@teal, 0.15);
+}

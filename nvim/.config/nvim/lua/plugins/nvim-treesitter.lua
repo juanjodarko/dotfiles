@@ -23,7 +23,11 @@ return {
                 "markdown",
                 "rust",
                 "svelte",
-                "regex"
+                "regex",
+                "graphql",
+                "python",
+                "go",
+                "elixir"
             },
             sync_install = true,
             auto_install = true,

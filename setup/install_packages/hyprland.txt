@@ -1,0 +1,15 @@
+hyprland
+hyprpaper
+hypridle
+hyprlock
+hyprshot
+waybar
+rofi
+wofi
+dunst
+wl-clipboard
+grim
+slurp
+brightnessctl
+playerctl
+qt6ct

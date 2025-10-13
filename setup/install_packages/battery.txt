@@ -1,0 +1,6 @@
+tlp
+powertop
+auto-cpufreq
+upower
+acpi
+

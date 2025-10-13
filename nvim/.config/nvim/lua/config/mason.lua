@@ -12,18 +12,24 @@ require('mason').setup({
 local lsp_servers = {
     -- Lua (for Neovim config)
     'lua_ls',
-    -- Ruby & Rails  
+    -- Ruby & Rails
     'solargraph',      -- Ruby LSP
     -- Note: ruby_ls and sorbet might not be available in Mason, removing for stability
     -- JavaScript/TypeScript/Node.js
-    'tsserver',        -- TypeScript/JavaScript
+    'ts_ls',           -- TypeScript/JavaScript (formerly tsserver)
     'eslint',          -- JavaScript/TypeScript linting
     'html',            -- HTML
     'cssls',           -- CSS
     'tailwindcss',     -- Tailwind CSS
     'emmet_ls',        -- Emmet for HTML/CSS
-    -- Go - install manually if Mason fails
-    -- 'gopls',        -- Official Go LSP (moved to manual installation)
+    -- GraphQL
+    'graphql',         -- GraphQL LSP
+    -- Python
+    'pyright',         -- Python LSP
+    -- Rust
+    'rust_analyzer',   -- Rust LSP
+    -- Go
+    'gopls',           -- Official Go LSP
     -- Elixir
     'elixirls',        -- Elixir LSP
     -- C++
@@ -44,12 +50,16 @@ local tools = {
     -- JavaScript/TypeScript
     'prettier',        -- Code formatter
     'eslint_d',        -- Fast ESLint daemon
-    -- Go tools - install manually if needed
-    -- 'gofumpt',      -- Go formatter (install with: go install mvdan.cc/gofumpt@latest)
-    -- 'golangci-lint', -- Go linter (install with: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest)
+    -- Python
+    'black',           -- Python formatter
+    'isort',           -- Python import sorter
+    'ruff',            -- Python linter
+    -- Rust tools - rustfmt comes with rust toolchain
+    -- Go tools
+    'gofumpt',         -- Go formatter
+    'goimports',       -- Go import organizer
     -- C++
     'clang-format',    -- C++ formatter
-    -- Note: cppcheck removed as it's not available in Mason
     -- General
     'shellcheck',      -- Shell script linter
     'yamllint',        -- YAML linter

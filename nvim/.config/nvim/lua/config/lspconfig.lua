@@ -17,23 +17,29 @@ lspconfig_defaults.capabilities = vim.tbl_deep_extend(
 vim.api.nvim_create_autocmd('LspAttach', {
     desc = 'LSP actions',
     callback = function(event)
-        local opts = { buffer = event.buf }
+        -- Standard keymap helper
+        local function map(mode, lhs, rhs, desc)
+            vim.keymap.set(mode, lhs, rhs, { buffer = event.buf, desc = desc, silent = true })
+        end
 
-        vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', opts)
-        vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', opts)
-        vim.keymap.set('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
-        vim.keymap.set('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
-        vim.keymap.set('n', 'go', '<cmd>lua vim.lsp.buf.type_definition()<cr>', opts)
-        vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', opts)
-        vim.keymap.set('n', 'gs', '<cmd>lua vim.lsp.buf.signature_help()<cr>', opts)
-        vim.keymap.set('n', '<F2>', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
-        vim.keymap.set({ 'n', 'x' }, '<F3>', '<cmd>lua vim.lsp.buf.format({async = true})<cr>', opts)
-        vim.keymap.set('n', '<F4>', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
-        
-        -- Additional useful keybindings
-        vim.keymap.set('n', '<leader>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<cr>', opts)
-        vim.keymap.set('n', '<leader>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<cr>', opts)
-        vim.keymap.set('n', '<leader>wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<cr>', opts)
+        -- LSP navigation
+        map('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', "Hover documentation")
+        map('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', "Go to definition")
+        map('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>', "Go to declaration")
+        map('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', "Go to implementation")
+        map('n', 'go', '<cmd>lua vim.lsp.buf.type_definition()<cr>', "Go to type definition")
+        map('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', "Show references")
+        map('n', 'gs', '<cmd>lua vim.lsp.buf.signature_help()<cr>', "Signature help")
+
+        -- LSP actions
+        map('n', '<F2>', '<cmd>lua vim.lsp.buf.rename()<cr>', "Rename symbol")
+        map({ 'n', 'x' }, '<F3>', '<cmd>lua vim.lsp.buf.format({async = true})<cr>', "Format code")
+        map('n', '<F4>', '<cmd>lua vim.lsp.buf.code_action()<cr>', "Code actions")
+
+        -- Workspace management
+        map('n', '<leader>wa', '<cmd>lua vim.lsp.buf.add_workspace_folder()<cr>', "Add workspace folder")
+        map('n', '<leader>wr', '<cmd>lua vim.lsp.buf.remove_workspace_folder()<cr>', "Remove workspace folder")
+        map('n', '<leader>wl', '<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<cr>', "List workspace folders")
     end,
 })
 
@@ -138,31 +144,65 @@ local function setup_lsp_servers()
 
     -- JavaScript/TypeScript/React/Node.js LSP Configuration
     if project_config.is_javascript or project_config.is_typescript or project_config.is_nodejs or project_config.is_react then
+        -- Custom root_dir for monorepos (prioritizes workspace root)
+        local function get_typescript_root(fname)
+            -- For monorepos, use workspace root to avoid multiple LSP instances
+            if project_config.is_monorepo then
+                return project_config.monorepo_root
+            end
+
+            -- For regular projects, find nearest package.json or tsconfig.json
+            return lspconfig.util.root_pattern("tsconfig.json", "package.json", ".git")(fname)
+        end
+
         -- TypeScript/JavaScript Server
-        setup_lsp_server('tsserver', {
-            root_dir = lspconfig.util.root_pattern("package.json", "tsconfig.json", ".git"),
+        setup_lsp_server('ts_ls', {
+            root_dir = get_typescript_root,
+            single_file_support = false,  -- Prevent LSP from attaching to random files
             settings = {
                 typescript = {
                     preferences = {
                         includePackageJsonAutoImports = "auto",
                     },
+                    -- Enable workspace support for monorepos
+                    tsserver = {
+                        maxTsServerMemory = 8192,  -- Increase for large monorepos
+                    },
                 },
                 javascript = {
                     preferences = {
-                        includePackageJsonAutoImports = "auto", 
+                        includePackageJsonAutoImports = "auto",
                     },
                 },
             },
             on_attach = function(client, bufnr)
-                -- Disable tsserver formatting in favor of prettier
+                -- Disable ts_ls formatting in favor of prettier
                 client.server_capabilities.documentFormattingProvider = false
                 client.server_capabilities.documentRangeFormattingProvider = false
             end,
         })
 
+        -- Custom root_dir for ESLint in monorepos
+        local function get_eslint_root(fname)
+            -- For monorepos, use workspace root for consistent config
+            if project_config.is_monorepo then
+                return project_config.monorepo_root
+            end
+
+            -- For regular projects, find nearest eslint config
+            return lspconfig.util.root_pattern(
+                ".eslintrc",
+                ".eslintrc.js",
+                ".eslintrc.cjs",
+                ".eslintrc.json",
+                "eslint.config.js",
+                "package.json"
+            )(fname)
+        end
+
         -- ESLint LSP
         setup_lsp_server('eslint', {
-            root_dir = lspconfig.util.root_pattern(".eslintrc", ".eslintrc.js", ".eslintrc.json", "package.json"),
+            root_dir = get_eslint_root,
             settings = {
                 codeAction = {
                     disableRuleComment = {
@@ -183,7 +223,7 @@ local function setup_lsp_servers()
                 format = true,
                 nodePath = "",
                 onIgnoredFiles = "off",
-                packageManager = "npm",
+                packageManager = project_config.is_monorepo and "pnpm" or "npm",
                 problems = {
                     shortenToSingleLine = false
                 },
@@ -193,7 +233,8 @@ local function setup_lsp_servers()
                 useESLintClass = false,
                 validate = "on",
                 workingDirectory = {
-                    mode = "location"
+                    -- Use auto mode for monorepos (uses nearest package.json as working dir)
+                    mode = project_config.is_monorepo and "auto" or "location"
                 }
             }
         })
@@ -276,7 +317,7 @@ local function setup_lsp_servers()
             cmd = {
                 "clangd",
                 "--background-index",
-                "--clang-tidy", 
+                "--clang-tidy",
                 "--header-insertion=iwyu",
                 "--completion-style=detailed",
                 "--function-arg-placeholders",
@@ -286,6 +327,69 @@ local function setup_lsp_servers()
                 usePlaceholders = true,
                 completeUnimported = true,
                 clangdFileStatus = true,
+            },
+        })
+    end
+
+    -- GraphQL LSP Configuration
+    if project_config.is_graphql or project_config.is_javascript or project_config.is_typescript or project_config.is_react then
+        setup_lsp_server('graphql', {
+            root_dir = lspconfig.util.root_pattern(
+                ".graphqlrc",
+                ".graphqlrc.yml",
+                ".graphqlrc.yaml",
+                ".graphqlrc.json",
+                "graphql.config.js",
+                "graphql.config.ts",
+                "package.json",
+                ".git"
+            ),
+            filetypes = { "graphql", "typescriptreact", "javascriptreact", "typescript", "javascript" },
+        })
+    end
+
+    -- Python LSP Configuration
+    if project_config.is_python then
+        setup_lsp_server('pyright', {
+            root_dir = lspconfig.util.root_pattern(
+                "pyproject.toml",
+                "setup.py",
+                "setup.cfg",
+                "requirements.txt",
+                "Pipfile",
+                "pyrightconfig.json",
+                ".git"
+            ),
+            settings = {
+                python = {
+                    analysis = {
+                        autoSearchPaths = true,
+                        useLibraryCodeForTypes = true,
+                        diagnosticMode = "workspace",
+                        typeCheckingMode = "basic",
+                    },
+                },
+            },
+        })
+    end
+
+    -- Rust LSP Configuration
+    if project_config.is_rust then
+        setup_lsp_server('rust_analyzer', {
+            root_dir = lspconfig.util.root_pattern("Cargo.toml", "rust-project.json", ".git"),
+            settings = {
+                ['rust-analyzer'] = {
+                    cargo = {
+                        allFeatures = true,
+                        loadOutDirsFromCheck = true,
+                    },
+                    checkOnSave = {
+                        command = "clippy",
+                    },
+                    procMacro = {
+                        enable = true,
+                    },
+                },
             },
         })
     end

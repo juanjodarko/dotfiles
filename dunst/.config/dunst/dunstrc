@@ -1,0 +1,202 @@
+# Dunst configuration with Catppuccin Mocha theme
+# See dunst(5) for all configuration options
+
+[global]
+    ### Display ###
+
+    # Display notification on focused monitor
+    follow = keyboard
+
+    ### Geometry ###
+
+    # Dynamic width from 300 to 500
+    width = (300, 500)
+
+    # Maximum height of a single notification
+    height = 300
+
+    # Position the notification in the top right corner
+    origin = top-right
+
+    # Offset from the origin (avoid overlapping with waybar)
+    offset = 20x60
+
+    # Scale factor (0 = auto-detect)
+    scale = 0
+
+    # Maximum number of notification (0 means no limit)
+    notification_limit = 5
+
+    ### Progress bar ###
+
+    progress_bar = true
+    progress_bar_height = 12
+    progress_bar_frame_width = 1
+    progress_bar_min_width = 150
+    progress_bar_max_width = 400
+    progress_bar_corner_radius = 5
+    progress_bar_corners = all
+
+    # Corner radius for icons
+    icon_corner_radius = 8
+    icon_corners = all
+
+    # Show how many messages are currently hidden
+    indicate_hidden = yes
+
+    # Transparency (0-100, requires compositor)
+    transparency = 5
+
+    # Separator between notifications
+    separator_height = 2
+
+    # Padding
+    padding = 12
+    horizontal_padding = 12
+    text_icon_padding = 12
+
+    # Frame around notifications
+    frame_width = 2
+
+    # Gap between notifications (requires compositor)
+    gap_size = 8
+
+    # Separator color
+    separator_color = frame
+
+    # Sort by urgency
+    sort = yes
+
+    ### Text ###
+
+    font = JetBrainsMono Nerd Font 10
+
+    line_height = 0
+
+    # Allow HTML markup
+    markup = full
+
+    # Format: %s = summary, %b = body
+    format = "<b>%s</b>\n%b"
+
+    # Text alignment
+    alignment = left
+    vertical_alignment = center
+
+    # Show age of message if older than threshold (seconds)
+    show_age_threshold = 60
+
+    # Ellipsize long lines
+    ellipsize = middle
+
+    # Recognize newlines
+    ignore_newline = no
+
+    # Stack duplicate notifications
+    stack_duplicates = true
+    hide_duplicate_count = false
+
+    # Show indicators for URLs (U) and actions (A)
+    show_indicators = yes
+
+    ### Icons ###
+
+    enable_recursive_icon_lookup = true
+    icon_theme = Papirus-Dark, Adwaita
+    icon_position = left
+    min_icon_size = 48
+    max_icon_size = 64
+
+    ### History ###
+
+    sticky_history = yes
+    history_length = 50
+
+    ### Misc/Advanced ###
+
+    dmenu = /usr/bin/wofi -dmenu -p dunst
+    browser = /usr/bin/xdg-open
+    always_run_script = true
+    title = Dunst
+    class = Dunst
+
+    # Rounded corners (matches Hyprland decoration.rounding)
+    corner_radius = 10
+    corners = all
+
+    # Don't ignore dbus close messages
+    ignore_dbusclose = false
+
+    ### Wayland ###
+    layer = overlay
+    force_xwayland = false
+
+    ### Mouse ###
+
+    mouse_left_click = do_action, close_current
+    mouse_middle_click = close_all
+    mouse_right_click = close_current
+
+[experimental]
+    per_monitor_dpi = false
+
+
+# Catppuccin Mocha color scheme
+# Base colors from mocha.conf
+
+[urgency_low]
+    # Low urgency: Green tones (success/info)
+    background = "#1e1e2e"    # base
+    foreground = "#a6e3a1"    # green
+    frame_color = "#a6e3a1"   # green
+    timeout = 5
+    override_pause_level = 10
+
+[urgency_normal]
+    # Normal urgency: Blue/Mauve tones (default)
+    background = "#1e1e2e"    # base
+    foreground = "#cdd6f4"    # text
+    frame_color = "#89b4fa"   # blue
+    timeout = 8
+    override_pause_level = 30
+
+[urgency_critical]
+    # Critical urgency: Red tones (errors/warnings)
+    background = "#1e1e2e"    # base
+    foreground = "#f38ba8"    # red
+    frame_color = "#f38ba8"   # red
+    timeout = 0
+    override_pause_level = 60
+
+
+# Application-specific rules
+
+# Volume/brightness notifications
+[volume]
+    summary = "Volume*"
+    set_stack_tag = "volume"
+    timeout = 2
+
+[brightness]
+    summary = "Brightness*"
+    set_stack_tag = "brightness"
+    timeout = 2
+
+# Battery notifications
+[battery_low]
+    summary = "*battery*"
+    urgency = critical
+
+# Network notifications
+[network]
+    summary = "*Network*"
+    summary = "*Wi-Fi*"
+    urgency = normal
+
+# Screenshot notifications
+[screenshot]
+    summary = "*screenshot*"
+    summary = "*Screenshot*"
+    timeout = 3
+
+# vim: ft=cfg
