@@ -1,0 +1,154 @@
+/* Settings Menu - Catppuccin Theme */
+
+@import "/home/juanjo/.config/themes/current.css";
+
+* {
+  font-family: 'JetBrainsMono Nerd Font', monospace;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Window */
+window {
+  margin: 0px;
+  padding: 8px;
+  border: 2px solid @mauve;
+  border-radius: 12px;
+  background-color: @base;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Inner Box */
+#inner-box {
+  margin: 0px;
+  padding: 4px;
+  border: none;
+  background-color: transparent;
+}
+
+/* Outer Box */
+#outer-box {
+  margin: 0px;
+  padding: 0px;
+  border: none;
+  background-color: transparent;
+}
+
+/* Scroll */
+#scroll {
+  margin: 0px;
+  padding: 4px;
+  border: none;
+  background-color: transparent;
+}
+
+/* Input - Hidden for settings menu */
+#input {
+  margin: 0px;
+  padding: 0px;
+  border: none;
+  opacity: 0;
+  min-height: 0px;
+}
+
+/* Text */
+#text {
+  margin: 0px 8px;
+  padding: 12px 14px;
+  border: none;
+  color: @text;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+/* Entry Base */
+#entry {
+  padding: 2px;
+  margin: 2px 0px;
+  background-color: transparent;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+/* Entry Hover State - Base */
+#entry:hover {
+  background-color: @surface1;
+  margin-left: 2px;
+  border: 1px solid @overlay0;
+}
+
+#entry:hover #text {
+  color: @text;
+  font-weight: 600;
+}
+
+/* Entry Selected State - Base */
+#entry:selected {
+  background-color: @surface1;
+  border: 2px solid @mauve;
+  margin-left: 4px;
+}
+
+#entry:selected #text {
+  color: @mauve;
+  font-weight: 600;
+}
+
+/* Color-coded entries by setting type */
+
+/* Theme - Mauve (Primary) */
+#entry:nth-child(1) #text {
+  color: @mauve;
+}
+
+#entry:nth-child(1):hover {
+  background-color: rgba(203, 166, 247, 0.1);
+  border: 1px solid @mauve;
+}
+
+#entry:nth-child(1):selected {
+  border: 2px solid @mauve;
+  background-color: rgba(203, 166, 247, 0.15);
+}
+
+#entry:nth-child(1):selected #text {
+  color: @mauve;
+}
+
+/* Wallpaper - Teal (Coming Soon) */
+#entry:nth-child(2) #text {
+  color: @overlay0;
+}
+
+#entry:nth-child(2):hover {
+  background-color: rgba(108, 112, 134, 0.1);
+  border: 1px solid @overlay0;
+}
+
+#entry:nth-child(2):selected {
+  border: 2px solid @overlay0;
+  background-color: rgba(108, 112, 134, 0.15);
+}
+
+#entry:nth-child(2):selected #text {
+  color: @overlay0;
+}
+
+/* Notifications - Yellow (Coming Soon) */
+#entry:nth-child(3) #text {
+  color: @overlay0;
+}
+
+#entry:nth-child(3):hover {
+  background-color: rgba(108, 112, 134, 0.1);
+  border: 1px solid @overlay0;
+}
+
+#entry:nth-child(3):selected {
+  border: 2px solid @overlay0;
+  background-color: rgba(108, 112, 134, 0.15);
+}
+
+#entry:nth-child(3):selected #text {
+  color: @overlay0;
+}

@@ -4,6 +4,7 @@ vim.g.loaded_netrwPlugin = 1
 -- User configurations
 require("user.settings")
 require("user.keymaps")
+require("user.monorepo")  -- Monorepo utilities
 
 -- Plugin configurations
 require("config.lazy")
@@ -20,12 +21,3 @@ vim.g.vrc_output_buffer_name = '_OUTPUT.json'
 vim.g.vrc_auto_format_response_patterns = {
   json = 'jq',
 }
-
--- Notification setup
-require("notify").setup({
-  background_colour = "#000000",
-})
-
--- Key mappings
-vim.api.nvim_set_keymap('n', '<leader>cc', ':Gen<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('v', '<leader>ce', ':GenExplain<CR>', { noremap = true, silent = true })

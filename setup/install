@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#
+# install — modular provisioning for Arch / Hyprland machines
+#
+
+set -e
+
+MACHINE=""
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    --machine)
+      MACHINE="$2"
+      shift 2
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z "$MACHINE" ]]; then
+  echo "Usage: $0 --machine <machine-name>"
+  exit 1
+fi
+
+BASE_DIR="$(dirname "$(realpath "$0")")"
+PKG_DIR="$BASE_DIR/install_packages"
+SCRIPT_DIR="$BASE_DIR/scripts"
+
+echo "💻 Setting up machine: $MACHINE"
+echo "📦 Installing package groups..."
+
+# Detect package manager
+if command -v yay >/dev/null; then
+  PM="yay -S --needed --noconfirm -"
+elif command -v pacman >/dev/null; then
+  PM="sudo pacman -S --needed --noconfirm -"
+else
+  echo "❌ No package manager found (yay or pacman)"
+  exit 1
+fi
+
+# Core package groups
+for FILE in base dev audio gpu battery hyprland fonts; do
+  if [[ -f "$PKG_DIR/$FILE.txt" ]]; then
+    echo "→ Installing group: $FILE"
+    $PM < "$PKG_DIR/$FILE.txt"
+  fi
+done
+
+# Machine-specific packages
+if [[ -f "$PKG_DIR/$MACHINE.txt" ]]; then
+  echo "→ Installing machine-specific packages: $MACHINE"
+  $PM < "$PKG_DIR/$MACHINE.txt"
+fi
+
+# Run post-setup scripts
+if [[ -x "$SCRIPT_DIR/setup-machine.sh" ]]; then
+  echo "⚙️  Running post-setup configuration for $MACHINE..."
+  "$SCRIPT_DIR/setup-machine.sh" "$MACHINE"
+fi
+
+echo "✅ Setup complete for $MACHINE"
+

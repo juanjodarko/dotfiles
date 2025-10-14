@@ -2,6 +2,7 @@
 
 # Check release
 if [ ! -f /etc/arch-release ]; then
+  echo '{"text":"󰸟", "tooltip":"Not an Arch system"}'
   exit 0
 fi
 
@@ -45,20 +46,29 @@ fi
 
 # Check for AUR updates
 if [ -n "$aur_helper" ]; then
-  aur_updates=$(${aur_helper} -Qua | grep -c '^')
+  aur_updates=$(${aur_helper} -Qua 2>/dev/null | wc -l)
+  aur_updates=$(echo "$aur_updates" | tr -d '[:space:]')
+  aur_updates=${aur_updates:-0}
 else
   aur_updates=0
 fi
 
 # Check for official repository updates
-official_updates=$(
-  (while pgrep -x checkupdates >/dev/null; do sleep 1; done)
-  checkupdates | grep -c '^'
-)
+if command -v checkupdates &>/dev/null; then
+  # Wait for any running checkupdates to finish
+  while pgrep -x checkupdates >/dev/null 2>&1; do sleep 1; done
+  official_updates=$(checkupdates 2>/dev/null | wc -l)
+  official_updates=$(echo "$official_updates" | tr -d '[:space:]')
+  official_updates=${official_updates:-0}
+else
+  official_updates=0
+fi
 
 # Check for Flatpak updates
 if pkg_installed flatpak; then
-  flatpak_updates=$(flatpak remote-ls --updates | grep -c '^')
+  flatpak_updates=$(flatpak remote-ls --updates 2>/dev/null | wc -l)
+  flatpak_updates=$(echo "$flatpak_updates" | tr -d '[:space:]')
+  flatpak_updates=${flatpak_updates:-0}
 else
   flatpak_updates=0
 fi
@@ -79,8 +89,11 @@ elif [ "$aur_helper" == "paru" ]; then
 fi
 
 # Module and tooltip
-if [ $total_updates -eq 0 ]; then
-  echo "{\"text\":\"󰸟\", \"tooltip\":\"Packages are up to date\"}"
+# Check if checkupdates is available
+if ! command -v checkupdates &>/dev/null; then
+  echo '{"text":"󰞒", "tooltip":"Update checker available\n\nNote: Install pacman-contrib for full functionality\n\nClick to check for updates"}'
+elif [ $total_updates -eq 0 ]; then
+  echo '{"text":"󰸟", "tooltip":"Packages are up to date\n\nClick to check again"}'
 else
   echo "{\"text\":\"󰞒\", \"tooltip\":\"${tooltip//\"/\\\"}\"}"
 fi

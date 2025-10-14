@@ -34,3 +34,11 @@ vim.opt.breakindent = true              -- maintain indent when wrapping indente
 vim.opt.fillchars:append({ eob = ' ' }) -- remove the ~ from end of buffer
 vim.opt.shortmess:append({ I = true })  -- disable the splash screen
 vim.opt.showmode = false
+
+-- Enable server mode for remote communication (theme switching, etc.)
+-- This allows external scripts to send commands to running Neovim instances
+if vim.fn.has('nvim-0.9') == 1 then
+  -- Create a unique server address based on the process ID
+  local server_addr = vim.fn.stdpath('run') .. '/nvim.' .. vim.fn.getpid() .. '.sock'
+  vim.fn.serverstart(server_addr)
+end

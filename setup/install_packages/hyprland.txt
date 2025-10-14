@@ -1,0 +1,16 @@
+hyprland
+hyprpaper
+hypridle
+hyprlock
+hyprshot
+waybar
+rofi
+rofi-calc
+rofi-emoji
+wofi
+dunst
+wl-clipboard
+grim
+slurp
+playerctl
+qt6ct

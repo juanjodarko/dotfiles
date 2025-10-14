@@ -27,9 +27,27 @@ return {
                 lualine_a = { 'mode' },
                 lualine_b = { 'branch', 'diff' },
                 lualine_c = {
+                    -- Noice integration: show recording, search count, and command
+                    {
+                        require("noice").api.statusline.mode.get,
+                        cond = require("noice").api.statusline.mode.has,
+                        color = { fg = "#ff9e64" },
+                    },
+                    {
+                        require("noice").api.status.command.get,
+                        cond = require("noice").api.status.command.has,
+                        color = { fg = "#7dcfff" },
+                    },
                 },
                 lualine_x = { 'encoding', 'fileformat', 'filetype' },
-                lualine_y = {},
+                lualine_y = {
+                    -- Noice integration: show search count
+                    {
+                        require("noice").api.statusline.search.get,
+                        cond = require("noice").api.statusline.search.has,
+                        color = { fg = "#9ece6a" },
+                    },
+                },
                 lualine_z = { 'location' }
             },
             inactive_sections = {

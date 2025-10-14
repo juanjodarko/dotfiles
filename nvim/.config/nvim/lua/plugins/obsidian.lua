@@ -53,5 +53,57 @@ return {
         tags = "",
       },
     })
-  end
+  end,
+
+  -- Keybindings for common Obsidian operations
+  keys = {
+    -- Daily Notes (Hybrid approach: create in Obsidian with Templater, open in Neovim)
+    {
+      "<leader>oo",
+      function()
+        -- Open today's daily note (assumes created in Obsidian with Templater)
+        local date = os.date("%Y-%m-%d-%A")
+        local path = "~/Documents/obsidian-notes/1.Projects/0.Dailies/" .. date .. ".md"
+        local expanded = vim.fn.expand(path)
+
+        if vim.fn.filereadable(expanded) == 1 then
+          vim.cmd("edit " .. expanded)
+        else
+          vim.notify(
+            "Daily note doesn't exist. Create it in Obsidian first with Templater.",
+            vim.log.levels.WARN
+          )
+        end
+      end,
+      desc = "Obsidian: Open today's daily note"
+    },
+
+    {
+      "<leader>oy",
+      function()
+        -- Open yesterday's daily note
+        local yesterday = os.time() - (24 * 60 * 60)
+        local date = os.date("%Y-%m-%d-%A", yesterday)
+        local path = "~/Documents/obsidian-notes/1.Projects/0.Dailies/" .. date .. ".md"
+        local expanded = vim.fn.expand(path)
+
+        if vim.fn.filereadable(expanded) == 1 then
+          vim.cmd("edit " .. expanded)
+        else
+          vim.notify("Yesterday's daily note doesn't exist.", vim.log.levels.WARN)
+        end
+      end,
+      desc = "Obsidian: Open yesterday's daily note"
+    },
+
+    -- Navigation
+    { "<leader>os", "<cmd>ObsidianSearch<CR>", desc = "Obsidian: Search notes" },
+    { "<leader>oq", "<cmd>ObsidianQuickSwitch<CR>", desc = "Obsidian: Quick switch" },
+    { "<leader>ob", "<cmd>ObsidianBacklinks<CR>", desc = "Obsidian: Show backlinks" },
+
+    -- Creation
+    { "<leader>on", "<cmd>ObsidianNew<CR>", desc = "Obsidian: New note (current dir)" },
+
+    -- Editing helpers (mappings <leader>of and <leader>od defined in config above)
+  },
 }

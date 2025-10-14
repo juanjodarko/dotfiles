@@ -1,0 +1,20 @@
+Hyprland Configuration Backup
+=============================
+Backup Date: Sat Aug 23 07:27:45 PM CST 2025
+Backup Path: /home/juanjo/.config/hypr/backups/hypr_backup_20250823_192745
+Files Backed Up: 8
+System: Linux DeusExBlade 6.16.2-arch1-1 #1 SMP PREEMPT_DYNAMIC Wed, 20 Aug 2025 21:43:45 +0000 x86_64 GNU/Linux
+Hyprland Version: Hyprland 0.50.1 built from branch  at commit 4e242d086e20b32951fdc0ebcbfb4d41b5be8dcc  ([gha] Nix: update inputs).
+
+Files in this backup:
+drwxr-xr-x 2 juanjo juanjo  4096 Aug 23 19:27 .
+drwxr-xr-x 3 juanjo juanjo  4096 Aug 23 19:27 ..
+-rw-r--r-- 1 juanjo juanjo     0 Aug 23 19:27 backup_info.txt
+-rwxr-xr-x 1 juanjo juanjo  1902 Aug 23 19:27 change_wallpaper.sh
+-rw-r--r-- 1 juanjo juanjo  2466 Aug 23 19:27 CLAUDE.md
+-rwxr-xr-x 1 juanjo juanjo  2917 Aug 23 19:27 generate_hyprpaper_config.sh
+-rw-r--r-- 1 juanjo juanjo   164 Aug 23 19:27 hypridle.conf
+-rw-r--r-- 1 juanjo juanjo 11922 Aug 23 19:27 hyprland.conf
+-rw-r--r-- 1 juanjo juanjo  1502 Aug 23 19:27 hyprlock.conf
+-rw-r--r-- 1 juanjo juanjo  5746 Aug 23 19:27 hyprpaper.conf
+-rw-r--r-- 1 juanjo juanjo  1180 Aug 23 19:27 mocha.conf

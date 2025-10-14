@@ -3,11 +3,8 @@
 # Author: Jesse Mirabel (@sejjy)
 # GitHub: https://github.com/sejjy/mechabar
 
-# Rofi config
-config="$HOME/.config/rofi/bluetooth-menu.rasi"
-
-# Rofi window override
-override_disabled="inputbar { enabled: false; } listview { lines: 1; padding: 6px; }"
+# Wofi config
+style="$HOME/.config/wofi/bluetooth-menu.css"
 
 get_device_icon() {
   local device_mac=$1
@@ -29,28 +26,35 @@ get_device_icon() {
 }
 
 while true; do
-  # Get list of paired devices
+  # Get list of paired devices with connection status
   bluetooth_devices=$(bluetoothctl devices | while read -r line; do
     device_mac=$(echo "$line" | awk '{print $2}')
     device_name=$(echo "$line" | awk '{$1=$2=""; print substr($0, 3)}')
     icon=$(get_device_icon "$device_mac")
-    echo "$icon $device_name"
+
+    # Check connection status
+    connection_status=$(bluetoothctl info "$device_mac" | grep "Connected:" | awk '{print $2}')
+    if [[ "$connection_status" == "yes" ]]; then
+      echo "$icon $device_name 󰂄"  # Add connected indicator
+    else
+      echo "$icon $device_name"
+    fi
   done)
 
   options=$(
-    echo "Scan for devices  "
-    echo "Disable Bluetooth"
+    echo "󰐇  Scan for devices"
+    echo "󰂲  Disable Bluetooth"
     echo "$bluetooth_devices"
   )
-  option="Enable Bluetooth"
+  option="󰂯  Enable Bluetooth"
 
   # Get Bluetooth status
   bluetooth_status=$(bluetoothctl show | grep "Powered:" | awk '{print $2}')
 
   if [[ "$bluetooth_status" == "yes" ]]; then
-    selected_option=$(echo -e "$options" | rofi -dmenu -i -selected-row 1 -config "${config}" -p " ")
+    selected_option=$(echo -e "$options" | wofi --dmenu --normal-window --style "${style}" --prompt "󰂯  Select Device" --width 570 --height 400 --location 0)
   else
-    selected_option=$(echo -e "$option" | rofi -dmenu -i -selected-row 1 -config "${config}" -theme-str "${override_disabled}" -p " ")
+    selected_option=$(echo -e "$option" | wofi --dmenu --normal-window --style "${style}" --prompt "󰂲  Bluetooth Disabled" --width 570 --height 140 --location 0)
   fi
 
   # Exit if no option is selected
@@ -60,44 +64,56 @@ while true; do
 
   # Actions based on selected option
   case "$selected_option" in
-  "Enable Bluetooth")
-    notify-send "Bluetooth Enabled"
+  *"Enable Bluetooth"*)
+    notify-send "󰂯 Bluetooth" "Enabling Bluetooth..."
     rfkill unblock bluetooth
     bluetoothctl power on
     sleep 1
     ;;
-  "Disable Bluetooth")
-    notify-send "Bluetooth Disabled"
+  *"Disable Bluetooth"*)
+    notify-send "󰂲 Bluetooth" "Bluetooth Disabled"
     rfkill block bluetooth
     bluetoothctl power off
     sleep 1
     ;;
-  "Scan for devices"*)
-    notify-send "Press '?' to show help."
-    kitty --title '󰂱  Bluetooth TUI' bash -c "bluetui" # Launch bluetui
+  *"Scan for devices"*)
+    notify-send "󰐇 Bluetooth" "Opening Bluetooth Manager\nPress '?' to show help."
+    ghostty --title '󰂱  Bluetooth TUI' bash -c "bluetui" # Launch bluetui
     ;;
   *)
-    # Extract device name
+    # Extract device name (remove icon and connection indicator)
     device_name="${selected_option#* }"
+    device_name="${device_name% 󰂄}"  # Remove connected indicator if present
     device_name="${device_name## }"
 
     if [[ -n "$device_name" ]]; then
       # Get MAC address
       device_mac=$(bluetoothctl devices | grep "$device_name" | awk '{print $2}')
 
-      # Trust and pair device
-      bluetoothctl trust "$device_mac" >/dev/null 2>&1
-      bluetoothctl pair "$device_mac" >/dev/null 2>&1
-
-      # Connect to device
-      bluetoothctl connect "$device_mac" &
-      sleep 3
+      # Check if already connected
       connection_status=$(bluetoothctl info "$device_mac" | grep "Connected:" | awk '{print $2}')
 
       if [[ "$connection_status" == "yes" ]]; then
-        notify-send "Connected to \"$device_name\"."
+        # Disconnect if already connected
+        notify-send "󰂲 Bluetooth" "Disconnecting from \"$device_name\"..."
+        bluetoothctl disconnect "$device_mac"
+        sleep 1
       else
-        notify-send "Failed to connect to \"$device_name\"."
+        # Trust and pair device
+        bluetoothctl trust "$device_mac" >/dev/null 2>&1
+        bluetoothctl pair "$device_mac" >/dev/null 2>&1
+
+        # Connect to device
+        notify-send "󰂯 Bluetooth" "Connecting to \"$device_name\"..."
+        bluetoothctl connect "$device_mac" &
+        sleep 3
+        connection_status=$(bluetoothctl info "$device_mac" | grep "Connected:" | awk '{print $2}')
+
+        if [[ "$connection_status" == "yes" ]]; then
+          notify-send "󰂄 Bluetooth Connected" "Successfully connected to \"$device_name\"."
+        else
+          notify-send "󰂲 Bluetooth Failed" "Failed to connect to \"$device_name\"."
+        fi
       fi
     fi
     ;;

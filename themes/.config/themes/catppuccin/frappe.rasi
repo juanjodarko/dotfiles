@@ -1,0 +1,141 @@
+/* Catppuccin Frappé Theme for Rofi (Dark) */
+
+* {
+    /* Catppuccin Frappé Colors */
+    bg: #303446;
+    bg-alt: #292c3c;
+    fg: #c6d0f5;
+    fg-alt: #b5bfe2;
+
+    surface0: #414559;
+    surface1: #51576d;
+    surface2: #626880;
+
+    lavender: #babbf1;
+    blue: #8caaee;
+    sapphire: #85c1dc;
+    sky: #99d1db;
+    teal: #81c8be;
+    green: #a6d189;
+    yellow: #e5c890;
+    peach: #ef9f76;
+    maroon: #ea999c;
+    red: #e78284;
+    mauve: #ca9ee6;
+    pink: #f4b8e4;
+
+    background-color: transparent;
+    text-color: @fg;
+    font: "CaskaydiaCove Nerd Font 14";
+}
+
+window {
+    location: center;
+    width: 600px;
+    border-radius: 16px;
+    background-color: @bg;
+    border: 2px solid;
+    border-color: @lavender;
+}
+
+mainbox {
+    padding: 12px;
+    background-color: transparent;
+}
+
+inputbar {
+    padding: 12px;
+    margin: 0px 0px 12px 0px;
+    background-color: @surface0;
+    border-radius: 12px;
+    children: [prompt, entry];
+}
+
+prompt {
+    padding: 8px 12px;
+    background-color: @lavender;
+    text-color: @bg;
+    border-radius: 8px;
+    margin: 0px 12px 0px 0px;
+}
+
+entry {
+    placeholder: "Search...";
+    placeholder-color: @fg-alt;
+    text-color: @fg;
+    background-color: transparent;
+}
+
+listview {
+    columns: 1;
+    lines: 8;
+    spacing: 6px;
+    padding: 8px 0px;
+    background-color: transparent;
+    scrollbar: false;
+}
+
+element {
+    padding: 12px;
+    border-radius: 10px;
+    background-color: transparent;
+    text-color: @fg;
+}
+
+element normal.normal {
+    background-color: transparent;
+    text-color: @fg;
+}
+
+element selected.normal {
+    background-color: @surface1;
+    text-color: @lavender;
+}
+
+element alternate.normal {
+    background-color: transparent;
+    text-color: @fg;
+}
+
+element-icon {
+    size: 48px;
+    margin: 0px 16px 0px 0px;
+    background-color: transparent;
+}
+
+element-text {
+    background-color: transparent;
+    text-color: inherit;
+    vertical-align: 0.5;
+}
+
+/* Mode Switcher (bottom tabs) */
+mode-switcher {
+    margin: 12px 0px 0px 0px;
+    spacing: 8px;
+}
+
+button {
+    padding: 10px;
+    background-color: @surface0;
+    text-color: @fg-alt;
+    border-radius: 8px;
+}
+
+button selected {
+    background-color: @lavender;
+    text-color: @bg;
+}
+
+/* Messages */
+message {
+    padding: 12px;
+    background-color: @surface0;
+    border-radius: 12px;
+    margin: 0px 0px 12px 0px;
+}
+
+textbox {
+    text-color: @fg;
+    background-color: transparent;
+}

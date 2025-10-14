@@ -3,18 +3,8 @@ return {
     version = "*",
     dependencies = 'nvim-tree/nvim-web-devicons',
     config = function()
-        local mocha = require("catppuccin.palettes").get_palette("mocha")
-
         require('bufferline').setup({
             options = {
-                highlights = require('catppuccin.groups.integrations.bufferline').get({
-                    styles = { "italic", "bold" },
-                    custom = {
-                        mocha = {
-                            background = { fg = mocha.text },
-                        },
-                    }
-                }),
                 mode = "buffers",                    -- set to "tabs" to only show tabpages instead
                 themable = true,                     -- allows highlight groups to be overriden i.e. sets highlights as default
                 numbers = "ordinal",
@@ -26,11 +16,11 @@ return {
                     icon = ' ',                      -- this should be omitted if indicator style is not 'icon'
                     style = 'icon',
                 },
-                buffer_close_icon = '',
+                buffer_close_icon = '',
                 modified_icon = '●',
-                close_icon = '',
-                left_trunc_marker = '',
-                right_trunc_marker = '',
+                close_icon = '',
+                left_trunc_marker = '',
+                right_trunc_marker = '',
                 max_name_length = 18,
                 max_prefix_length = 15, -- prefix used when a buffer is de-duplicated
                 truncate_names = true,  -- whether or not tab names should be truncated
@@ -38,13 +28,13 @@ return {
                 diagnostics = "nvim_lsp",
                 diagnostics_update_in_insert = false,
                 diagnostics_indicator = function(count, level, diagnostics_dict, context)
-                    local icon = level:match("error") and " " or " "
+                    local icon = level:match("error") and " " or " "
                     return " " .. icon .. count
                 end,
                 offsets = {
                     {
                         filetype = 'NvimTree',
-                        text = '  Files',
+                        text = '  Files',
                         highlight = 'StatusLine',
                         text_align = 'left',
                     }
@@ -80,22 +70,15 @@ return {
                     items = {
                         {
                             name = "Tests", -- Mandatory
-                            highlight = { underline = true, sp = mocha.blue }, -- Optional
+                            highlight = { underline = true, sp = "#89b4fa" }, -- Use direct color instead of catppuccin
                             priority = 2, -- determines where it will appear relative to other groups (Optional)
-                            icon = "", -- Optional
+                            icon = "", -- Optional
                             matcher = function(buf) -- Mandatory
                                 return buf.name:match('%_test') or buf.name:match('%_spec')
                             end,
                         },
                     }
                 },
-                --custom_areas = {
-                --  left = function()
-                --    return {
-                --      { text = '    ', fg = '#8fff6d' },
-                --    }
-                --  end,
-                --},
             },
         })
     end,

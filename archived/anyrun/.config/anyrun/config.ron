@@ -1,0 +1,36 @@
+Config(
+  // Window positioning and size
+  x: Fraction(0.5),
+  y: Fraction(0.5),
+  width: Fraction(0.4),
+  height: Absolute(1),
+
+  // Layer type (Overlay appears above other windows)
+  layer: Overlay,
+
+  // UI options
+  hide_icons: false,
+  hide_plugin_info: true,
+  close_on_click: true,
+  ignore_exclusive_zones: false,
+  show_results_immediately: false,
+  max_entries: Some(10),
+
+  // Plugin order (first matched takes priority)
+  plugins: [
+    "libapplications.so",  // App launcher
+    "librink.so",          // Calculator/unit converter
+    "libshell.so",         // Shell commands
+    "libsymbols.so",       // Unicode/symbols lookup
+  ],
+
+  // Keybindings
+  keybinds: [
+    Keybind(key: "Return", action: Select),
+    Keybind(key: "Up", action: Up),
+    Keybind(key: "Down", action: Down),
+    Keybind(key: "ISO_Left_Tab", action: Up, shift: true),
+    Keybind(key: "Tab", action: Down),
+    Keybind(key: "Escape", action: Close),
+  ],
+)

@@ -1,0 +1,5 @@
+# Fingerprint reader support
+fprintd
+
+# Note: Device-specific drivers (e.g., libfprint-cs9711-git for CS9711)
+# are installed automatically by init_fingerprint.sh based on detected hardware

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Wrapper script to launch rofi-update-manager with proper detachment
+# This ensures rofi displays correctly when called from waybar
+
+~/.config/waybar/scripts/rofi-update-manager.sh &
+disown

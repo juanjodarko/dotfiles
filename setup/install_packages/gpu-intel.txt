@@ -1,0 +1,3 @@
+# Intel GPU packages
+vulkan-intel
+lib32-vulkan-intel

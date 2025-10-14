@@ -1,29 +1,36 @@
-local mapper = function(mode, key, result)
-  vim.api.nvim_set_keymap(mode, key, result, { noremap = true })
-end
-
 vim.g.mapleader = ' '
-vim.api.nvim_set_keymap('', 'gf', ':edit <cfile><cr>', {})
 vim.g.loaded_matchparent = 1
 
-vim.api.nvim_set_keymap('n', '<leader>ve', ':edit ~/.config/nvim/init.lua<cr>', {})
-vim.api.nvim_set_keymap('n', '<leader>vr', ':source ~/.config/nvim/init.lua<cr>', {})
+-- Standard keymap helper
+local function map(mode, lhs, rhs, desc)
+    vim.keymap.set(mode, lhs, rhs, { desc = desc, silent = true })
+end
 
-vim.api.nvim_set_keymap('n', '<C-h>', 'TmuxNavigateLeft<CR>', { silent = true })
-vim.api.nvim_set_keymap('n', '<C-j>', 'TmuxNavigateDown<CR>', { silent = true })
-vim.api.nvim_set_keymap('n', '<C-k>', 'TmuxNavigateUp<CR>', { silent = true })
-vim.api.nvim_set_keymap('n', '<C-l>', 'TmuxNavigateRight<CR>', { silent = true })
+-- Config editing keymaps
+map('n', '<leader>ve', ':edit ~/.config/nvim/init.lua<cr>', "Edit init.lua")
+map('n', '<leader>vr', ':source ~/.config/nvim/init.lua<cr>', "Reload init.lua")
 
-mapper('n', '<leader>ghw', ':h <C-R>=expand("<cword>")<CR><CR>')
-mapper('n', '<leader>pv', ':wincmd v<bar> :Ex <bar> :veritcal resize 30 <CR>')
+-- File navigation
+map('', 'gf', ':edit <cfile><cr>', "Go to file")
 
--- TroubleToggle
-mapper("n", "<leader>ttdl", ":TroubleToggle<CR>", { silent = true, noremap = true })
-mapper("n", "<leader>ttwd", ":TroubleToggle workspace_diagnostics<CR>", { silent = true, noremap = true })
-mapper("n", "<leader>ttdd", ":TroubleToggle document_diagnostics<CR>", { silent = true, noremap = true })
-mapper("n", "<leader>ttll", ":TroubleToggle loclist<CR>", { silent = true, noremap = true })
-mapper("n", "<leader>ttxq", ":TroubleToggle quickfix<CR>", { silent = true, noremap = true })
-mapper("n", "gR", ":TroubleToggle lsp_references<CR>", { silent = true, noremap = true })
+-- Tmux navigation
+map('n', '<C-h>', 'TmuxNavigateLeft<CR>', "Navigate left (tmux)")
+map('n', '<C-j>', 'TmuxNavigateDown<CR>', "Navigate down (tmux)")
+map('n', '<C-k>', 'TmuxNavigateUp<CR>', "Navigate up (tmux)")
+map('n', '<C-l>', 'TmuxNavigateRight<CR>', "Navigate right (tmux)")
+
+-- Terminal mode navigation (exit terminal mode + move to window)
+map('t', '<C-h>', '<C-\\><C-n><C-w>h', "Navigate left from terminal")
+map('t', '<C-j>', '<C-\\><C-n><C-w>j', "Navigate down from terminal")
+map('t', '<C-k>', '<C-\\><C-n><C-w>k', "Navigate up from terminal")
+map('t', '<C-l>', '<C-\\><C-n><C-w>l', "Navigate right from terminal")
+
+-- Quick escape from terminal mode
+map('t', '<Esc><Esc>', '<C-\\><C-n>', "Exit terminal mode")
+
+-- Utility keymaps
+map('n', '<leader>ghw', ':h <C-R>=expand("<cword>")<CR><CR>', "Help for word under cursor")
+map('n', '<leader>pv', ':wincmd v<bar> :Ex <bar> :vertical resize 30 <CR>', "Open file explorer")
 
 -- VCR
-mapper('n', '<leader>xr', ':call VcrQuery()<CR>')
+map('n', '<leader>xr', ':call VcrQuery()<CR>', "VCR Query")
