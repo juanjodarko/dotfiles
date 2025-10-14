@@ -26,11 +26,11 @@ PATH=$(brew --prefix)/opt/findutils/libexec/gnubin:$PATH
 PATH=$(brew --prefix)/opt/lua-language-server/bin:$PATH
 
 # eval "$(direnv hook zsh)"
-eval "$(rbenv init - zsh)"
-eval "$(nodenv init -)"
+# eval "$(rbenv init - zsh)"
+# eval "$(nodenv init -)"
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
+# eval "$(pyenv init -)"
 
 # DIRENV_WARN_TIMEOUT="30s"
 
@@ -49,10 +49,6 @@ export FZF_DEFAULT_COMMAND='fd --hidden --strip-cwd-prefix --exclude .git'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 export FZF_ALT_C_COMMAND="fd --type d --hidden --strip-cwd-prefix --exclude .git"
 
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-
 _fzf_compgen_path() {
   fd --hidden --exclude ".git" . "$1"
 }
@@ -61,7 +57,7 @@ _fzf_compgen_dir() {
   fd --type d --hidden --exclude ".git" . "$1"
 }
 
-source ~/Applications/fzf-git.sh/fzf-git.sh
+# source ~/Applications/fzf-git.sh/fzf-git.sh
 
 export FREEDESKTOP_MIME_TYPES_PATH=/opt/homebrew/share/mime/packages/freedesktop.org.xml
 
@@ -92,3 +88,18 @@ export FZF_DEFAULT_OPTS=" \
 --multi"
 
 export KITTY_CONFIG_DIRECTORY=$HOME/.config/kitty
+export WORKDIR=~/workspace
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# Added by change/development_environment script
+export WORKDIR="/Users/juanjo/workspace"
+export PATH="$WORKDIR/development_environment/bin:$PATH"
+
+# Task Master aliases added on 9/10/2025
+alias tm='task-master'
+alias taskmaster='task-master'
+
+alias corgi-front-lint-fix="./node_modules/.bin/eslint --fix --quiet $1"
+alias corgi-front-check="pnpm typecheck && pnpm test:coverage:branch"
+alias corgi-middle-check="pnpm typecheck && pnpm lint:fix --quiet && pnpm test"
