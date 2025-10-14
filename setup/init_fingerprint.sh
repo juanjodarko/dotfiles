@@ -245,33 +245,53 @@ echo ""
 # ============================================================================
 print_step "Configuring PAM authentication..."
 
-PAM_FILE="/etc/pam.d/system-auth"
-PAM_LINE="auth       sufficient  pam_fprintd.so"
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+TEMPLATE_DIR="$SCRIPT_DIR/system-configs/pam.d"
 
-if grep -q "pam_fprintd.so" "$PAM_FILE"; then
+SYSTEM_AUTH_FILE="/etc/pam.d/system-auth"
+POLKIT_FILE="/etc/pam.d/polkit-1"
+
+if grep -q "pam_fprintd.so" "$SYSTEM_AUTH_FILE"; then
     print_success "PAM already configured for fingerprint"
 else
     echo ""
-    echo "This will add fingerprint authentication to system-auth."
-    echo "It will try fingerprint first, then fall back to password."
+    echo "This will configure fingerprint authentication for:"
+    echo "  • System login (TTY, display manager)"
+    echo "  • sudo commands"
+    echo "  • Hyprlock screen unlock"
+    echo "  • 1Password and polkit-protected apps"
+    echo ""
+    echo "Fingerprint will be tried first, with password as fallback."
     echo ""
     read -p "$(echo -e ${BLUE}Configure PAM for fingerprint auth?${NC} [Y/n]: )" response
     response=${response:-y}
 
     if [[ "$response" =~ ^[Yy] ]]; then
-        # Create backup
-        sudo cp "$PAM_FILE" "$PAM_FILE.backup.$(date +%Y%m%d-%H%M%S)"
-        print_success "Created backup: $PAM_FILE.backup.*"
+        # Backup existing configs
+        print_step "Creating backups..."
+        sudo cp "$SYSTEM_AUTH_FILE" "$SYSTEM_AUTH_FILE.backup.$(date +%Y%m%d-%H%M%S)"
+        [ -f "$POLKIT_FILE" ] && sudo cp "$POLKIT_FILE" "$POLKIT_FILE.backup.$(date +%Y%m%d-%H%M%S)"
+        print_success "Created backups"
 
-        # Add pam_fprintd.so after pam_faillock preauth
-        sudo sed -i '/^auth.*pam_faillock\.so.*preauth/a auth       sufficient  pam_fprintd.so' "$PAM_FILE"
-
-        if grep -q "pam_fprintd.so" "$PAM_FILE"; then
-            print_success "PAM configured successfully"
+        # Install system-auth template
+        print_step "Installing system-auth template..."
+        if sudo cp "$TEMPLATE_DIR/system-auth" "$SYSTEM_AUTH_FILE"; then
+            print_success "system-auth configured"
         else
-            print_error "Failed to configure PAM"
+            print_error "Failed to install system-auth"
             exit 1
         fi
+
+        # Install polkit-1 template
+        print_step "Installing polkit-1 template..."
+        if sudo cp "$TEMPLATE_DIR/polkit-1" "$POLKIT_FILE"; then
+            print_success "polkit-1 configured"
+        else
+            print_warning "Failed to install polkit-1 (not critical)"
+        fi
+
+        print_success "PAM configuration complete"
     else
         print_skip "PAM configuration skipped"
     fi
