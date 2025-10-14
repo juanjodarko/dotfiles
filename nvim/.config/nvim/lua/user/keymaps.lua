@@ -34,3 +34,8 @@ map('n', '<leader>pv', ':wincmd v<bar> :Ex <bar> :vertical resize 30 <CR>', "Ope
 
 -- VCR
 map('n', '<leader>xr', ':call VcrQuery()<CR>', "VCR Query")
+
+-- Monorepo / Package Script Runner
+map('n', '<leader>mr', function() require('user.monorepo').show_script_menu() end, "Monorepo: Quick menu")
+map('n', '<leader>mR', function() require('user.monorepo').list_all_scripts() end, "Monorepo: All scripts")
+map('n', '<leader>ml', function() require('user.monorepo').run_last() end, "Monorepo: Re-run last")
