@@ -240,6 +240,12 @@ function M.run_script(script_name, opts)
     opts = opts or {}
 
     local cmd = M.build_workspace_command(script_name)
+
+    -- Append additional arguments if provided
+    if opts.args then
+        cmd = cmd .. " " .. opts.args
+    end
+
     M.last_command = cmd
 
     -- Use Snacks terminal for interactive output
@@ -272,6 +278,39 @@ function M.run_last()
     end
 end
 
+-- Update test snapshots
+function M.update_snapshots()
+    local workspace = M.detect_current_workspace()
+    local config = project_utils.get_project_config()
+
+    local package_json = workspace and workspace.package_json or (config.monorepo_root or vim.fn.getcwd()) .. '/package.json'
+
+    if vim.fn.filereadable(package_json) ~= 1 then
+        vim.notify("No package.json found", vim.log.levels.WARN)
+        return
+    end
+
+    local scripts = M.parse_package_scripts(package_json)
+
+    -- Detect which test script to use (prefer test:coverage:branch if available)
+    local test_script = nil
+    if scripts["test:coverage:branch"] then
+        test_script = "test:coverage:branch"
+    elseif scripts["test:unit"] then
+        test_script = "test:unit"
+    elseif scripts.test then
+        test_script = "test"
+    end
+
+    if not test_script then
+        vim.notify("No test script found in package.json", vim.log.levels.WARN)
+        return
+    end
+
+    -- Run test with -u flag to update snapshots
+    M.run_script(test_script, { args = "-- -u" })
+end
+
 -- Quick menu for common scripts (typecheck, lint, lint --fix, test)
 function M.show_script_menu()
     -- Check if we have package.json
@@ -290,22 +329,25 @@ function M.show_script_menu()
     -- Show which-key menu
     local wk = require("which-key")
 
-    -- Build menu items based on available scripts
-    local menu = {}
+    -- Build menu items in which-key spec format
+    local menu_items = {
+        { "<leader>m", group = "Monorepo/Package" }
+    }
 
     if scripts.typecheck then
-        menu.t = { function() M.run_script("typecheck") end, "Typecheck" }
+        table.insert(menu_items, { "<leader>mt", function() M.run_script("typecheck") end, desc = "Typecheck" })
     end
 
     if scripts.lint then
-        menu.l = { function() M.run_script("lint") end, "Lint" }
+        table.insert(menu_items, { "<leader>ml", function() M.run_script("lint") end, desc = "Lint" })
     end
 
     -- Handle "lint --fix" - could be a separate script or we append --fix
     if scripts["lint:fix"] then
-        menu.f = { function() M.run_script("lint:fix") end, "Lint --fix" }
+        table.insert(menu_items, { "<leader>mf", function() M.run_script("lint:fix") end, desc = "Lint --fix" })
     elseif scripts.lint then
-        menu.f = {
+        table.insert(menu_items, {
+            "<leader>mf",
             function()
                 local cmd = M.build_workspace_command("lint") .. " --fix"
                 M.last_command = cmd
@@ -316,26 +358,29 @@ function M.show_script_menu()
                 end
                 vim.notify(string.format("Running: %s", cmd), vim.log.levels.INFO)
             end,
-            "Lint --fix"
-        }
+            desc = "Lint --fix"
+        })
     end
 
     if scripts.test then
-        menu.x = { function() M.run_script("test") end, "Test" }
+        table.insert(menu_items, { "<leader>mx", function() M.run_script("test") end, desc = "Test" })
+    end
+
+    -- Add snapshot update option if test script exists
+    if scripts.test or scripts["test:coverage:branch"] then
+        table.insert(menu_items, { "<leader>mu", function() M.update_snapshots() end, desc = "Update snapshots" })
     end
 
     -- Add last command re-run option
     if M.last_command then
-        menu.r = { function() M.run_last() end, "Re-run last" }
+        table.insert(menu_items, { "<leader>mr", function() M.run_last() end, desc = "Re-run last" })
     end
 
     -- Show all scripts option
-    menu.a = { function() M.list_all_scripts() end, "All scripts..." }
+    table.insert(menu_items, { "<leader>ma", function() M.list_all_scripts() end, desc = "All scripts..." })
 
     -- Register and show menu
-    wk.add({
-        { "<leader>m", group = "Monorepo/Package" }
-    })
+    wk.add(menu_items)
 
     -- Trigger the menu
     vim.defer_fn(function()
@@ -390,5 +435,6 @@ vim.api.nvim_create_user_command('MonorepoLSP', M.show_lsp_workspace, { desc = "
 vim.api.nvim_create_user_command('MonorepoRun', M.show_script_menu, { desc = "Quick menu for package scripts" })
 vim.api.nvim_create_user_command('MonorepoRunAll', M.list_all_scripts, { desc = "List all package scripts" })
 vim.api.nvim_create_user_command('MonorepoRunLast', M.run_last, { desc = "Re-run last package script" })
+vim.api.nvim_create_user_command('MonorepoUpdateSnapshots', M.update_snapshots, { desc = "Update test snapshots" })
 
 return M
