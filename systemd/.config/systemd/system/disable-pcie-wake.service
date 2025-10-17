@@ -1,0 +1,17 @@
+[Unit]
+Description=Disable unnecessary PCIe wake sources to prevent spurious wakeups
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c 'if [ -f /proc/acpi/wakeup ]; then \
+    for device in PEG0 RP13 RP06; do \
+        if grep -q "^$device.*\\*enabled" /proc/acpi/wakeup 2>/dev/null; then \
+            echo $device > /proc/acpi/wakeup 2>/dev/null || true; \
+        fi; \
+    done; \
+fi'
+
+[Install]
+WantedBy=multi-user.target

@@ -328,6 +328,11 @@ fi
 print_step "Installing missing packages..."
 echo ""
 
+# Temporarily modify PATH to use system Python for AUR builds
+# This prevents issues with mise/asdf Python installations that may lack build tools
+ORIGINAL_PATH="$PATH"
+export PATH="/usr/bin:/usr/local/bin:$PATH"
+
 # Use yay if available (for AUR packages), otherwise pacman
 if command -v yay &> /dev/null; then
     print_step "Using yay (AUR helper)..."
@@ -348,6 +353,9 @@ else
         echo "  sudo pacman -S ${MISSING_PACKAGES[*]}"
     fi
 fi
+
+# Restore original PATH
+export PATH="$ORIGINAL_PATH"
 
 echo ""
 echo "✅ Package check complete"

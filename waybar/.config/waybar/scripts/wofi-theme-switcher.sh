@@ -203,6 +203,12 @@ if pgrep -x Hyprland > /dev/null; then
     hyprctl reload 2>/dev/null &
 fi
 
+# Update SDDM login screen theme
+if command -v pkexec &> /dev/null && [ -f /usr/local/bin/update-sddm-theme ]; then
+    # Use pkexec to run with elevated privileges (passwordless via polkit rule)
+    pkexec /usr/local/bin/update-sddm-theme "$theme_file" 2>/dev/null &
+fi
+
 # Notify user
 notify-send "Theme Changed" "Switched to Catppuccin $theme_name\nAll applications updated instantly" -i preferences-desktop-theme
 

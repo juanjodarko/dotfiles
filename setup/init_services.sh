@@ -59,6 +59,34 @@ if ! command -v systemctl &> /dev/null; then
     exit 0
 fi
 
+# ============================================================================
+# Deploy systemd service files via stow
+# ============================================================================
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SYSTEMD_USER_DIR="$HOME/.config/systemd/user"
+
+print_step "Checking systemd service files..."
+
+# Check if systemd directory needs to be stowed
+if [ -d "$DOTFILES_DIR/systemd" ]; then
+    if [ ! -d "$SYSTEMD_USER_DIR" ] || [ ! -L "$SYSTEMD_USER_DIR/audio-router.service" ]; then
+        echo ""
+        if ask_yn "Would you like to stow the systemd module now?" "y"; then
+            cd "$DOTFILES_DIR"
+            if stow -v systemd 2>&1; then
+                print_success "Systemd service files deployed"
+            else
+                print_skip "Failed to stow systemd module (may already be linked)"
+            fi
+        fi
+    else
+        print_skip "Systemd service files already deployed"
+    fi
+fi
+
+echo ""
+
 # Reload systemd user daemon
 systemctl --user daemon-reload 2>/dev/null || true
 
@@ -129,8 +157,47 @@ else
 fi
 
 echo ""
+
+# ============================================================================
+# Audio Router Service
+# ============================================================================
+
+AUDIO_ROUTER_SERVICE="audio-router.service"
+AUDIO_ROUTER_SERVICE_PATH="$HOME/.config/systemd/user/$AUDIO_ROUTER_SERVICE"
+
+print_step "Checking $AUDIO_ROUTER_SERVICE..."
+
+if [ ! -f "$AUDIO_ROUTER_SERVICE_PATH" ]; then
+    print_skip "Service file not found (stow systemd module first)"
+elif systemctl --user is-enabled "$AUDIO_ROUTER_SERVICE" &>/dev/null; then
+    if systemctl --user is-active "$AUDIO_ROUTER_SERVICE" &>/dev/null; then
+        print_skip "Already enabled and running"
+    else
+        print_step "Service enabled but not running, starting..."
+        systemctl --user start "$AUDIO_ROUTER_SERVICE"
+        print_success "Service started"
+    fi
+else
+    echo ""
+    echo "  The Audio Router daemon automatically applies saved routing preferences"
+    echo "  to new audio streams based on application name."
+    echo ""
+    if ask_yn "Enable audio router daemon?" "n"; then
+        systemctl --user enable "$AUDIO_ROUTER_SERVICE"
+        systemctl --user start "$AUDIO_ROUTER_SERVICE"
+        print_success "Service enabled and started"
+        echo "   Saved audio routes will now be auto-applied"
+        echo "   Configure routes via: waybar audio router button (🎵)"
+    else
+        print_skip "Skipped by user choice"
+        echo "   To enable later: systemctl --user enable --now $AUDIO_ROUTER_SERVICE"
+    fi
+fi
+
+echo ""
 echo "✅ Service initialization complete"
 echo ""
 echo "To check service status:"
 echo "  systemctl --user status $MASTODON_SERVICE"
 echo "  systemctl --user status $BATTERY_SERVICE"
+echo "  systemctl --user status $AUDIO_ROUTER_SERVICE"

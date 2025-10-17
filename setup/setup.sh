@@ -184,6 +184,19 @@ main() {
             echo ""
             run_script "init_fingerprint.sh" "Configuring fingerprint authentication" "true"
         fi
+
+        # Configure audio profiles if WirePlumber is installed
+        if command -v wpctl &> /dev/null; then
+            echo ""
+            run_script "init_audio_profiles.sh" "Configuring audio profile management" "true"
+        fi
+
+        # Configure laptop power management if on a laptop
+        chassis_type=$(cat /sys/class/dmi/id/chassis_type 2>/dev/null || echo "0")
+        if [[ "$chassis_type" =~ ^(8|9|10|14)$ ]]; then
+            echo ""
+            run_script "init_power_management.sh" "Configuring laptop power management" "true"
+        fi
     else
         print_warning "pacman not found, skipping package installation"
     fi

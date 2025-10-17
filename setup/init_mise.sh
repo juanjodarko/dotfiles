@@ -136,6 +136,31 @@ else
 fi
 
 echo ""
+
+# ============================================================================
+# Install Python build tools (for AUR package builds)
+# ============================================================================
+
+# Check if Python is managed by mise
+if mise ls python &>/dev/null; then
+    print_step "Installing Python build tools for AUR compatibility..."
+
+    # Find all Python installations
+    PYTHON_PATHS=$(find ~/.local/share/mise/installs/python/*/bin/python -type f 2>/dev/null || true)
+
+    if [ -n "$PYTHON_PATHS" ]; then
+        for python_bin in $PYTHON_PATHS; do
+            # Check if build module is already installed
+            if ! $python_bin -m build --version &>/dev/null; then
+                print_step "Installing build module for: $python_bin"
+                $python_bin -m pip install --quiet build 2>/dev/null || true
+            fi
+        done
+        print_success "Python build tools verified"
+    fi
+fi
+
+echo ""
 echo "✅ Mise initialization complete"
 echo ""
 echo "Installed tools:"

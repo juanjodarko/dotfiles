@@ -1,0 +1,11 @@
+[Unit]
+Description=Disable USB wake sources to prevent spurious wakeups
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c 'if [ -f /proc/acpi/wakeup ]; then echo XHC > /proc/acpi/wakeup 2>/dev/null || true; fi'
+
+[Install]
+WantedBy=multi-user.target

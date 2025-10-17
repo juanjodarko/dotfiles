@@ -2,7 +2,35 @@
 
 This directory contains system configuration templates that are installed by setup scripts to enable fingerprint authentication and other system features.
 
-## PAM Configuration Files
+## Configuration Files
+
+### SDDM Display Manager
+
+SDDM configuration templates for login screen appearance and behavior.
+
+#### sddm.conf.d/theme.conf
+
+**Installed to:** `/etc/sddm.conf.d/theme.conf`
+**Applied by:** `setup/init_sddm.sh`
+
+Configures SDDM login screen with:
+- Catppuccin theme matching system theme
+- Disabled auto-login (secure login required)
+- User avatar support
+- Theme synchronized with system theme switcher
+
+**Key settings:**
+- Current theme: catppuccin-macchiato (matches system default)
+- Auto-login disabled for security
+- Theme updates when switching system themes
+
+**Required packages:**
+- `catppuccin-sddm-theme-mocha`
+- `catppuccin-sddm-theme-macchiato`
+- `catppuccin-sddm-theme-frappe`
+- `catppuccin-sddm-theme-latte`
+
+### PAM Configuration Files
 
 PAM (Pluggable Authentication Modules) configurations control system authentication behavior. These templates enable fingerprint authentication across different contexts.
 

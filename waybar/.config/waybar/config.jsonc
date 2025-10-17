@@ -46,6 +46,7 @@
 
     "custom/wifi",          // wi-fi
     "bluetooth",            // bluetooth
+    "custom/audio-router",  // audio stream router
     "custom/fingerprint",   // fingerprint manager
     "custom/update",        // system update
     "custom/notification",  // notifications (SwayNC)
@@ -330,6 +331,15 @@
     "on-click": "~/.config/waybar/scripts/bluetooth-menu.sh",
     "on-click-right": "ghostty --title '󰂯  Bluetooth TUI' bash -c bluetui",
     "interval": 5, // Reduced from 1s for better battery life
+    "min-length": 1,
+    "max-length": 1
+  },
+
+  "custom/audio-router": {
+    "format": "🎵",
+    "tooltip": true,
+    "tooltip-format": "Audio Router\n\nRoute application audio to different devices\nClick to manage stream routing",
+    "on-click": "~/.config/waybar/scripts/audio-router.sh",
     "min-length": 1,
     "max-length": 1
   },

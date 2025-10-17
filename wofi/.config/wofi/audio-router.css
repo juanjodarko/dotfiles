@@ -1,0 +1,150 @@
+/* Audio Router - Catppuccin Theme */
+/* Stream routing interface with color-coded devices */
+
+@import "/home/juanjo/.config/themes/current.css";
+
+* {
+  font-family: 'JetBrainsMono Nerd Font', monospace;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Window */
+window {
+  margin: 0px;
+  padding: 8px;
+  border: 2px solid @green;
+  border-radius: 12px;
+  background-color: @base;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Inner Box */
+#inner-box {
+  margin: 0px;
+  padding: 4px;
+  border: none;
+  background-color: transparent;
+}
+
+/* Outer Box */
+#outer-box {
+  margin: 0px;
+  padding: 0px;
+  border: none;
+  background-color: transparent;
+}
+
+/* Scroll */
+#scroll {
+  margin: 0px;
+  padding: 4px;
+  border: none;
+  background-color: transparent;
+}
+
+/* Input - Enhanced and Prominent */
+#input {
+  margin: 6px 8px 10px 8px;
+  padding: 10px 14px;
+  border: 2px solid @surface1;
+  border-radius: 8px;
+  color: @text;
+  background-color: @surface0;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+#input:focus {
+  border: 2px solid @green;
+  background-color: @surface1;
+}
+
+#input image {
+  border: none;
+  color: @green;
+  margin-right: 6px;
+}
+
+/* Text */
+#text {
+  margin: 0px 8px;
+  padding: 10px 12px;
+  border: none;
+  color: @text;
+  transition: all 0.2s ease;
+}
+
+/* Entry Base */
+#entry {
+  padding: 2px;
+  margin: 2px 0px;
+  background-color: transparent;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+/* Entry Hover State */
+#entry:hover {
+  background-color: @surface1;
+  margin-left: 2px;
+  border: 1px solid @overlay0;
+}
+
+#entry:hover #text {
+  color: @text;
+  font-weight: 600;
+}
+
+/* Entry Selected State */
+#entry:selected {
+  background-color: @surface1;
+  border: 2px solid @green;
+  margin-left: 4px;
+}
+
+#entry:selected #text {
+  color: @green;
+  font-weight: 600;
+}
+
+/* Last two entries are always control options (Refresh, Exit or Back) */
+
+/* Second-to-last entry - Refresh/Back - Yellow */
+#entry:nth-last-child(2) #text {
+  color: @yellow;
+}
+
+#entry:nth-last-child(2):hover {
+  background-color: rgba(249, 226, 175, 0.1);
+  border: 1px solid @yellow;
+}
+
+#entry:nth-last-child(2):selected {
+  border: 2px solid @yellow;
+  background-color: rgba(249, 226, 175, 0.15);
+}
+
+#entry:nth-last-child(2):selected #text {
+  color: @yellow;
+}
+
+/* Last entry - Exit - Red */
+#entry:last-child #text {
+  color: @red;
+}
+
+#entry:last-child:hover {
+  background-color: rgba(243, 139, 168, 0.1);
+  border: 1px solid @red;
+}
+
+#entry:last-child:selected {
+  border: 2px solid @red;
+  background-color: rgba(243, 139, 168, 0.15);
+}
+
+#entry:last-child:selected #text {
+  color: @red;
+}

@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# update-sddm-theme - Update SDDM login screen theme
+#
+# This script updates the SDDM theme to match the system theme.
+# It's designed to be called via polkit/pkexec for passwordless execution.
+#
+# Usage: update-sddm-theme <flavor> [accent]
+#   flavor: mocha, latte, frappe, or macchiato
+#   accent: mauve (default), blue, pink, lavender, etc.
+#
+
+set -e
+
+FLAVOR="$1"
+ACCENT="${2:-mauve}"  # Default to mauve if not specified
+CONFIG_FILE="/etc/sddm.conf.d/theme.conf"
+
+# Validate input
+if [ -z "$FLAVOR" ]; then
+    echo "Error: No flavor specified" >&2
+    echo "Usage: $0 <mocha|latte|frappe|macchiato> [accent]" >&2
+    exit 1
+fi
+
+# Validate flavor
+case "$FLAVOR" in
+    mocha|latte|frappe|macchiato)
+        ;;
+    *)
+        echo "Error: Invalid flavor '$FLAVOR'" >&2
+        echo "Valid flavors: mocha, latte, frappe, macchiato" >&2
+        exit 1
+        ;;
+esac
+
+# Check if config file exists
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Error: SDDM config file not found: $CONFIG_FILE" >&2
+    echo "Run setup/init_sddm.sh first" >&2
+    exit 1
+fi
+
+# Build theme name with accent
+THEME_NAME="catppuccin-$FLAVOR-$ACCENT"
+
+# Check if theme is installed
+THEME_DIR="/usr/share/sddm/themes/$THEME_NAME"
+if [ ! -d "$THEME_DIR" ]; then
+    echo "Warning: Theme directory not found: $THEME_DIR" >&2
+    echo "Trying to find available accent colors..." >&2
+
+    # Try to find any available accent for this flavor
+    available=$(ls -d /usr/share/sddm/themes/catppuccin-$FLAVOR-* 2>/dev/null | head -1)
+    if [ -n "$available" ]; then
+        THEME_NAME=$(basename "$available")
+        echo "Using available theme: $THEME_NAME" >&2
+    else
+        echo "No themes found for flavor: $FLAVOR" >&2
+        echo "Install with: yay -S catppuccin-sddm-theme-$FLAVOR" >&2
+        exit 1
+    fi
+fi
+
+# Update the Current= line in the config file
+if grep -q "^Current=" "$CONFIG_FILE"; then
+    # Replace existing Current= line
+    sed -i "s|^Current=.*|Current=$THEME_NAME|" "$CONFIG_FILE"
+    echo "SDDM theme updated to $THEME_NAME"
+else
+    # Add Current= line if missing (shouldn't happen with our config)
+    sed -i "/^\[Theme\]/a Current=$THEME_NAME" "$CONFIG_FILE"
+    echo "SDDM theme set to $THEME_NAME"
+fi
+
+exit 0

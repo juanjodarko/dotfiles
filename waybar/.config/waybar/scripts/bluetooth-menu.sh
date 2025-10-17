@@ -78,7 +78,7 @@ while true; do
     ;;
   *"Scan for devices"*)
     notify-send "󰐇 Bluetooth" "Opening Bluetooth Manager\nPress '?' to show help."
-    ghostty --title '󰂱  Bluetooth TUI' bash -c "bluetui" # Launch bluetui
+    ghostty --title='󰂱  Bluetooth TUI' -e bluetui # Launch bluetui
     ;;
   *)
     # Extract device name (remove icon and connection indicator)

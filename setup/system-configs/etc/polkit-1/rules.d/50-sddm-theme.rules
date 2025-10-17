@@ -1,0 +1,19 @@
+/* Allow users to update SDDM theme without password
+ *
+ * This rule allows members of the wheel group to run the
+ * update-sddm-theme script without authentication.
+ *
+ * This enables seamless theme switching where the SDDM login screen
+ * theme automatically updates when the user changes their system theme.
+ *
+ * Security: The script only modifies the theme setting in SDDM config,
+ * nothing else. It validates input and only accepts specific theme names.
+ */
+
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.policykit.exec" &&
+        action.lookup("program") == "/usr/local/bin/update-sddm-theme" &&
+        subject.isInGroup("wheel")) {
+        return polkit.Result.YES;
+    }
+});
