@@ -1,0 +1,50 @@
+# Disable USB autosuspend for Bluetooth devices
+# This prevents random disconnections caused by the USB controller
+# entering power-saving mode
+#
+# Context:
+# - USB autosuspend can cause Bluetooth controllers to enter low-power mode
+# - When the controller suspends, all connected devices disconnect
+# - Auto-reconnect fails because the USB controller is in low-power state
+# - This affects both AC and battery power configurations
+#
+# Solution:
+# - Set power/control to "on" for all Bluetooth USB devices
+# - This keeps the Bluetooth controller always active
+# - Minimal battery impact on laptops (Bluetooth uses very little power when idle)
+
+# Match Bluetooth USB devices by driver
+ACTION=="add", SUBSYSTEM=="usb", DRIVER=="btusb", ATTR{power/control}="on"
+
+# Match Bluetooth USB devices by device class
+# Class E0 (Wireless Controller) with SubClass 01 (RF Controller) and Protocol 01 (Bluetooth)
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{bDeviceClass}=="e0", ATTRS{bDeviceSubClass}=="01", ATTRS{bDeviceProtocol}=="01", ATTR{power/control}="on"
+
+# Match Bluetooth USB devices by interface class
+# Some Bluetooth adapters present as interface class E0:01:01
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{bInterfaceClass}=="e0", ATTRS{bInterfaceSubClass}=="01", ATTRS{bInterfaceProtocol}=="01", ATTR{power/control}="on"
+
+# Match common Bluetooth chip manufacturers by vendor ID
+# Intel Bluetooth (8087)
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="8087", ATTR{power/control}="on"
+
+# Realtek Bluetooth (0bda)
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0bda", ATTR{power/control}="on"
+
+# Qualcomm Atheros Bluetooth (0cf3)
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0cf3", ATTR{power/control}="on"
+
+# Broadcom Bluetooth (0a5c)
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0a5c", ATTR{power/control}="on"
+
+# MediaTek Bluetooth (0e8d)
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0e8d", ATTR{power/control}="on"
+
+# Cambridge Silicon Radio (CSR) / Qualcomm Bluetooth (0a12)
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="0a12", ATTR{power/control}="on"
+
+# Apple Bluetooth (05ac)
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="05ac", ATTR{power/control}="on"
+
+# Generic Bluetooth devices - catch-all for any device with "bluetooth" in product string
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{product}=="*[Bb]luetooth*", ATTR{power/control}="on"

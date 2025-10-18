@@ -1,7 +1,15 @@
 #!/bin/sh
-brightness=$(brightnessctl g) 
-full_brightness=9
-brightness_percentage=$(expr $brightness \* 100 / $full_brightness)
-echo $brightness_percentage
-killall dunst
-dunstify -i /usr/share/icons/custom/bright.png " Brightness " " ${brightness_percentage}% "
+# Get current and maximum brightness
+brightness=$(brightnessctl g)
+max_brightness=$(brightnessctl max)
+brightness_percentage=$(expr $brightness \* 100 / $max_brightness)
+
+# Use custom icon if available, otherwise use generic icon
+if [ -f /usr/share/icons/custom/bright.png ]; then
+    icon_path="/usr/share/icons/custom/bright.png"
+else
+    icon_path="display-brightness-symbolic"
+fi
+
+# Send notification via notify-send (swaync will capture it)
+notify-send -i "$icon_path" -h int:value:$brightness_percentage -h string:synchronous:brightness "Brightness" "${brightness_percentage}%"

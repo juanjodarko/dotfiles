@@ -208,6 +208,57 @@ verify_ac_detection() {
     fi
 }
 
+verify_bluetooth_power() {
+    print_step "Checking Bluetooth USB autosuspend configuration..."
+
+    local issues=0
+
+    # Check udev rule
+    if [ -f /etc/udev/rules.d/50-bluetooth-usb-disable-autosuspend.rules ]; then
+        print_success "Bluetooth USB autosuspend udev rule present"
+    else
+        print_skip "Bluetooth USB autosuspend udev rule not found"
+        issues=$((issues + 1))
+    fi
+
+    # Check systemd service
+    if systemctl is-enabled bluetooth-disable-usb-autosuspend.service &>/dev/null; then
+        if systemctl is-active bluetooth-disable-usb-autosuspend.service &>/dev/null; then
+            print_success "Bluetooth power management service enabled and running"
+        else
+            print_skip "Bluetooth power management service enabled but not running"
+            issues=$((issues + 1))
+        fi
+    else
+        print_skip "Bluetooth power management service not enabled"
+        issues=$((issues + 1))
+    fi
+
+    # Check actual USB devices
+    local bt_usb_found=false
+    for device in /sys/bus/usb/devices/*/; do
+        if [ -f "$device/power/control" ]; then
+            if [ -f "$device/driver" ] && readlink "$device/driver" 2>/dev/null | grep -q btusb; then
+                bt_usb_found=true
+                local control_value=$(cat "$device/power/control" 2>/dev/null || echo "unknown")
+                if [ "$control_value" = "on" ]; then
+                    print_success "Bluetooth USB autosuspend disabled (control=$control_value)"
+                else
+                    print_error "Bluetooth USB autosuspend still enabled (control=$control_value)"
+                    issues=$((issues + 1))
+                fi
+                break
+            fi
+        fi
+    done
+
+    if [ "$bt_usb_found" = false ]; then
+        print_skip "No Bluetooth USB devices detected (rules will apply when detected)"
+    fi
+
+    return $issues
+}
+
 run_verification() {
     echo ""
     echo "═══════════════════════════════════════════════════════"
@@ -230,6 +281,10 @@ run_verification() {
     echo ""
 
     verify_ac_detection
+    total_issues=$((total_issues + $?))
+    echo ""
+
+    verify_bluetooth_power
     total_issues=$((total_issues + $?))
     echo ""
 
@@ -475,6 +530,71 @@ deploy_user_services() {
     fi
 }
 
+deploy_bluetooth_power_management() {
+    print_step "Deploying Bluetooth power management (requires sudo)..."
+
+    # Check if already deployed
+    local already_deployed=true
+    if [ ! -f /etc/udev/rules.d/50-bluetooth-usb-disable-autosuspend.rules ]; then
+        already_deployed=false
+    fi
+    if ! systemctl list-unit-files | grep -q "bluetooth-disable-usb-autosuspend.service"; then
+        already_deployed=false
+    fi
+
+    if [ "$already_deployed" = true ] && [ "$FORCE" != true ]; then
+        print_skip "Bluetooth power management already deployed"
+        return 0
+    fi
+
+    echo ""
+    print_info "This prevents random Bluetooth disconnections caused by USB autosuspend"
+    print_info "Will deploy:"
+    print_info "  • Udev rule to disable USB autosuspend for Bluetooth controllers"
+    print_info "  • Systemd service to enforce power management settings"
+    echo ""
+
+    if ! ask_yn "Deploy Bluetooth power management?" "y"; then
+        print_skip "Skipped by user choice"
+        return 0
+    fi
+
+    # Deploy udev rule
+    local udev_rule_src="$DOTFILES_DIR/udev/etc/udev/rules.d/50-bluetooth-usb-disable-autosuspend.rules"
+    if [ -f "$udev_rule_src" ]; then
+        sudo cp "$udev_rule_src" /etc/udev/rules.d/
+        print_success "Udev rule deployed"
+
+        # Reload udev rules
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger --action=add --subsystem-match=usb
+        print_success "Udev rules reloaded"
+    else
+        print_error "Udev rule not found: $udev_rule_src"
+    fi
+
+    # Deploy systemd service
+    local service_src="$DOTFILES_DIR/systemd/.config/systemd/system/bluetooth-disable-usb-autosuspend.service"
+    if [ -f "$service_src" ]; then
+        sudo cp "$service_src" /etc/systemd/system/
+        sudo systemctl daemon-reload
+        print_success "Systemd service deployed"
+
+        # Enable and start service
+        sudo systemctl enable bluetooth-disable-usb-autosuspend.service
+        sudo systemctl start bluetooth-disable-usb-autosuspend.service
+
+        if systemctl is-active --quiet bluetooth-disable-usb-autosuspend.service; then
+            print_success "Bluetooth power management service enabled and started"
+        else
+            print_error "Service failed to start"
+            print_info "Check: sudo systemctl status bluetooth-disable-usb-autosuspend.service"
+        fi
+    else
+        print_error "Service file not found: $service_src"
+    fi
+}
+
 # ============================================================================
 # Main Function
 # ============================================================================
@@ -494,6 +614,7 @@ show_help() {
     echo "  • Prevents spurious wake-ups from USB/PCIe devices"
     echo "  • Smart lid handling based on power state"
     echo "  • GPU mode awareness for hybrid graphics"
+    echo "  • Bluetooth power management: prevents random disconnections"
     echo ""
 }
 
@@ -564,6 +685,7 @@ main() {
     echo "  • System services to prevent spurious wake-ups"
     echo "  • Power-aware lid handling"
     echo "  • Updated hypridle configuration"
+    echo "  • Bluetooth power management (prevents random disconnections)"
     echo ""
 
     if ! ask_yn "Continue with setup?" "y"; then
@@ -585,19 +707,25 @@ main() {
 
     echo ""
     echo "═══════════════════════════════════════════════════════"
-    echo "  Step 3: Lid Handling"
+    echo "  Step 3: Bluetooth Power Management"
+    echo "═══════════════════════════════════════════════════════"
+    deploy_bluetooth_power_management
+
+    echo ""
+    echo "═══════════════════════════════════════════════════════"
+    echo "  Step 4: Lid Handling"
     echo "═══════════════════════════════════════════════════════"
     deploy_logind_config
 
     echo ""
     echo "═══════════════════════════════════════════════════════"
-    echo "  Step 4: Hypridle Configuration"
+    echo "  Step 5: Hypridle Configuration"
     echo "═══════════════════════════════════════════════════════"
     deploy_hypridle
 
     echo ""
     echo "═══════════════════════════════════════════════════════"
-    echo "  Step 5: Optional Services"
+    echo "  Step 6: Optional Services"
     echo "═══════════════════════════════════════════════════════"
     deploy_user_services
 
@@ -616,10 +744,15 @@ main() {
     echo "  • Idle 20min on AC → stay awake (lock screen)"
     echo "  • Close lid on battery → suspend"
     echo "  • Close lid on AC → lock screen only"
+    echo "  • Bluetooth USB autosuspend disabled (prevents random disconnections)"
     echo ""
     print_info "Test with:"
     echo "  ~/.local/bin/conditional-suspend.sh"
     echo "  cat /sys/class/power_supply/AC0/online  # 1=AC, 0=battery"
+    echo ""
+    print_info "Check Bluetooth power management:"
+    echo "  cat /sys/bus/usb/devices/*/power/control | grep -v auto"
+    echo "  systemctl status bluetooth-disable-usb-autosuspend.service"
     echo ""
     print_info "Verify at any time:"
     echo "  $0 --verify-only"

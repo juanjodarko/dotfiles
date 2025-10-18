@@ -1,3 +1,32 @@
 #!/bin/sh
-killall dunst
-dunstify -i /usr/share/icons/custom/vol3.png " Volume " " $(pamixer --get-volume)% "
+# Get current volume using wpctl
+volume=$(wpctl get-volume @DEFAULT_AUDIO_SINK@)
+# Extract percentage (format is "Volume: 0.65" -> convert to 65%)
+volume_percentage=$(echo "$volume" | awk '{print int($2 * 100)}')
+
+# Check if muted
+if echo "$volume" | grep -q "MUTED"; then
+    volume_percentage=0
+    mute_status=" (Muted)"
+else
+    mute_status=""
+fi
+
+# Use custom icon if available, otherwise use generic icon
+if [ -f /usr/share/icons/custom/vol3.png ]; then
+    icon_path="/usr/share/icons/custom/vol3.png"
+else
+    # Choose icon based on volume level
+    if [ "$volume_percentage" -eq 0 ]; then
+        icon_path="audio-volume-muted-symbolic"
+    elif [ "$volume_percentage" -lt 33 ]; then
+        icon_path="audio-volume-low-symbolic"
+    elif [ "$volume_percentage" -lt 66 ]; then
+        icon_path="audio-volume-medium-symbolic"
+    else
+        icon_path="audio-volume-high-symbolic"
+    fi
+fi
+
+# Send notification via notify-send (swaync will capture it)
+notify-send -i "$icon_path" -h int:value:$volume_percentage -h string:synchronous:volume "Volume" "${volume_percentage}%${mute_status}"
