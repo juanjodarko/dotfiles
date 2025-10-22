@@ -504,6 +504,10 @@
     "format": "",
     "tooltip": false
   },
+  "custom/left9": {
+    "format": "",
+    "tooltip": false
+  },
 
   // == Right Arrows ==
 
@@ -536,6 +540,18 @@
   },
   "custom/leftin2": {
     "format": "",
+    "tooltip": false
+  },
+
+  "custom/leftin3": {
+    "format": "",
+    "tooltip": false
+  },
+
+  // === Tray Spacing ===
+
+  "custom/tray-spacing": {
+    "format": "  ",
     "tooltip": false
   },
 

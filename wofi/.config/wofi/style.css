@@ -13,7 +13,7 @@ window {
   padding: 10px;
   border: 2px solid @lavender;
   border-radius: 8px;
-  background-color: @base;
+  background-color: alpha(@base, 0.85);
 }
 
 /* Inner Box */
@@ -21,7 +21,7 @@ window {
   margin: 5px;
   padding: 10px;
   border: none;
-  background-color: @base;
+  background-color: transparent;
 }
 
 /* Outer Box */
@@ -29,7 +29,7 @@ window {
   margin: 5px;
   padding: 10px;
   border: none;
-  background-color: @base;
+  background-color: transparent;
 }
 
 /* Scroll */
@@ -37,7 +37,7 @@ window {
   margin: 0px;
   padding: 10px;
   border: none;
-  background-color: @base;
+  background-color: transparent;
 }
 
 /* Input */
@@ -47,7 +47,7 @@ window {
   border: none;
   border-radius: 0.1em;
   color: @text;
-  background-color: @base;
+  background-color: alpha(@base, 0.5);
 }
 
 #input image {
@@ -67,7 +67,7 @@ window {
 }
 
 #entry {
-  background-color: @base;
+  background-color: transparent;
 }
 
 #entry arrow {
@@ -107,7 +107,7 @@ window {
 
 /* Scrollbar */
 scrollbar {
-  background-color: @base;
+  background-color: transparent;
   border-radius: 8px;
   margin: 5px;
   padding: 2px;

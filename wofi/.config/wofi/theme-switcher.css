@@ -14,7 +14,7 @@ window {
   padding: 8px;
   border: 2px solid @mauve;
   border-radius: 12px;
-  background-color: @base;
+  background-color: alpha(@base, 0.85);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 

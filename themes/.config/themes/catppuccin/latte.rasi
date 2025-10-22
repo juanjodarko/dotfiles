@@ -33,7 +33,7 @@ window {
     location: center;
     width: 600px;
     border-radius: 16px;
-    background-color: @bg;
+    background-color: rgba(239, 241, 245, 0.85);
     border: 2px solid;
     border-color: @lavender;
 }

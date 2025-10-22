@@ -37,6 +37,8 @@
 @define-color date            @yellow;
 @define-color tray            @teal;
 
+@define-color media           @maroon;
+
 @define-color pulseaudio      @green;
 @define-color backlight       @yellow;
 @define-color battery         @sky;
