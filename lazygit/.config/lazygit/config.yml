@@ -12,10 +12,6 @@ gui:
   # Mouse support
   mouseEvents: true
 
-  # Skip unstaged changes warning
-  skipUnstageLineWarning: false
-  skipStashWarning: false
-
   # Show branch heads in log
   showBranchCommitHash: true
 
