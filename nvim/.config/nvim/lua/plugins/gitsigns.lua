@@ -40,8 +40,27 @@ return {
                 map('n', '<leader>hp', gs.preview_hunk)
                 map('n', '<leader>hb', function() gs.blame_line { full = true } end)
                 map('n', '<leader>tb', gs.toggle_current_line_blame)
-                map('n', '<leader>hd', gs.diffthis)
-                map('n', '<leader>hD', function() gs.diffthis('~') end)
+
+                -- Enhanced diff with Diffview integration
+                map('n', '<leader>hd', function()
+                  -- Use Diffview for better diff experience
+                  local ok, _ = pcall(require, 'diffview')
+                  if ok then
+                    vim.cmd('DiffviewOpen')
+                  else
+                    gs.diffthis()
+                  end
+                end, { desc = 'Diff this (Diffview or Gitsigns)' })
+
+                map('n', '<leader>hD', function()
+                  local ok, _ = pcall(require, 'diffview')
+                  if ok then
+                    vim.cmd('DiffviewFileHistory %')
+                  else
+                    gs.diffthis('~')
+                  end
+                end, { desc = 'Diff file history (Diffview or Gitsigns)' })
+
                 map('n', '<leader>td', gs.toggle_deleted)
 
                 -- Text object

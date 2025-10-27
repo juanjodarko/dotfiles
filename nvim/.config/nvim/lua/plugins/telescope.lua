@@ -65,5 +65,12 @@ return {
         map('n', '<leader>h', builtin.help_tags, "Help tags")
         map('n', '<leader>s', builtin.lsp_document_symbols, "Document symbols")
         map('n', '<leader>sk', builtin.keymaps, "Search keymaps")
+
+        -- Git pickers (using <leader>gt* prefix for "git telescope")
+        map('n', '<leader>gtc', builtin.git_commits, "Git: Commits (Telescope)")
+        map('n', '<leader>gtb', builtin.git_branches, "Git: Branches (Telescope)")
+        map('n', '<leader>gts', builtin.git_status, "Git: Status (Telescope)")
+        map('n', '<leader>gtS', builtin.git_stash, "Git: Stash (Telescope)")
+        map('n', '<leader>gtf', builtin.git_bcommits, "Git: Buffer commits (Telescope)")
     end,
 }

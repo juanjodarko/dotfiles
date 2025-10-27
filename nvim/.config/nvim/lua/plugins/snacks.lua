@@ -29,12 +29,34 @@ return {
     }
   },
   keys = {
+    -- Core Lazygit interface
     { "<leader>gg", function() Snacks.lazygit() end, desc = "Lazygit" },
-    { "<leader>gf", function() Snacks.lazygit.log_file() end, desc = "Lazygit Current File History" },
-    { "<leader>gl", function() Snacks.lazygit.log() end, desc = "Lazygit Log (cwd)" },
-    { "<leader>gb", function() Snacks.git.blame_line() end, desc = "Git Blame Line" },
-    { "<leader>gB", function() Snacks.gitbrowse() end, desc = "Git Browse" },
-    { "<c-/>",      function() Snacks.terminal() end, desc = "Toggle Terminal" },
+
+    -- File history
+    { "<leader>gf", function() Snacks.lazygit.log_file() end, desc = "Lazygit: File history (current)" },
+
+    -- Repository log
+    { "<leader>gl", function() Snacks.lazygit.log() end, desc = "Lazygit: Log (repo)" },
+
+    -- Commits
+    { "<leader>gc", function()
+      -- Show commits for current file
+      Snacks.lazygit.log_file()
+    end, desc = "Lazygit: Commits (current file)" },
+
+    { "<leader>gC", function()
+      -- Show all commits in repo
+      Snacks.lazygit.log()
+    end, desc = "Lazygit: Commits (entire repo)" },
+
+    -- Blame
+    { "<leader>gb", function() Snacks.git.blame_line() end, desc = "Git: Blame line" },
+
+    -- Browse (open in GitHub/GitLab)
+    { "<leader>gB", function() Snacks.gitbrowse() end, desc = "Git: Browse (GitHub/GitLab)" },
+
+    -- Terminal
+    { "<c-/>", function() Snacks.terminal() end, desc = "Toggle Terminal" },
     {
       "<leader>N",
       desc = "Neovim News",
