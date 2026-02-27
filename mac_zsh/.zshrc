@@ -31,6 +31,7 @@ PATH=$(brew --prefix)/opt/lua-language-server/bin:$PATH
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 # eval "$(pyenv init -)"
+eval "$(mise activate zsh)"
 
 # DIRENV_WARN_TIMEOUT="30s"
 
