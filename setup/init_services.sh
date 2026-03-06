@@ -194,10 +194,58 @@ else
     fi
 fi
 
+# ============================================================================
+# System Services (require sudo)
+# ============================================================================
+
+TRACKPAD_SERVICE="fix-trackpad-resume.service"
+TRACKPAD_SERVICE_SRC="$DOTFILES_DIR/systemd/.config/systemd/system/$TRACKPAD_SERVICE"
+TRACKPAD_SERVICE_DEST="/etc/systemd/system/$TRACKPAD_SERVICE"
+
+print_step "Checking system service: $TRACKPAD_SERVICE..."
+
+if [ ! -f "$TRACKPAD_SERVICE_SRC" ]; then
+    print_skip "Service file not found in dotfiles"
+elif [ -f "$TRACKPAD_SERVICE_DEST" ] && systemctl is-enabled "$TRACKPAD_SERVICE" &>/dev/null; then
+    # Check if the installed version matches the source
+    if diff -q "$TRACKPAD_SERVICE_SRC" "$TRACKPAD_SERVICE_DEST" &>/dev/null; then
+        print_skip "Already installed and enabled"
+    else
+        print_step "Service file has changed, updating..."
+        echo ""
+        if ask_yn "Update $TRACKPAD_SERVICE?" "y"; then
+            sudo cp "$TRACKPAD_SERVICE_SRC" "$TRACKPAD_SERVICE_DEST"
+            sudo systemctl daemon-reload
+            print_success "Service updated"
+        else
+            print_skip "Skipped by user choice"
+        fi
+    fi
+else
+    echo ""
+    echo "  This service automatically fixes trackpad issues after suspend/hibernate."
+    echo "  It will unbind and rebind the i2c-hid device to restore trackpad functionality."
+    echo ""
+    if ask_yn "Install and enable trackpad resume fix service?" "y"; then
+        sudo cp "$TRACKPAD_SERVICE_SRC" "$TRACKPAD_SERVICE_DEST"
+        sudo systemctl daemon-reload
+        sudo systemctl enable "$TRACKPAD_SERVICE"
+        print_success "Service installed and enabled"
+        echo "   Trackpad will now auto-fix after suspend/hibernate"
+    else
+        print_skip "Skipped by user choice"
+        echo "   To install later: sudo cp $TRACKPAD_SERVICE_SRC $TRACKPAD_SERVICE_DEST"
+        echo "                     sudo systemctl enable $TRACKPAD_SERVICE"
+    fi
+fi
+
 echo ""
 echo "✅ Service initialization complete"
 echo ""
-echo "To check service status:"
+echo "User services status:"
 echo "  systemctl --user status $MASTODON_SERVICE"
 echo "  systemctl --user status $BATTERY_SERVICE"
 echo "  systemctl --user status $AUDIO_ROUTER_SERVICE"
+echo ""
+echo "System services status:"
+echo "  systemctl status $TRACKPAD_SERVICE"

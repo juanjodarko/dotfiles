@@ -35,7 +35,7 @@ return {
     map('n', '<leader>Gf', ':Git fetch --all<cr>', "Git: Fetch all")
 
     -- Branch operations
-    map('n', '<leader>Gb', ':Git branch<cr>', "Git: Branch list")
+    map('n', '<leader>GBr', ':Git branch<cr>', "Git: Branch list")
     map('n', '<leader>Gco', ':Git checkout ', "Git: Checkout")
     map('n', '<leader>Gcb', ':Git checkout -b ', "Git: Create branch")
 

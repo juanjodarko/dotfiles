@@ -8,9 +8,9 @@ rofi
 rofi-calc
 rofi-emoji
 wofi
-dunst
 wl-clipboard
 grim
 slurp
 playerctl
 qt6ct
+nwg-displays

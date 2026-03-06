@@ -1,0 +1,22 @@
+#!/bin/bash
+# Trackpad Reset Script
+# Fixes trackpad issues after suspend/resume by rebinding the i2c-hid device
+
+set -e
+
+DEVICE="i2c-1532020F:00"
+DRIVER_PATH="/sys/bus/i2c/drivers/i2c_hid_acpi"
+
+echo "Unbinding trackpad device: $DEVICE"
+echo "$DEVICE" > "$DRIVER_PATH/unbind" 2>/dev/null || echo "Device already unbound or error unbinding"
+
+# Wait a moment for device to unbind
+sleep 1
+
+echo "Rebinding trackpad device: $DEVICE"
+echo "$DEVICE" > "$DRIVER_PATH/bind" 2>/dev/null || echo "Error binding device"
+
+# Wait for device to initialize
+sleep 1
+
+echo "Trackpad reset complete"
