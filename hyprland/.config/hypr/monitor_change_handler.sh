@@ -95,6 +95,17 @@ regenerate_waybar() {
     fi
 }
 
+# Function to reload Hyprland configuration
+reload_hyprland() {
+    log "Reloading Hyprland configuration to apply monitor changes..."
+
+    if hyprctl reload >> "$LOG_FILE" 2>&1; then
+        log "Hyprland configuration reloaded successfully"
+    else
+        log "Warning: Failed to reload Hyprland configuration"
+    fi
+}
+
 # Listen to Hyprland events
 # Events we're interested in: monitoradded, monitorremoved
 socat -U UNIX-CONNECT:"$SOCKET_PATH" - | while read -r event; do
@@ -105,12 +116,14 @@ socat -U UNIX-CONNECT:"$SOCKET_PATH" - | while read -r event; do
         monitoradded)
             monitor_name=$(echo "$event" | cut -d'>' -f3-)
             log "Monitor added: $monitor_name"
+            reload_hyprland
             regenerate_wallpapers
             regenerate_waybar
             ;;
         monitorremoved)
             monitor_name=$(echo "$event" | cut -d'>' -f3-)
             log "Monitor removed: $monitor_name"
+            reload_hyprland
             regenerate_wallpapers
             regenerate_waybar
             ;;

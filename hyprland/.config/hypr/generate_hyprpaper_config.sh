@@ -5,6 +5,9 @@
 
 set -euo pipefail  # Exit on error, undefined vars, pipe failures
 
+# Wait for Hyprland to be fully ready (important for startup)
+sleep 2
+
 # Path to hyprpaper config
 CONFIG_FILE="$HOME/.config/hypr/hyprpaper.conf"
 WALLPAPER_DIR="$HOME/wallpapers"
@@ -129,9 +132,10 @@ if [[ ! -s "$CONFIG_FILE" ]]; then
     exit 1
 fi
 
-# Start hyprpaper in background
+# Start hyprpaper in background with logging
 echo "Starting hyprpaper..."
-nohup hyprpaper > /dev/null 2>&1 &
-echo "Hyprpaper started successfully"
+LOG_FILE="$HOME/.cache/hyprpaper.log"
+hyprpaper >> "$LOG_FILE" 2>&1 &
+echo "Hyprpaper started (logs: $LOG_FILE)"
 echo "Wallpaper configuration complete!"
 

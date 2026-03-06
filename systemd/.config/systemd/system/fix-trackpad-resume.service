@@ -1,0 +1,10 @@
+[Unit]
+Description=Fix trackpad after suspend/hibernate
+After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/juanjo/dotfiles/bin/.local/bin/fix-trackpad
+
+[Install]
+WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target

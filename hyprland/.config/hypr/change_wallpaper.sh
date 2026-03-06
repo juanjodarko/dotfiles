@@ -76,8 +76,8 @@ for monitor in "${monitors[@]}"; do
 
     echo "Setting $monitor: $(basename "$wallpaper")"
 
-    # Set wallpaper using hyprctl
-    if hyprctl hyprpaper wallpaper "$monitor,$wallpaper" 2>/dev/null; then
+    # Set wallpaper using hyprctl reload (handles preload/unload automatically)
+    if hyprctl hyprpaper reload "$monitor,$wallpaper" 2>/dev/null; then
         echo "  ✓ Successfully changed wallpaper for $monitor"
 
         # Save first wallpaper as primary for lock screen
@@ -86,8 +86,18 @@ for monitor in "${monitors[@]}"; do
         fi
     else
         echo "  ✗ Failed to change wallpaper for $monitor"
-        echo "    This might happen if the wallpaper wasn't preloaded"
-        all_successful=false
+        echo "    Trying fallback method..."
+        # Fallback: try preload + wallpaper method
+        hyprctl hyprpaper preload "$wallpaper" 2>/dev/null || true
+        if hyprctl hyprpaper wallpaper "$monitor,$wallpaper" 2>/dev/null; then
+            echo "  ✓ Fallback succeeded for $monitor"
+            if [[ -z "$PRIMARY_WALLPAPER" ]]; then
+                PRIMARY_WALLPAPER="$wallpaper"
+            fi
+        else
+            echo "  ✗ Fallback also failed for $monitor"
+            all_successful=false
+        fi
     fi
 
     wallpaper_index=$((wallpaper_index + 1))

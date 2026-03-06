@@ -270,12 +270,6 @@ When you first launch Neovim:
 
 #### AI Features Setup
 
-**Codeium (Free AI completions):**
-
-1. Visit [codeium.com](https://codeium.com) and create account
-2. In Neovim, run `:Codeium Auth`
-3. Follow the authentication flow
-
 **ChatGPT Integration:**
 
 1. Get OpenAI API key from [platform.openai.com](https://platform.openai.com)
@@ -611,8 +605,7 @@ return {
 ### Code Completion
 
 - **[nvim-cmp](https://github.com/hrsh7th/nvim-cmp)** - Completion engine
-- **[codeium.vim](https://github.com/Exafunction/codeium.vim)** - AI-powered completions
-- **Sources:** LSP, file paths, buffer text, AI suggestions
+- **Sources:** LSP, file paths, buffer text, snippets
 
 **Use Cases:**
 

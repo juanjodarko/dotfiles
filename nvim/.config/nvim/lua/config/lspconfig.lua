@@ -2,9 +2,6 @@
 local lspconfig = require('lspconfig')
 local project_utils = require('user.project_utils')
 
--- Reserve a space in the gutter to avoid layout shift
-vim.opt.signcolumn = 'yes'
-
 -- Add cmp_nvim_lsp capabilities settings to lspconfig
 local lspconfig_defaults = require('lspconfig').util.default_config
 lspconfig_defaults.capabilities = vim.tbl_deep_extend(

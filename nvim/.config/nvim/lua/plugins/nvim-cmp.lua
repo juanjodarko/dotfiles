@@ -14,7 +14,6 @@ return {
 
         cmp.setup({
             sources = {
-                { name = "codeium" },
                 { name = "nvim_lsp" },
                 { name = "luasnip", priority = 100 }, -- Snippets with high priority
                 { name = "path" },
@@ -61,8 +60,7 @@ return {
                     mode = "symbol",
                     maxwidth = 50,
                     ellipsis_char = '...',
-                    symbol_map = { 
-                        Codeium = "",
+                    symbol_map = {
                         Text = "",
                         Method = "ƒ",
                         Function = "",
