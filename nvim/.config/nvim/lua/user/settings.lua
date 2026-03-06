@@ -26,7 +26,7 @@ vim.opt.clipboard = 'unnamedplus'       -- Use Linux system clipboard
 vim.opt.confirm = true                  -- ask for confirmation instead of erroring
 vim.opt.exrc = true
 vim.opt.backup = true                   -- automatically save a backup file
-vim.opt.backupdir:remove('.')           -- keep backups out of the current directory
+vim.opt.backupdir = { vim.fn.expand('~/.local/share/nvim/backup/') }  -- centralized backup directory
 vim.opt.updatetime = 4001               -- Set updatime to 1ms longer than the default to prevent polyglot from changing it
 vim.opt.redrawtime = 10000              -- Allow more time for loading syntax on large files
 vim.opt.wrap = false

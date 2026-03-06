@@ -28,10 +28,10 @@ return {
       end,
       
       -- JavaScript/TypeScript/React
-      javascript = { { "prettier", "eslint_d" } },
-      typescript = { { "prettier", "eslint_d" } },
-      javascriptreact = { { "prettier", "eslint_d" } },
-      typescriptreact = { { "prettier", "eslint_d" } },
+      javascript = { "prettier", "eslint_d" },
+      typescript = { "prettier", "eslint_d" },
+      javascriptreact = { "prettier", "eslint_d" },
+      typescriptreact = { "prettier", "eslint_d" },
       
       -- Web technologies
       html = { "prettier" },
@@ -69,18 +69,18 @@ return {
       if vim.tbl_contains(disabled_filetypes, vim.bo[bufnr].filetype) then
         return
       end
-      
+
       -- Only format if the file is part of a project (has version control)
       local project_utils = require('user.project_utils')
       local root = project_utils.get_project_root()
       if not root or root == vim.fn.expand('~') then
         return
       end
-      
-      return { 
-        timeout_ms = 500, 
+
+      return {
+        timeout_ms = 2000,
         lsp_fallback = true,
-        quiet = true,
+        quiet = false,
       }
     end,
     
