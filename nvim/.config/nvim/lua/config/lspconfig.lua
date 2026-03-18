@@ -1,14 +1,14 @@
--- Intelligent, context-aware LSP configuration
-local lspconfig = require('lspconfig')
+-- Intelligent, context-aware LSP configuration (Neovim 0.11+ native API)
 local project_utils = require('user.project_utils')
 
--- Add cmp_nvim_lsp capabilities settings to lspconfig
-local lspconfig_defaults = require('lspconfig').util.default_config
-lspconfig_defaults.capabilities = vim.tbl_deep_extend(
-    'force',
-    lspconfig_defaults.capabilities,
-    require('cmp_nvim_lsp').default_capabilities()
-)
+-- Add cmp_nvim_lsp capabilities to all LSP servers
+vim.lsp.config('*', {
+    capabilities = vim.tbl_deep_extend(
+        'force',
+        vim.lsp.protocol.make_client_capabilities(),
+        require('cmp_nvim_lsp').default_capabilities()
+    ),
+})
 
 -- Enhanced LSP keybindings
 vim.api.nvim_create_autocmd('LspAttach', {
@@ -41,21 +41,22 @@ vim.api.nvim_create_autocmd('LspAttach', {
 })
 
 -- Helper function to setup LSP server with project-specific overrides
-local function setup_lsp_server(server_name, default_config)
+local function setup_lsp_server(server_name, config)
     if project_utils.is_lsp_disabled(server_name) then
         return
     end
-    
+
     local project_overrides = project_utils.get_lsp_overrides(server_name)
-    local config = vim.tbl_deep_extend('force', default_config, project_overrides)
-    
-    lspconfig[server_name].setup(config)
+    config = vim.tbl_deep_extend('force', config, project_overrides)
+
+    vim.lsp.config(server_name, config)
+    vim.lsp.enable(server_name)
 end
 
 -- LSP server configurations with intelligent project detection
 local function setup_lsp_servers()
     local project_config = project_utils.get_project_config()
-    
+
     -- Always setup Lua LSP for Neovim config
     setup_lsp_server('lua_ls', {
         settings = {
@@ -75,7 +76,7 @@ local function setup_lsp_servers()
     if project_config.is_ruby or project_config.is_rails then
         -- Solargraph (primary Ruby LSP)
         setup_lsp_server('solargraph', {
-            root_dir = lspconfig.util.root_pattern("Gemfile", ".git"),
+            root_markers = { "Gemfile", ".git" },
             settings = {
                 solargraph = {
                     diagnostics = true,
@@ -93,13 +94,13 @@ local function setup_lsp_servers()
 
         -- Ruby LS (alternative, faster Ruby LSP)
         if vim.fn.executable('ruby-lsp') == 1 then
-            setup_lsp_server('ruby_ls', {
-                root_dir = lspconfig.util.root_pattern("Gemfile", ".git"),
+            setup_lsp_server('ruby_lsp', {
+                root_markers = { "Gemfile", ".git" },
                 cmd = { "ruby-lsp" },
                 init_options = {
                     enabledFeatures = {
                         "documentHighlights",
-                        "documentSymbols", 
+                        "documentSymbols",
                         "foldingRanges",
                         "selectionRanges",
                         "semanticHighlighting",
@@ -120,7 +121,7 @@ local function setup_lsp_servers()
                     vim.lsp.start({
                         name = "standardrb",
                         cmd = { standardrb_cmd, "--lsp" },
-                        root_dir = lspconfig.util.root_pattern("Gemfile", ".git")(vim.fn.expand('%:p:h')),
+                        root_dir = vim.fs.root(0, { "Gemfile", ".git" }),
                     })
                 end,
             })
@@ -142,14 +143,16 @@ local function setup_lsp_servers()
     -- JavaScript/TypeScript/React/Node.js LSP Configuration
     if project_config.is_javascript or project_config.is_typescript or project_config.is_nodejs or project_config.is_react then
         -- Custom root_dir for monorepos (prioritizes workspace root)
-        local function get_typescript_root(fname)
+        local function get_typescript_root(bufnr, on_dir)
             -- For monorepos, use workspace root to avoid multiple LSP instances
             if project_config.is_monorepo then
-                return project_config.monorepo_root
+                on_dir(project_config.monorepo_root)
+                return
             end
 
             -- For regular projects, find nearest package.json or tsconfig.json
-            return lspconfig.util.root_pattern("tsconfig.json", "package.json", ".git")(fname)
+            local root = vim.fs.root(bufnr, { "tsconfig.json", "package.json", ".git" })
+            if root then on_dir(root) end
         end
 
         -- TypeScript/JavaScript Server
@@ -180,21 +183,23 @@ local function setup_lsp_servers()
         })
 
         -- Custom root_dir for ESLint in monorepos
-        local function get_eslint_root(fname)
+        local function get_eslint_root(bufnr, on_dir)
             -- For monorepos, use workspace root for consistent config
             if project_config.is_monorepo then
-                return project_config.monorepo_root
+                on_dir(project_config.monorepo_root)
+                return
             end
 
             -- For regular projects, find nearest eslint config
-            return lspconfig.util.root_pattern(
+            local root = vim.fs.root(bufnr, {
                 ".eslintrc",
                 ".eslintrc.js",
                 ".eslintrc.cjs",
                 ".eslintrc.json",
                 "eslint.config.js",
-                "package.json"
-            )(fname)
+                "package.json",
+            })
+            if root then on_dir(root) end
         end
 
         -- ESLint LSP
@@ -262,13 +267,13 @@ local function setup_lsp_servers()
         -- Tailwind CSS LSP (if tailwind.config.js exists)
         if vim.fn.glob(project_config.root_dir .. "/tailwind.config.*") ~= "" then
             setup_lsp_server('tailwindcss', {
-                root_dir = lspconfig.util.root_pattern("tailwind.config.js", "tailwind.config.ts", "package.json"),
+                root_markers = { "tailwind.config.js", "tailwind.config.ts", "package.json" },
             })
         end
 
         -- Emmet LSP for HTML/JSX
         setup_lsp_server('emmet_ls', {
-            filetypes = { 
+            filetypes = {
                 "html", "css", "javascript", "javascriptreact", "typescript", "typescriptreact"
             }
         })
@@ -277,7 +282,7 @@ local function setup_lsp_servers()
     -- Go LSP Configuration
     if project_config.is_go then
         setup_lsp_server('gopls', {
-            root_dir = lspconfig.util.root_pattern("go.mod", ".git"),
+            root_markers = { "go.mod", ".git" },
             settings = {
                 gopls = {
                     analyses = {
@@ -293,11 +298,11 @@ local function setup_lsp_servers()
         })
     end
 
-    -- Elixir LSP Configuration  
+    -- Elixir LSP Configuration
     if project_config.is_elixir then
         setup_lsp_server('elixirls', {
             cmd = { "elixir-ls" },
-            root_dir = lspconfig.util.root_pattern("mix.exs", ".git"),
+            root_markers = { "mix.exs", ".git" },
             settings = {
                 elixirLS = {
                     dialyzerEnabled = false,
@@ -310,7 +315,7 @@ local function setup_lsp_servers()
     -- C++ LSP Configuration
     if project_config.is_cpp then
         setup_lsp_server('clangd', {
-            root_dir = lspconfig.util.root_pattern("CMakeLists.txt", "compile_commands.json", ".git"),
+            root_markers = { "CMakeLists.txt", "compile_commands.json", ".git" },
             cmd = {
                 "clangd",
                 "--background-index",
@@ -331,7 +336,7 @@ local function setup_lsp_servers()
     -- GraphQL LSP Configuration
     if project_config.is_graphql or project_config.is_javascript or project_config.is_typescript or project_config.is_react then
         setup_lsp_server('graphql', {
-            root_dir = lspconfig.util.root_pattern(
+            root_markers = {
                 ".graphqlrc",
                 ".graphqlrc.yml",
                 ".graphqlrc.yaml",
@@ -339,8 +344,8 @@ local function setup_lsp_servers()
                 "graphql.config.js",
                 "graphql.config.ts",
                 "package.json",
-                ".git"
-            ),
+                ".git",
+            },
             filetypes = { "graphql", "typescriptreact", "javascriptreact", "typescript", "javascript" },
         })
     end
@@ -348,15 +353,15 @@ local function setup_lsp_servers()
     -- Python LSP Configuration
     if project_config.is_python then
         setup_lsp_server('pyright', {
-            root_dir = lspconfig.util.root_pattern(
+            root_markers = {
                 "pyproject.toml",
                 "setup.py",
                 "setup.cfg",
                 "requirements.txt",
                 "Pipfile",
                 "pyrightconfig.json",
-                ".git"
-            ),
+                ".git",
+            },
             settings = {
                 python = {
                     analysis = {
@@ -373,7 +378,7 @@ local function setup_lsp_servers()
     -- Rust LSP Configuration
     if project_config.is_rust then
         setup_lsp_server('rust_analyzer', {
-            root_dir = lspconfig.util.root_pattern("Cargo.toml", "rust-project.json", ".git"),
+            root_markers = { "Cargo.toml", "rust-project.json", ".git" },
             settings = {
                 ['rust-analyzer'] = {
                     cargo = {
@@ -441,18 +446,18 @@ vim.diagnostic.config({
         source = true,
     },
     float = {
-        source = 'always',
+        source = true,
         border = 'rounded',
     },
-    signs = true,
+    signs = {
+        text = {
+            [vim.diagnostic.severity.ERROR] = " ",
+            [vim.diagnostic.severity.WARN] = " ",
+            [vim.diagnostic.severity.HINT] = " ",
+            [vim.diagnostic.severity.INFO] = " ",
+        },
+    },
     underline = true,
     update_in_insert = false,
     severity_sort = true,
 })
-
--- Diagnostic signs
-local signs = { Error = " ", Warn = " ", Hint = " ", Info = " " }
-for type, icon in pairs(signs) do
-    local hl = "DiagnosticSign" .. type
-    vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
-end

@@ -6,12 +6,12 @@ return {
   opts = {
     bigfile = { enabled = true },
     dashboard = { enabled = true, example = "doom" },
-    indent = { enabled = true },
+    indent = { enabled = true, char = "|" },
     lazygit = {
       enabled = true,
       configure = true,
     },
-    picker = { enabled = true },
+    picker = { enabled = false },
     notifier = { enabled = true, timeout = 10000 },
     quickfile = { enabled = true },
     scroll = { enabled = true },
@@ -57,6 +57,7 @@ return {
 
     -- Terminal
     { "<c-/>", function() Snacks.terminal() end, desc = "Toggle Terminal" },
+    { "<leader>nh", function() Snacks.notifier.show_history() end, desc = "Notification History" },
     {
       "<leader>N",
       desc = "Neovim News",

@@ -64,6 +64,9 @@ local tools = {
     'shellcheck',      -- Shell script linter
     'yamllint',        -- YAML linter
     'markdownlint',    -- Markdown linter
+    -- DAP adapters
+    'js-debug-adapter',  -- JavaScript/TypeScript DAP
+    'debugpy',           -- Python DAP
 }
 
 require('mason-lspconfig').setup({

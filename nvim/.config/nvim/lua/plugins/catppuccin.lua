@@ -43,17 +43,9 @@ return {
             custom_highlights = {},
             default_integrations = true,  -- Enable default integrations
             integrations = {
-                -- ==========================================
-                -- CORE INTEGRATIONS
-                -- ==========================================
-                -- Completion
+                -- Completion & LSP
                 cmp = true,
-
-                -- Syntax Highlighting
                 treesitter = true,
-                treesitter_context = false,
-
-                -- LSP
                 native_lsp = {
                     enabled = true,
                     virtual_text = {
@@ -77,12 +69,10 @@ return {
                 lsp_trouble = true,
                 mason = true,
 
-                -- ==========================================
-                -- UI INTEGRATIONS
-                -- ==========================================
+                -- UI
                 telescope = {
                     enabled = true,
-                    style = "nvchad"
+                    style = "nvchad",
                 },
                 which_key = true,
                 nvimtree = true,
@@ -94,86 +84,32 @@ return {
                     enabled = true,
                     indentscope_color = "lavender",
                 },
+                snacks = true,
 
-                -- ==========================================
-                -- GIT INTEGRATIONS
-                -- ==========================================
+                -- Git
                 gitsigns = true,
                 octo = true,
+                diffview = true,
 
-                -- ==========================================
-                -- MARKDOWN & NOTES
-                -- ==========================================
+                -- Navigation
+                flash = true,
+                harpoon = true,
+
+                -- Markdown & Notes
                 markdown = true,
+                render_markdown = true,
 
-                -- ==========================================
-                -- ADDITIONAL TOOLS
-                -- ==========================================
-                indent_blankline = {
-                    enabled = true,
-                    scope_color = "lavender",
-                    colored_indent_levels = false,
-                },
-                fzf = true,
-                snacks = true,
-                colorizer = true,  -- nvim-colorizer.lua
-                neoscroll = false,
-                flash_nvim = true,  -- Enhanced navigation
+                -- AI
+                avante = true,
 
-                -- ==========================================
-                -- AI INTEGRATIONS
-                -- ==========================================
-                -- Note: avante might not have official integration yet,
-                -- but will work with default_integrations = true
-
-                -- ==========================================
-                -- DEBUGGING & TESTING
-                -- ==========================================
+                -- Debugging & Testing
                 dap = true,
                 dap_ui = true,
                 neotest = true,
 
-                -- ==========================================
-                -- DISABLED (not installed)
-                -- ==========================================
-                aerial = false,
-                alpha = false,
-                barbar = false,
-                barbecue = false,
-                beacon = false,
-                blink_cmp = false,
-                coc_nvim = false,
-                dashboard = false,
-                dap = false,
-                dap_ui = false,
-                dropbar = false,
-                fidget = false,
-                flash = false,
-                gitgutter = false,
-                harpoon = false,
-                headlines = false,
-                hop = false,
-                illuminate = false,
-                leap = false,
-                lightspeed = false,
-                lsp_saga = false,
-                navic = false,
-                neotest = false,
-                neotree = false,
-                nvim_surround = false,
-                overseer = false,
-                pounce = false,
-                rainbow_delimiters = false,
-                render_markdown = false,
-                sandwich = false,
-                semantic_tokens = false,
-                symbols_outline = false,
-                telekasten = false,
-                ts_rainbow = false,
-                ts_rainbow2 = false,
-                ufo = false,
-                vim_sneak = false,
-                vimwiki = false,
+                -- Misc
+                fzf = true,
+                colorizer = true,
             },
         })
 

@@ -12,7 +12,7 @@ return {
         sync_on_ui_close = true,
         key = function()
           -- Per-project harpoon lists based on git root or cwd
-          return vim.loop.cwd()
+          return vim.uv.cwd()
         end,
       },
     })

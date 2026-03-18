@@ -10,18 +10,14 @@ return {
     local project_utils = require("user.project_utils")
     local project_config = project_utils.get_project_config()
 
-    -- ===========================================
-    -- DAP ICONS & SIGNS
-    -- ===========================================
+    -- DAP Icons & Signs
     vim.fn.sign_define("DapBreakpoint", { text = "", texthl = "DiagnosticError", linehl = "", numhl = "" })
     vim.fn.sign_define("DapBreakpointCondition", { text = "", texthl = "DiagnosticWarn", linehl = "", numhl = "" })
     vim.fn.sign_define("DapBreakpointRejected", { text = "", texthl = "DiagnosticInfo", linehl = "", numhl = "" })
     vim.fn.sign_define("DapLogPoint", { text = "", texthl = "DiagnosticInfo", linehl = "", numhl = "" })
     vim.fn.sign_define("DapStopped", { text = "", texthl = "DiagnosticOk", linehl = "debugPC", numhl = "" })
 
-    -- ===========================================
-    -- VIRTUAL TEXT CONFIGURATION
-    -- ===========================================
+    -- Virtual Text
     require("nvim-dap-virtual-text").setup({
       enabled = true,
       enabled_commands = true,
@@ -41,11 +37,7 @@ return {
       virt_text_pos = "eol", -- position: 'eol' | 'overlay' | 'right_align' | 'inline'
     })
 
-    -- ===========================================
-    -- RUBY/RAILS DEBUGGER
-    -- ===========================================
-    -- Install: gem install debug
-    -- Usage: Add `debugger` or `binding.break` to your Ruby code
+    -- Ruby/Rails Debugger
     dap.adapters.ruby = function(callback, config)
       callback({
         type = "server",
@@ -118,11 +110,22 @@ return {
 
     dap.configurations.ruby = ruby_configs
 
-    -- ===========================================
-    -- JAVASCRIPT/TYPESCRIPT DEBUGGER
-    -- ===========================================
-    -- Install: Mason will install node-debug2-adapter
+    -- JavaScript/TypeScript Debugger
     dap.adapters["pwa-node"] = {
+      type = "server",
+      host = "localhost",
+      port = "${port}",
+      executable = {
+        command = "node",
+        args = {
+          require("mason-registry").get_package("js-debug-adapter"):get_install_path()
+            .. "/js-debug/src/dapDebugServer.js",
+          "${port}",
+        },
+      },
+    }
+
+    dap.adapters["pwa-chrome"] = {
       type = "server",
       host = "localhost",
       port = "${port}",
@@ -184,6 +187,40 @@ return {
           cwd = "${workspaceFolder}",
           console = "integratedTerminal",
         },
+        -- Next.js
+        {
+          type = "pwa-node",
+          request = "launch",
+          name = "Debug Next.js (server)",
+          runtimeExecutable = "npm",
+          runtimeArgs = { "run", "dev" },
+          cwd = "${workspaceFolder}",
+          sourceMaps = true,
+          console = "integratedTerminal",
+          skipFiles = { "<node_internals>/**", "node_modules/**" },
+        },
+        {
+          type = "pwa-chrome",
+          request = "launch",
+          name = "Debug Next.js (client)",
+          url = "http://localhost:3000",
+          webRoot = "${workspaceFolder}",
+          sourceMaps = true,
+          skipFiles = { "<node_internals>/**", "node_modules/**" },
+        },
+        -- NestJS
+        {
+          type = "pwa-node",
+          request = "launch",
+          name = "Debug NestJS",
+          runtimeExecutable = "npm",
+          runtimeArgs = { "run", "start:debug" },
+          cwd = "${workspaceFolder}",
+          sourceMaps = true,
+          outFiles = { "${workspaceFolder}/dist/**/*.js" },
+          console = "integratedTerminal",
+          skipFiles = { "<node_internals>/**", "node_modules/**" },
+        },
       }
 
       -- Add Docker configuration if available
@@ -206,10 +243,7 @@ return {
       dap.configurations[language] = js_configs
     end
 
-    -- ===========================================
-    -- GO DEBUGGER (Delve)
-    -- ===========================================
-    -- Install: go install github.com/go-delve/delve/cmd/dlv@latest
+    -- Go Debugger (Delve)
     dap.adapters.delve = {
       type = "server",
       port = "${port}",
@@ -262,10 +296,7 @@ return {
 
     dap.configurations.go = go_configs
 
-    -- ===========================================
-    -- PYTHON DEBUGGER
-    -- ===========================================
-    -- Install: Mason will install debugpy
+    -- Python Debugger
     dap.adapters.python = {
       type = "executable",
       command = vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/bin/python",
