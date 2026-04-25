@@ -105,7 +105,6 @@ alias corgi-front-lint-fix="./node_modules/.bin/eslint --fix --quiet $1"
 alias corgi-front-check="pnpm typecheck && pnpm test:coverage:branch"
 alias corgi-middle-check="pnpm typecheck && pnpm lint:fix --quiet && pnpm test"
 
-export CHANGE_USERNAME=jjruiz@change.org
 # place this after nvm initialization!
 autoload -U add-zsh-hook
 
