@@ -99,9 +99,6 @@ return {
                 markdown = true,
                 render_markdown = true,
 
-                -- AI
-                avante = true,
-
                 -- Debugging & Testing
                 dap = true,
                 dap_ui = true,
