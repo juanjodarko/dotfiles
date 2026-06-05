@@ -1,3 +1,7 @@
+-- Run nvim-ts-context-commentstring in standalone mode (no archived
+-- nvim-treesitter dependency). Must be set before the plugin loads.
+vim.g.skip_ts_context_commentstring_module = true
+
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
 vim.opt.tabstop = 2

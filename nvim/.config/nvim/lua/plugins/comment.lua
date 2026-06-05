@@ -1,6 +1,8 @@
 return {
   'numToStr/Comment.nvim',
   config = function()
+    -- Standalone mode (no archived nvim-treesitter); flag set in user/settings.lua
+    require('ts_context_commentstring').setup({})
     require('Comment').setup({
       -- Enable treesitter integration for better context-aware commenting
       pre_hook = require('ts_context_commentstring.integrations.comment_nvim').create_pre_hook(),
