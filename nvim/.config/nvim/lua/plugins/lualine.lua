@@ -38,6 +38,18 @@ return {
                         cond = require("noice").api.status.command.has,
                         color = { fg = "#7dcfff" },
                     },
+                    -- Claude collab: show editing activity
+                    {
+                        require("claude-collab.statusline").get,
+                        cond = require("claude-collab.statusline").has,
+                        color = { fg = "#cba6f7" },
+                    },
+                    -- Claude sessions: animated cue when a session waits for input
+                    {
+                        require("claude-collab.statusline").sessions,
+                        cond = require("claude-collab.statusline").sessions_has,
+                        color = { fg = "#f9e2af" },
+                    },
                 },
                 lualine_x = { 'encoding', 'fileformat', 'filetype' },
                 lualine_y = {
