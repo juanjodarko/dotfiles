@@ -18,9 +18,6 @@ autoload -Uz compinit && compinit
 if [ ! "$TMUX" = "" ]; then export TERM=screen-256color; fi
 bindkey -s ^f "tmux-sessionizer\n"
 
-export NVM_DIR="$HOME/.nvm"
-
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 export PATH="$PATH:$HOME/.local/bin"
 PATH=$(brew --prefix)/opt/findutils/libexec/gnubin:$PATH
 PATH=$(brew --prefix)/opt/lua-language-server/bin:$PATH
@@ -33,6 +30,9 @@ export PYENV_ROOT="$HOME/.pyenv"
 # eval "$(pyenv init -)"
 eval "$(mise activate zsh)"
 
+# Add Python user bin to PATH for pip-installed tools like isort
+export PATH="$HOME/Library/Python/3.9/bin:$PATH"
+
 # DIRENV_WARN_TIMEOUT="30s"
 
 # [[ -f .direnv/.direnvrc ]] && source .direnv/direnvrc
@@ -44,7 +44,7 @@ done
 source <(kubectl completion zsh)  # setup autocomplete in zsh into the current shell
 [[ $commands[kubectl] ]] && source <(kubectl completion zsh)
 export PATH="/opt/homebrew/opt/postgresql@12/bin:$PATH"
-export BAT_THEME="Catppuccin-mocha"
+export BAT_THEME="Catppuccin Mocha"
 
 export FZF_DEFAULT_COMMAND='fd --hidden --strip-cwd-prefix --exclude .git'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
@@ -104,3 +104,22 @@ alias taskmaster='task-master'
 alias corgi-front-lint-fix="./node_modules/.bin/eslint --fix --quiet $1"
 alias corgi-front-check="pnpm typecheck && pnpm test:coverage:branch"
 alias corgi-middle-check="pnpm typecheck && pnpm lint:fix --quiet && pnpm test"
+
+# place this after nvm initialization!
+autoload -U add-zsh-hook
+
+# fnm
+FNM_PATH="/opt/homebrew/opt/fnm/bin"
+if [ -d "$FNM_PATH" ]; then
+  eval "`fnm env`"
+fi
+export CHANGE_USERNAME="jjruiz@change.org"
+
+
+# setup-env: runs commands queued by project scripts in the parent terminal
+_setup_env_deferred_run() {
+  [ -f "${HOME}/.setup-env-deferred" ] || return 0
+  . "${HOME}/.setup-env-deferred" 2>/dev/null
+  rm -f "${HOME}/.setup-env-deferred"
+}
+autoload -Uz add-zsh-hook 2>/dev/null && add-zsh-hook precmd _setup_env_deferred_run

@@ -33,8 +33,8 @@ function M.show_info()
     -- Create a floating window to display info
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-    vim.api.nvim_buf_set_option(buf, 'modifiable', false)
-    vim.api.nvim_buf_set_option(buf, 'filetype', 'markdown')
+    vim.api.nvim_set_option_value('modifiable', false, { buf = buf })
+    vim.api.nvim_set_option_value('filetype', 'markdown', { buf = buf })
 
     local width = 60
     local height = #lines
@@ -121,7 +121,7 @@ function M.show_lsp_workspace()
     -- Create a floating window
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-    vim.api.nvim_buf_set_option(buf, 'modifiable', false)
+    vim.api.nvim_set_option_value('modifiable', false, { buf = buf })
 
     local width = 70
     local height = math.min(#lines, 20)

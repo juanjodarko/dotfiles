@@ -15,6 +15,7 @@ return {
                 "html", "css", "dockerfile", "markdown", "markdown_inline",
                 "rust", "svelte", "regex", "graphql",
                 "python", "go", "elixir",
+                "bash", "json", "yaml",
             },
             auto_install = true,
             highlight = true,

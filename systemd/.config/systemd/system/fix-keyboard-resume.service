@@ -1,0 +1,10 @@
+[Unit]
+Description=Fix keyboard after suspend/hibernate
+After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/juanjo/.local/bin/fix-keyboard
+
+[Install]
+WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target

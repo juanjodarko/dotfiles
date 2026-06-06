@@ -29,7 +29,7 @@ return {
                     prompt_position = 'top',
                 },
                 sorting_strategy = 'ascending',
-                file_ignore_patterns = { '.git/' },
+                file_ignore_patterns = { '.git/', 'node_modules' },
                 preview = {
                     treesitter = true,
                 },

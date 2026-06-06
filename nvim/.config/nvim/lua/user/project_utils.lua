@@ -366,14 +366,14 @@ function M.build_docker_test_command(base_cmd, service_name)
   end
 
   -- Build Docker Compose command
-  return vim.tbl_flatten({
+  return vim.iter({
     "docker",
     "compose",
     "run",
     "--rm",
     service,
     base_cmd,
-  })
+  }):flatten():totable()
 end
 
 -- ==========================================

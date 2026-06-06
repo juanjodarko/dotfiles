@@ -196,8 +196,13 @@ local function setup_lsp_servers()
                 ".eslintrc.js",
                 ".eslintrc.cjs",
                 ".eslintrc.json",
+                ".eslintrc.yaml",
+                ".eslintrc.yml",
                 "eslint.config.js",
-                "package.json",
+                "eslint.config.mjs",
+                "eslint.config.cjs",
+                "eslint.config.ts",
+                "eslint.config.mts",
             })
             if root then on_dir(root) end
         end
@@ -220,7 +225,7 @@ local function setup_lsp_servers()
                     mode = "all"
                 },
                 experimental = {
-                    useFlatConfig = false
+                    useFlatConfig = "auto"
                 },
                 format = true,
                 nodePath = "",
