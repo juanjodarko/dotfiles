@@ -1,0 +1,13 @@
+nodejs
+npm
+python
+python-pip
+docker
+docker-compose
+postgresql
+redis
+gcc
+make
+cmake
+pkgconf
+

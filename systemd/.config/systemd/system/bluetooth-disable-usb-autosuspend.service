@@ -1,0 +1,24 @@
+[Unit]
+Description=Disable USB autosuspend for Bluetooth controllers
+After=bluetooth.service
+Before=bluetooth.target
+ConditionPathExists=/sys/class/bluetooth
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Find all Bluetooth USB devices and disable autosuspend
+# This prevents random disconnections caused by USB power management
+ExecStart=/bin/bash -c '\
+    for device in /sys/bus/usb/devices/*/; do \
+        if [ -f "$device/power/control" ]; then \
+            if [ -f "$device/driver" ] && readlink "$device/driver" 2>/dev/null | grep -q btusb; then \
+                echo "on" > "$device/power/control" 2>/dev/null || true; \
+            elif [ -f "$device/bDeviceClass" ] && grep -q "e0" "$device/bDeviceClass" 2>/dev/null; then \
+                echo "on" > "$device/power/control" 2>/dev/null || true; \
+            fi; \
+        fi; \
+    done'
+
+[Install]
+WantedBy=bluetooth.target multi-user.target

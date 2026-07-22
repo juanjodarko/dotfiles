@@ -1,0 +1,3 @@
+# Hybrid GPU management (Intel/AMD iGPU + NVIDIA dGPU)
+# Note: supergfxctl conflicts with optimus-manager
+supergfxctl

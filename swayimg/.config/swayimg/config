@@ -1,0 +1,221 @@
+# Swayimg Configuration
+# Catppuccin Mocha Theme
+
+[general]
+# Start in viewer mode by default
+mode = viewer
+
+# Initial window size - let Hyprland manage window size or use: fullscreen, image, or W,H
+size = 1280,720
+
+# Let Hyprland control window position instead of overlay mode
+position = auto
+overlay = no
+
+# Window decoration (borders and title bar)
+decoration = yes
+
+# Application ID for Hyprland window rules
+app_id = swayimg
+
+# Signal handlers
+sigusr1 = reload
+sigusr2 = next_file
+
+[viewer]
+# Window background - Catppuccin Mocha base color with transparency
+window = #1e1e2eff
+
+# Transparency background for images with alpha channel
+# Use Catppuccin surface0 color
+transparency = #313244ff
+
+# Initial scale mode - fit image to window while maintaining aspect ratio
+scale = optimal
+
+# Center image in window
+position = center
+
+# High-quality anti-aliasing
+antialiasing = mks13
+
+# Loop through image list
+loop = yes
+
+# Cache for previously viewed images
+history = 3
+
+# Preload next images for smoother navigation
+preload = 2
+
+[slideshow]
+# Duration between images in seconds
+time = 5
+
+# Use same settings as viewer
+window = #1e1e2eff
+transparency = #313244ff
+scale = optimal
+antialiasing = mks13
+
+[gallery]
+# Thumbnail size in pixels
+size = 250
+
+# Max number of thumbnails in cache
+cache = 200
+
+# Preload adjacent thumbnails
+preload = yes
+
+# Persistent thumbnail storage
+pstore = yes
+
+# Fill entire tile with thumbnail
+fill = yes
+
+# Anti-aliasing for thumbnails
+antialiasing = mks13
+
+# Catppuccin Mocha colors for gallery
+window = #1e1e2eff
+background = #313244ff
+select = #45475aff
+border = #89b4faff
+shadow = #11111bff
+
+[list]
+# Sort images alphabetically by default
+order = alpha
+
+# Recursively include subdirectories
+recursive = no
+
+[font]
+# Font for info overlay
+name = monospace
+size = 14
+color = #cdd6f4ff
+
+[info]
+# Info display settings
+viewer.show = yes
+viewer.info = "name,format,filesize,imagesize,exif"
+viewer.status = "index,scale"
+
+gallery.show = yes
+gallery.info = "name,filesize,imagesize"
+
+[keys.viewer]
+# Navigation
+Home = first_file
+End = last_file
+Prior = prev_file
+Next = next_file
+Left = prev_file
+Right = next_file
+r = rand_file
+BracketLeft = prev_dir
+BracketRight = next_dir
+
+# Animation control
+space = animation
+period = next_frame
+comma = prev_frame
+
+# Image manipulation
+bracketleft = rotate_left
+bracketright = rotate_right
+v = flip_vertical
+h = flip_horizontal
+
+# Zoom controls
+equal = zoom +10
+minus = zoom -10
+0 = zoom optimal
+1 = zoom real
+w = zoom fit
+e = zoom fill
+BackSpace = zoom optimal
+
+# Pan/scroll
+Shift+Left = step_left 5
+Shift+Right = step_right 5
+Shift+Up = step_up 5
+Shift+Down = step_down 5
+
+# Mode switching
+g = mode gallery
+s = mode slideshow
+Escape = mode
+
+# Display options
+f = fullscreen
+i = info
+a = antialiasing
+
+# File operations
+d = skip_file
+Ctrl+r = reload
+Ctrl+e = exec nautilus "$(dirname %)"
+Ctrl+s = export ~/Pictures/swayimg_export_%%.png
+
+# Exit
+q = exit
+Ctrl+q = exit
+
+# Mouse bindings
+MouseLeft = drag
+ScrollUp = zoom +5
+ScrollDown = zoom -5
+Ctrl+ScrollUp = prev_file
+Ctrl+ScrollDown = next_file
+
+[keys.gallery]
+# Navigation
+Left = step_left
+Right = step_right
+Up = step_up
+Down = step_down
+Home = first_file
+End = last_file
+Prior = page_up
+Next = page_down
+
+# Thumbnail size
+equal = thumb +50
+minus = thumb -50
+
+# Mode switching
+v = mode viewer
+s = mode slideshow
+Return = mode viewer
+
+# Display options
+f = fullscreen
+i = info
+
+# File operations
+d = skip_file
+Ctrl+r = reload
+
+# Exit
+q = exit
+Escape = exit
+
+[keys.slideshow]
+# Navigation (manual control during slideshow)
+Left = prev_file
+Right = next_file
+space = pause
+
+# Mode switching
+v = mode viewer
+g = mode gallery
+Escape = mode viewer
+
+# Display options
+f = fullscreen
+
+# Exit
+q = exit

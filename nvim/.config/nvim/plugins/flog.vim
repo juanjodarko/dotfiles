@@ -1,1 +1,0 @@
-Plug 'rbong/vim-flog'

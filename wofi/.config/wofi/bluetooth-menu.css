@@ -1,0 +1,150 @@
+/* Bluetooth Menu - Catppuccin Theme */
+/* Enhanced with color-coded devices and prominent search bar */
+
+@import "/home/juanjo/.config/themes/current.css";
+
+* {
+  font-family: 'JetBrainsMono Nerd Font', monospace;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Window */
+window {
+  margin: 0px;
+  padding: 8px;
+  border: 2px solid @blue;
+  border-radius: 12px;
+  background-color: alpha(@base, 0.85);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Inner Box */
+#inner-box {
+  margin: 0px;
+  padding: 4px;
+  border: none;
+  background-color: transparent;
+}
+
+/* Outer Box */
+#outer-box {
+  margin: 0px;
+  padding: 0px;
+  border: none;
+  background-color: transparent;
+}
+
+/* Scroll */
+#scroll {
+  margin: 0px;
+  padding: 4px;
+  border: none;
+  background-color: transparent;
+}
+
+/* Input - Enhanced and Prominent */
+#input {
+  margin: 6px 8px 10px 8px;
+  padding: 10px 14px;
+  border: 2px solid @surface1;
+  border-radius: 8px;
+  color: @text;
+  background-color: @surface0;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+#input:focus {
+  border: 2px solid @blue;
+  background-color: @surface1;
+}
+
+#input image {
+  border: none;
+  color: @blue;
+  margin-right: 6px;
+}
+
+/* Text */
+#text {
+  margin: 0px 8px;
+  padding: 10px 12px;
+  border: none;
+  color: @text;
+  transition: all 0.2s ease;
+}
+
+/* Entry Base */
+#entry {
+  padding: 2px;
+  margin: 2px 0px;
+  background-color: transparent;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+/* Entry Hover State - Base */
+#entry:hover {
+  background-color: @surface1;
+  margin-left: 2px;
+  border: 1px solid @overlay0;
+}
+
+#entry:hover #text {
+  color: @text;
+  font-weight: 600;
+}
+
+/* Entry Selected State - Base */
+#entry:selected {
+  background-color: @surface1;
+  border: 2px solid @blue;
+  margin-left: 4px;
+}
+
+#entry:selected #text {
+  color: @blue;
+  font-weight: 600;
+}
+
+/* Color-coded entries by action type */
+
+/* Scan for Devices - Teal (Discovery) */
+#entry:nth-child(1) #text {
+  color: @teal;
+}
+
+#entry:nth-child(1):hover {
+  background-color: rgba(148, 226, 213, 0.1);
+  border: 1px solid @teal;
+}
+
+#entry:nth-child(1):selected {
+  border: 2px solid @teal;
+  background-color: rgba(148, 226, 213, 0.15);
+}
+
+#entry:nth-child(1):selected #text {
+  color: @teal;
+}
+
+/* Disable Bluetooth - Red */
+#entry:nth-child(2) #text {
+  color: @red;
+}
+
+#entry:nth-child(2):hover {
+  background-color: rgba(243, 139, 168, 0.1);
+  border: 1px solid @red;
+}
+
+#entry:nth-child(2):selected {
+  border: 2px solid @red;
+  background-color: rgba(243, 139, 168, 0.15);
+}
+
+#entry:nth-child(2):selected #text {
+  color: @red;
+}

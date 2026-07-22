@@ -1,0 +1,5 @@
+# NVIDIA GPU packages
+nvidia
+nvidia-utils
+nvidia-settings
+lib32-nvidia-utils

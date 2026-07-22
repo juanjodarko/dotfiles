@@ -1,0 +1,43 @@
+#!/bin/bash
+# Mouse State Reset Script
+# Fixes mouse/pointer issues after suspend/resume or when mouse stops working
+
+# Log function
+log() {
+    logger -t "fix-mouse" "$1"
+    echo "[fix-mouse] $1"
+}
+
+log "Starting mouse reset..."
+
+# Get list of all mouse devices from Hyprland
+MICE=$(hyprctl devices -j | jq -r '.mice[].name')
+
+if [ -z "$MICE" ]; then
+    log "No mice detected by Hyprland"
+    exit 1
+fi
+
+# Reset each mouse device
+while IFS= read -r mouse; do
+    log "Resetting mouse: $mouse"
+
+    # Reset mouse speed and acceleration
+    hyprctl keyword "device:$mouse:sensitivity" 0
+    hyprctl keyword "device:$mouse:accel_profile" "flat"
+
+    # Small delay between devices
+    sleep 0.1
+done <<< "$MICE"
+
+# Force reload Hyprland input configuration
+log "Reloading Hyprland input configuration..."
+hyprctl reload
+
+# Restart the cursor/pointer subsystem
+log "Dispatching cursor reset..."
+hyprctl dispatch exec "killall -SIGUSR1 hyprland" 2>/dev/null || true
+
+sleep 0.2
+
+log "Mouse reset complete"

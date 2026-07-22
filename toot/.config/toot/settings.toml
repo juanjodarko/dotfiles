@@ -1,0 +1,101 @@
+# Toot Settings - Catppuccin Mocha Theme
+# Mastodon CLI/TUI Configuration
+
+[common]
+# Enable color output
+color = true
+
+[commands.tui]
+# Use true color (24-bit) for accurate Catppuccin colors
+# Options: 1, 16, 88, 256, 16777216 (true color)
+colors = 16777216
+
+# Image format for inline display in ghostty terminal (uses Kitty graphics protocol)
+# Requires: python-pillow and python-term-image
+# Options: kitty, iterm, auto, none
+image-format = "kitty"
+
+# Fallback media viewer for external viewing (if needed)
+# media_viewer = "swayimg"
+
+# Catppuccin Mocha Color Palette
+# Format: [foreground, background, monochrome, high_color_fg, high_color_bg]
+# Using true color mode, we specify colors in #RRGGBB format
+
+[commands.tui.palette]
+# Buttons
+button = ["#cdd6f4", "#313244"]  # text on surface0
+button_focused = ["#1e1e2e", "#cba6f7"]  # base on mauve
+
+# Card elements
+card_author = ["#f9e2af", ""]  # yellow
+card_title = ["#a6e3a1", ""]  # green
+
+# Columns
+columns_divider = ["#585b70", ""]  # surface2
+
+# Content warnings
+content_warning = ["#1e1e2e", "#f38ba8"]  # base on red
+
+# Edit boxes
+editbox = ["#cdd6f4", "#313244"]  # text on surface0
+editbox_focused = ["#cdd6f4", "#45475a"]  # text on surface1
+
+# Footer messages
+footer_message = ["#a6e3a1", ""]  # green
+footer_message_error = ["#f38ba8", ""]  # red
+footer_status = ["#cdd6f4", "#313244"]  # text on surface0
+footer_status_bold = ["#cdd6f4", "#313244"]  # text on surface0
+
+# Header
+header = ["#cdd6f4", "#313244"]  # text on surface0
+header_bold = ["#b4befe", "#313244"]  # lavender on surface0
+
+# Accounts
+account = ["#89b4fa", ""]  # blue
+account_id = ["#6c7086", ""]  # overlay0
+
+# Hashtags
+hashtag = ["#94e2d5", ""]  # teal
+hashtag_followed = ["#a6e3a1", ""]  # green
+
+# Links
+link = ["#89b4fa", ""]  # blue
+link_focused = ["#74c7ec", ""]  # sapphire
+
+# Status elements
+status_detail_account = ["#89b4fa", ""]  # blue
+status_detail_bookmarked = ["#f9e2af", ""]  # yellow
+status_detail_timestamp = ["#6c7086", ""]  # overlay0
+
+# Status list
+status_list_account = ["#a6adc8", ""]  # subtext0
+status_list_selected = ["#1e1e2e", "#a6e3a1"]  # base on green
+status_list_timestamp = ["#6c7086", ""]  # overlay0
+
+# Visibility indicators
+visibility_public = ["#a6e3a1", ""]  # green
+visibility_unlisted = ["#94e2d5", ""]  # teal
+visibility_private = ["#f9e2af", ""]  # yellow
+visibility_direct = ["#f38ba8", ""]  # red
+
+# Text styles
+bold = ["#cdd6f4", ""]  # text
+dim = ["#6c7086", ""]  # overlay0
+highlight = ["#fab387", ""]  # peach
+success = ["#a6e3a1", ""]  # green
+warning = ["#f9e2af", ""]  # yellow
+error = ["#f38ba8", ""]  # red
+
+# HTML tag styles
+tag_a = ["#89b4fa", ""]  # blue (links)
+tag_code = ["#f5c2e7", "#313244"]  # pink on surface0
+tag_pre = ["#f5c2e7", "#313244"]  # pink on surface0
+tag_i = ["#cba6f7", ""]  # mauve (italic)
+tag_b = ["#cdd6f4", ""]  # text (bold)
+tag_u = ["#cdd6f4", ""]  # text (underline)
+tag_em = ["#cba6f7", ""]  # mauve (emphasis)
+tag_strong = ["#cdd6f4", ""]  # text (strong)
+tag_del = ["#f38ba8", ""]  # red (deleted)
+tag_ins = ["#a6e3a1", ""]  # green (inserted)
+tag_mark = ["#1e1e2e", "#f9e2af"]  # base on yellow (highlight)

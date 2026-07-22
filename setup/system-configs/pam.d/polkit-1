@@ -1,0 +1,20 @@
+#%PAM-1.0
+#
+# Polkit authentication with fingerprint support
+# Installed to: /etc/pam.d/polkit-1
+# Managed by: dotfiles/setup/init_fingerprint.sh
+#
+# This enables fingerprint authentication for privileged operations like:
+# - 1Password system authentication
+# - System settings requiring admin access
+# - Any application using polkit for authorization
+#
+
+# Try fingerprint first (30s timeout, 3 attempts)
+auth       sufficient  pam_fprintd.so timeout=30 max-tries=3
+# Fall back to system authentication (includes password)
+auth       include     system-auth
+
+account    include     system-auth
+password   include     system-auth
+session    include     system-auth

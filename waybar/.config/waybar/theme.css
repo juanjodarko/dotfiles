@@ -1,0 +1,53 @@
+/*
+  Catppuccin Theme for Waybar
+
+  bg - background
+  fg - foreground
+  br - border
+*/
+
+@import "/home/juanjo/.config/themes/current.css";
+
+/* Main Colors */
+
+@define-color main-fg         @text;
+@define-color main-bg         @base;
+@define-color main-br         @text;
+
+@define-color active-bg       @mauve;
+@define-color active-fg       @crust;
+
+@define-color hover-bg        @surface0;
+@define-color hover-fg        @text;
+
+@define-color white           #ffffff;
+@define-color black           #000000;
+
+/* Module Colors - Now using full Catppuccin palette! */
+
+@define-color module-fg       @text;
+@define-color workspaces      @mauve;
+
+@define-color cpuinfo         @sapphire;
+@define-color memory          @blue;
+@define-color cpu             @lavender;
+@define-color distro-fg       @crust;
+@define-color distro-bg       @overlay2;
+@define-color time            @peach;
+@define-color date            @yellow;
+@define-color tray            @teal;
+
+@define-color media           @maroon;
+
+@define-color pulseaudio      @green;
+@define-color backlight       @yellow;
+@define-color battery         @sky;
+@define-color power           @red;
+
+/* State Colors */
+
+@define-color good            @green;
+@define-color warning         @yellow;
+@define-color critical        @red;
+@define-color full            @green;
+@define-color charging        @blue;

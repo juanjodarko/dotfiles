@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# claude-session-status.sh — producer for the claude-collab session tracker.
+#
+# Writes/updates one JSON status file per Claude Code session so Neovim can list
+# sessions running in other tmux panes and jump to them. This is the "simple hook"
+# producer; the status-dir schema is the stable seam — a metadata-filesystem can
+# replace this later by emitting the same files.
+#
+# Usage:  claude-session-status.sh <state>
+#   state ∈ working | waiting | idle | end
+#   "end" deletes the session's file.
+#
+# Reads the Claude Code hook JSON payload on stdin (.session_id, .cwd, .prompt).
+# Inherits $TMUX_PANE / $TMUX from the pane Claude runs in.
+#
+# Schema written to $XDG_STATE_HOME/claude-sessions/<session_id>.json:
+#   { id, pane, session, window, cwd, title, state, updated_at }
+set -euo pipefail
+
+state="${1:-working}"
+dir="${XDG_STATE_HOME:-$HOME/.local/state}/claude-sessions"
+
+# jq is required; degrade gracefully (never break the Claude session over telemetry).
+command -v jq >/dev/null 2>&1 || exit 0
+
+mkdir -p "$dir"
+
+payload="$(cat 2>/dev/null || true)"
+sid="$(printf '%s' "$payload" | jq -r '.session_id // empty' 2>/dev/null || true)"
+cwd="$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null || true)"
+prompt="$(printf '%s' "$payload" | jq -r '.prompt // empty' 2>/dev/null || true)"
+
+[ -z "$sid" ] && sid="${CLAUDE_SESSION_ID:-unknown}"
+[ -z "$cwd" ] && cwd="$PWD"
+
+file="$dir/${sid}.json"
+
+if [ "$state" = "end" ]; then
+  rm -f "$file"
+  exit 0
+fi
+
+pane="${TMUX_PANE:-}"
+session=""
+window=""
+if [ -n "${TMUX:-}" ] && [ -n "$pane" ] && command -v tmux >/dev/null 2>&1; then
+  session="$(tmux display-message -p -t "$pane" '#{session_name}' 2>/dev/null || true)"
+  window="$(tmux display-message -p -t "$pane" '#{window_index}' 2>/dev/null || true)"
+fi
+
+now="$(date +%s)"
+
+# Title: prefer the current prompt (UserPromptSubmit), else preserve the existing one.
+title=""
+if [ -f "$file" ]; then
+  title="$(jq -r '.title // empty' "$file" 2>/dev/null || true)"
+fi
+if [ -n "$prompt" ]; then
+  title="$(printf '%s' "$prompt" | tr '\n' ' ' | cut -c1-60)"
+fi
+
+tmp="$(mktemp "${dir}/.${sid}.XXXXXX")"
+jq -n \
+  --arg id "$sid" \
+  --arg pane "$pane" \
+  --arg session "$session" \
+  --arg window "$window" \
+  --arg cwd "$cwd" \
+  --arg title "$title" \
+  --arg state "$state" \
+  --argjson updated_at "$now" \
+  '{id:$id, pane:$pane, session:$session, window:$window, cwd:$cwd, title:$title, state:$state, updated_at:$updated_at}' \
+  >"$tmp"
+mv -f "$tmp" "$file"

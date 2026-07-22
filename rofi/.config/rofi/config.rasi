@@ -1,0 +1,20 @@
+configuration{
+    modi: "drun,run,calc,emoji,window";
+    icon-theme: "Papirus-Dark";
+    show-icons: true;
+    terminal: "ghostty";
+    drun-display-format: "{icon} {name}";
+    location: 0;
+    disable-history: false;
+    hide-scrollbar: true;
+    display-drun: "   Apps ";
+    display-run: "   Run ";
+    display-calc: " 󰃬  Calc";
+    display-emoji: " 󰞅  Emoji";
+    display-window: " 﩯  Window";
+    display-Network: " 󰤨  Network";
+    sidebar-mode: true;
+    font: "CaskaydiaCove Nerd Font 14";
+}
+
+@theme "/home/juanjo/.config/themes/current.rasi"

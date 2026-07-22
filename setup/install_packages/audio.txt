@@ -1,0 +1,12 @@
+pipewire
+pipewire-alsa
+pipewire-pulse
+wireplumber
+alsa-utils
+sof-firmware
+razer-nari-pipewire-profile
+
+# High-quality Bluetooth audio codecs
+libldac
+libfreeaptx
+

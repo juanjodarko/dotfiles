@@ -1,2 +1,0 @@
-Plug 'jremmen/vim-ripgrep'
-

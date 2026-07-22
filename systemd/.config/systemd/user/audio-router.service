@@ -1,0 +1,22 @@
+[Unit]
+Description=Audio Router Daemon - Auto-apply saved stream routes
+Documentation=https://github.com/juanjodarko/dotfiles
+After=pipewire.service wireplumber.service
+Requires=pipewire.service
+
+[Service]
+Type=simple
+ExecStart=%h/.config/waybar/scripts/audio-router-daemon.sh
+Restart=on-failure
+RestartSec=5
+
+# Resource limits for efficiency
+Nice=10
+IOSchedulingClass=idle
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

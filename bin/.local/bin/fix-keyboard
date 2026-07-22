@@ -1,0 +1,38 @@
+#!/bin/bash
+# Keyboard State Reset Script
+# Fixes keyboard input issues after suspend/resume or when keys stop working
+
+# Log function
+log() {
+    logger -t "fix-keyboard" "$1"
+    echo "[fix-keyboard] $1"
+}
+
+log "Starting keyboard reset..."
+
+# Clear any XKB state (for Xwayland compatibility)
+setxkbmap -option 2>/dev/null || log "XKB reset skipped (no X server)"
+
+# Reset Hyprland keyboard configuration
+log "Resetting Hyprland keyboard settings..."
+hyprctl keyword input:kb_layout us
+hyprctl keyword input:kb_variant ""
+hyprctl keyword input:kb_options ""
+hyprctl keyword input:kb_model ""
+hyprctl keyword input:kb_rules ""
+
+# Force switch main keyboard layout to ensure it's active
+MAIN_KEYBOARD=$(hyprctl devices -j | jq -r '.keyboards[] | select(.main == true) | .name' | head -1)
+if [ -n "$MAIN_KEYBOARD" ]; then
+    log "Resetting main keyboard: $MAIN_KEYBOARD"
+    hyprctl switchxkblayout "$MAIN_KEYBOARD" 0
+fi
+
+# Small delay to let changes propagate
+sleep 0.2
+
+# Reload Hyprland configuration
+log "Reloading Hyprland configuration..."
+hyprctl reload
+
+log "Keyboard reset complete"

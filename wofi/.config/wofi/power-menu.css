@@ -1,0 +1,202 @@
+/* Modern Power Menu - Catppuccin Theme */
+
+@import "/home/juanjo/.config/themes/current.css";
+
+* {
+  font-family: 'JetBrainsMono Nerd Font', monospace;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Window */
+window {
+  margin: 0px;
+  padding: 8px;
+  border: 2px solid @lavender;
+  border-radius: 12px;
+  background-color: alpha(@base, 0.85);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Inner Box */
+#inner-box {
+  margin: 0px;
+  padding: 4px;
+  border: none;
+  background-color: transparent;
+}
+
+/* Outer Box */
+#outer-box {
+  margin: 0px;
+  padding: 0px;
+  border: none;
+  background-color: transparent;
+}
+
+/* Input - Hidden for power menu */
+#input {
+  margin: 0px;
+  padding: 0px;
+  border: none;
+  opacity: 0;
+  min-height: 0px;
+}
+
+/* Text */
+#text {
+  margin: 0px 8px;
+  padding: 10px 12px;
+  border: none;
+  color: @text;
+  transition: all 0.2s ease;
+}
+
+/* Entry Base */
+#entry {
+  padding: 2px;
+  margin: 2px 0px;
+  background-color: transparent;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+/* Entry Hover State - Base */
+#entry:hover {
+  background-color: @surface1;
+  margin-left: 2px;
+  border: 1px solid @overlay0;
+}
+
+#entry:hover #text {
+  color: @text;
+  font-weight: 600;
+}
+
+/* Entry Selected State */
+#entry:selected {
+  background-color: @surface1;
+  border: 2px solid @lavender;
+  margin-left: 4px;
+}
+
+#entry:selected #text {
+  color: @lavender;
+  font-weight: 600;
+}
+
+/* Color-coded entries by action type */
+
+/* Lock - Blue (Security) */
+#entry:nth-child(1) #text {
+  color: @blue;
+}
+
+#entry:nth-child(1):hover {
+  background-color: rgba(137, 180, 250, 0.1);
+  border: 1px solid @blue;
+}
+
+#entry:nth-child(1):selected {
+  border: 2px solid @blue;
+  background-color: rgba(137, 180, 250, 0.15);
+}
+
+#entry:nth-child(1):selected #text {
+  color: @blue;
+}
+
+/* Shutdown - Red (Critical) */
+#entry:nth-child(2) #text {
+  color: @red;
+}
+
+#entry:nth-child(2):hover {
+  background-color: rgba(243, 139, 168, 0.1);
+  border: 1px solid @red;
+}
+
+#entry:nth-child(2):selected {
+  border: 2px solid @red;
+  background-color: rgba(243, 139, 168, 0.15);
+}
+
+#entry:nth-child(2):selected #text {
+  color: @red;
+}
+
+/* Reboot - Peach (Warning) */
+#entry:nth-child(3) #text {
+  color: @peach;
+}
+
+#entry:nth-child(3):hover {
+  background-color: rgba(250, 179, 135, 0.1);
+  border: 1px solid @peach;
+}
+
+#entry:nth-child(3):selected {
+  border: 2px solid @peach;
+  background-color: rgba(250, 179, 135, 0.15);
+}
+
+#entry:nth-child(3):selected #text {
+  color: @peach;
+}
+
+/* Suspend - Yellow (Sleep) */
+#entry:nth-child(4) #text {
+  color: @yellow;
+}
+
+#entry:nth-child(4):hover {
+  background-color: rgba(249, 226, 175, 0.1);
+  border: 1px solid @yellow;
+}
+
+#entry:nth-child(4):selected {
+  border: 2px solid @yellow;
+  background-color: rgba(249, 226, 175, 0.15);
+}
+
+#entry:nth-child(4):selected #text {
+  color: @yellow;
+}
+
+/* Hibernate - Teal (Deep Sleep) */
+#entry:nth-child(5) #text {
+  color: @teal;
+}
+
+#entry:nth-child(5):hover {
+  background-color: rgba(148, 226, 213, 0.1);
+  border: 1px solid @teal;
+}
+
+#entry:nth-child(5):selected {
+  border: 2px solid @teal;
+  background-color: rgba(148, 226, 213, 0.15);
+}
+
+#entry:nth-child(5):selected #text {
+  color: @teal;
+}
+
+/* Logout - Mauve (Session End) */
+#entry:nth-child(6) #text {
+  color: @mauve;
+}
+
+#entry:nth-child(6):hover {
+  background-color: rgba(203, 166, 247, 0.1);
+  border: 1px solid @mauve;
+}
+
+#entry:nth-child(6):selected {
+  border: 2px solid @mauve;
+  background-color: rgba(203, 166, 247, 0.15);
+}
+
+#entry:nth-child(6):selected #text {
+  color: @mauve;
+}

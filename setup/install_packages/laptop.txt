@@ -1,0 +1,13 @@
+# Laptop-specific packages
+# Power management
+tlp
+powertop
+auto-cpufreq
+upower
+acpi
+
+# Display brightness control
+brightnessctl
+
+# Fingerprint reader support
+fprintd
