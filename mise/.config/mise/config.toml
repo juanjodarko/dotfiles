@@ -3,8 +3,8 @@
 
 [tools]
 # Default tool versions used globally unless overridden by project-specific config
-node = "20.13.0"
-python = "3.9.11"
+node = "26.3.0"
+python = "3.14.6"
 # Ruby versions managed separately per project
 
 [settings]
