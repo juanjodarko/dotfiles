@@ -1,0 +1,44 @@
+{
+  // Personal additions to the Omarchy menu (SUPER + SPACE).
+  //
+  // Parents are inferred from the dotted id, so "personal.wallpapers" lands
+  // inside the "personal" row and "personal" lands on the root menu. Reusing an
+  // existing Omarchy id overrides it instead; nothing here does that, so this
+  // file only adds and never shadows a stock entry.
+  //
+  // Hot-reloads on save. Reference for the available fields:
+  //   /usr/share/omarchy/config/omarchy/extensions/omarchy-menu.jsonc
+
+  "personal": {
+    "icon": "󰋜",
+    "label": "Personal",
+    "description": "Personal dotfiles tools"
+  },
+
+  "personal.wallpapers-sync": {
+    "icon": "󰸉",
+    "label": "Sync wallpapers",
+    "description": "Re-match personal wallpapers to every theme by color and re-seed them",
+    "aliases": ["wallpapers", "wallsync"],
+    // Runs in a terminal so the per-wallpaper scoring is visible; it takes a
+    // moment per image because each one is analysed with ImageMagick.
+    "action": "omarchy-launch-tui bash -c 'omarchy-wallpapers-sync; echo; read -n 1 -s -r -p \"Press any key to close\"'",
+    "when": "command -v omarchy-wallpapers-sync"
+  },
+
+  "personal.wallpapers-folder": {
+    "icon": "",
+    "label": "Wallpaper sources",
+    "description": "Open the directories personal wallpapers are seeded from",
+    "action": "uwsm-app -- nautilus \"$(head -n1 ~/.config/omarchy/wallpaper-sources)\"",
+    "when": "test -s ~/.config/omarchy/wallpaper-sources"
+  },
+
+  "personal.dotfiles": {
+    "icon": "",
+    "label": "Edit dotfiles",
+    "description": "Open the Omarchy dotfiles in the default editor",
+    "action": "omarchy-launch-editor ~/dotfiles/omarchy",
+    "when": "test -d ~/dotfiles/omarchy"
+  }
+}

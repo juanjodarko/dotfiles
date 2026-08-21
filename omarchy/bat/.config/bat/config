@@ -1,0 +1,9 @@
+# bat, themed by Omarchy.
+#
+# The `ansi` theme renders using the terminal's own 16 colors instead of a
+# bundled tmTheme. Omarchy retints the terminal on every theme change, so bat
+# follows along for free -- no template and no per-theme .tmTheme to maintain.
+#
+# The Arch config (../../../bat/.config/bat/config) pins "Catppuccin Mocha"
+# instead, which is why this is scoped separately.
+--theme="ansi"

@@ -1,0 +1,15 @@
+# Ghostty, themed by Omarchy.
+#
+# Omarchy renders the active theme's palette to the file included below on every
+# `omarchy theme set`. The `?` prefix makes the include optional, so this config
+# still loads if the file is missing (fresh install, theme mid-switch).
+#
+# This is the Omarchy counterpart of ../../../ghostty/.config/ghostty/config,
+# which instead sources the Arch theme switcher's ~/.config/themes/current.ghostty.
+
+config-file = ?"~/.local/state/omarchy/current/theme/ghostty.conf"
+
+# Personal settings, independent of the theme.
+background-opacity = 0.9
+background-blur = 20
+keybind = shift+enter=text:\n

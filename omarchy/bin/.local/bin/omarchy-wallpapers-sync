@@ -1,0 +1,579 @@
+#!/usr/bin/env python3
+"""Seed personal wallpapers into Omarchy's per-theme background folders.
+
+Omarchy looks for backgrounds in two places when cycling or applying a theme
+(see `omarchy-theme-bg-next` and `omarchy-theme-set`):
+
+    ~/.config/omarchy/backgrounds/<theme-slug>/     <- user backgrounds
+    ~/.local/state/omarchy/current/theme/backgrounds/
+
+Both are scanned with `find -L`, so symlinks are followed. This script scores
+every wallpaper against every installed theme's palette and symlinks each
+wallpaper into the folders of the themes it matches best.
+
+Nothing is copied and nothing outside ~/.config/omarchy/backgrounds is touched,
+so `--clean` fully reverses a run.
+"""
+
+from __future__ import annotations
+
+import argparse
+import concurrent.futures
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+HOME = Path.home()
+CONFIG_DIR = HOME / ".config" / "omarchy"
+BACKGROUNDS_DIR = CONFIG_DIR / "backgrounds"
+SOURCES_FILE = CONFIG_DIR / "wallpaper-sources"
+STATE_FILE = HOME / ".local" / "state" / "omarchy" / "wallpapers-sync.json"
+CACHE_FILE = HOME / ".cache" / "omarchy" / "wallpaper-palettes.json"
+
+OMARCHY_PATH = Path(os.environ.get("OMARCHY_PATH", "/usr/share/omarchy"))
+STOCK_THEMES = OMARCHY_PATH / "themes"
+USER_THEMES = CONFIG_DIR / "themes"
+
+IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}
+
+# Palette keys that actually carry a theme's identity. The full colors.toml
+# dump contains ~50 keys, but most are aliases (fg/foreground, color4/blue) and
+# would skew the distance by counting the same hue several times.
+HUE_KEYS = (
+    "accent", "red", "orange", "yellow", "green",
+    "cyan", "blue", "magenta", "brown",
+    "bright_red", "bright_yellow", "bright_green",
+    "bright_cyan", "bright_blue", "bright_magenta",
+)
+NEUTRAL_KEYS = ("background", "foreground", "muted", "selection")
+
+HISTOGRAM_RE = re.compile(r"^\s*(\d+):.*?#([0-9A-Fa-f]{6})")
+
+
+# --------------------------------------------------------------------------
+# Color math (Oklab -- perceptually uniform, so plain euclidean distance in it
+# tracks "do these look alike" far better than distance in sRGB).
+# --------------------------------------------------------------------------
+
+def hex_to_rgb(value: str) -> tuple[int, int, int] | None:
+    value = value.strip().lstrip("#")
+    if len(value) == 8:  # RRGGBBAA
+        value = value[:6]
+    if len(value) != 6:
+        return None
+    try:
+        return int(value[0:2], 16), int(value[2:4], 16), int(value[4:6], 16)
+    except ValueError:
+        return None
+
+
+def srgb_to_oklab(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
+    def linearize(channel: int) -> float:
+        c = channel / 255.0
+        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+    r, g, b = (linearize(c) for c in rgb)
+
+    l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b
+    m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b
+    s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b
+
+    l_, m_, s_ = l ** (1 / 3), m ** (1 / 3), s ** (1 / 3)
+
+    return (
+        0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_,
+        1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_,
+        0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_,
+    )
+
+
+def oklab_distance(a: tuple[float, float, float], b: tuple[float, float, float]) -> float:
+    return sum((x - y) ** 2 for x, y in zip(a, b)) ** 0.5
+
+
+def chroma(lab: tuple[float, float, float]) -> float:
+    return (lab[1] ** 2 + lab[2] ** 2) ** 0.5
+
+
+# --------------------------------------------------------------------------
+# Reading themes and wallpapers
+# --------------------------------------------------------------------------
+
+def read_theme_colors(colors_file: Path) -> dict[str, str]:
+    """Prefer omarchy-theme-color so alias/fallback resolution matches Omarchy.
+
+    Falls back to a plain TOML-ish parse when the helper is unavailable, which
+    keeps the script usable from a plain shell or a container.
+    """
+    if shutil.which("omarchy-theme-color"):
+        try:
+            out = subprocess.run(
+                ["omarchy-theme-color", "--file", str(colors_file), "--all"],
+                capture_output=True, text=True, timeout=10, check=True,
+            ).stdout
+            colors = {}
+            for line in out.splitlines():
+                if "\t" in line:
+                    key, _, value = line.partition("\t")
+                    colors[key.strip()] = value.strip()
+            if colors:
+                return colors
+        except (subprocess.SubprocessError, OSError):
+            pass
+
+    colors = {}
+    for line in colors_file.read_text(errors="replace").splitlines():
+        line = line.split("#", 1)[0] if line.strip().startswith("#") else line
+        if "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        colors[key.strip()] = value.strip().strip('"').strip("'")
+    return colors
+
+
+def discover_themes() -> list[dict]:
+    """Collect every installed theme, user overlays winning over stock ones."""
+    found: dict[str, Path] = {}
+    for root in (STOCK_THEMES, USER_THEMES):
+        if not root.is_dir():
+            continue
+        for entry in sorted(root.iterdir()):
+            colors = entry / "colors.toml"
+            if entry.is_dir() and colors.is_file():
+                found[entry.name] = colors
+
+    themes = []
+    for slug, colors_file in sorted(found.items()):
+        colors = read_theme_colors(colors_file)
+        palette = {}
+        for key in HUE_KEYS + NEUTRAL_KEYS:
+            rgb = hex_to_rgb(colors.get(key, ""))
+            if rgb:
+                palette[key] = srgb_to_oklab(rgb)
+        if not palette:
+            continue
+
+        mode = colors.get("mode", "").lower()
+        if mode not in ("dark", "light"):
+            bg = palette.get("background")
+            mode = "light" if bg and bg[0] > 0.6 else "dark"
+
+        themes.append({"slug": slug, "palette": palette, "mode": mode})
+    return themes
+
+
+def wallpaper_palette(path: Path, colors: int = 8) -> list[tuple[float, tuple[int, int, int]]]:
+    """Return [(weight, rgb)] for the image's dominant colors, weights summing to 1."""
+    try:
+        out = subprocess.run(
+            ["magick", str(path), "-resize", "120x120!", "-colors", str(colors),
+             "-depth", "8", "-format", "%c", "histogram:info:"],
+            capture_output=True, text=True, timeout=60, check=True,
+        ).stdout
+    except (subprocess.SubprocessError, OSError) as exc:
+        raise RuntimeError(f"could not read {path.name}: {exc}") from exc
+
+    entries = []
+    for line in out.splitlines():
+        match = HISTOGRAM_RE.match(line)
+        if not match:
+            continue
+        count = int(match.group(1))
+        rgb = hex_to_rgb(match.group(2))
+        if rgb:
+            entries.append((count, rgb))
+
+    total = sum(count for count, _ in entries)
+    if not total:
+        raise RuntimeError(f"no colors extracted from {path.name}")
+    return [(count / total, rgb) for count, rgb in entries]
+
+
+# --------------------------------------------------------------------------
+# Palette cache
+#
+# Extracting a palette costs an ImageMagick process per image, which dominates
+# the runtime on a large collection. Results are cached by path, size and mtime
+# so re-runs after adding a few wallpapers only analyse the new ones.
+# --------------------------------------------------------------------------
+
+def cache_key(path: Path) -> str:
+    try:
+        stat = path.stat()
+    except OSError:
+        return str(path)
+    return f"{path}:{stat.st_size}:{int(stat.st_mtime)}"
+
+
+def load_cache() -> dict:
+    if CACHE_FILE.is_file():
+        try:
+            return json.loads(CACHE_FILE.read_text())
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {}
+
+
+def save_cache(cache: dict) -> None:
+    try:
+        CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        CACHE_FILE.write_text(json.dumps(cache))
+    except OSError:
+        pass  # a cache we cannot persist is a slow run, not a failure
+
+
+def extract_palettes(wallpapers: list[Path], cache: dict, quiet: bool) -> tuple[dict, int]:
+    """Return {path: palette} for every readable wallpaper, plus a failure count.
+
+    Cache misses are analysed in parallel: each worker spends its time waiting on
+    an ImageMagick subprocess, so threads scale this nearly linearly with cores.
+    """
+    palettes: dict[Path, list] = {}
+    pending: list[Path] = []
+
+    for wallpaper in wallpapers:
+        entry = cache.get(cache_key(wallpaper))
+        if entry is None:
+            pending.append(wallpaper)
+        else:
+            palettes[wallpaper] = [(weight, tuple(rgb)) for weight, rgb in entry]
+
+    failures = 0
+    if pending:
+        if not quiet:
+            reused = len(wallpapers) - len(pending)
+            note = f" ({reused} reused from cache)" if reused else ""
+            print(f"Analysing {len(pending)} wallpaper(s){note}...")
+
+        workers = min(32, (os.cpu_count() or 4) * 2)
+        done = 0
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = {pool.submit(wallpaper_palette, w): w for w in pending}
+            for future in concurrent.futures.as_completed(futures):
+                wallpaper = futures[future]
+                done += 1
+                try:
+                    palette = future.result()
+                except RuntimeError as exc:
+                    print(f"  skip: {exc}", file=sys.stderr)
+                    failures += 1
+                    continue
+                palettes[wallpaper] = palette
+                cache[cache_key(wallpaper)] = [[weight, list(rgb)] for weight, rgb in palette]
+                if not quiet and done % 100 == 0:
+                    print(f"  {done}/{len(pending)}")
+
+    return palettes, failures
+
+
+# --------------------------------------------------------------------------
+# Scoring
+# --------------------------------------------------------------------------
+
+def score_theme(palette: list[tuple[float, tuple[int, int, int]]], theme: dict) -> float:
+    """Lower is better. Combines three signals, in rough order of importance.
+
+    1. Mode agreement -- a bright wallpaper under a dark theme reads as broken
+       no matter how well the accents line up, so this dominates.
+    2. Background affinity -- the wallpaper's dominant color against the theme
+       background, i.e. does the desktop feel continuous with the bar and gaps.
+    3. Accent affinity -- how well the wallpaper's saturated colors are echoed
+       by the theme's hues, weighted by how much of the image they cover.
+    """
+    labs = [(weight, srgb_to_oklab(rgb)) for weight, rgb in palette]
+
+    mean_lightness = sum(weight * lab[0] for weight, lab in labs)
+    wallpaper_mode = "light" if mean_lightness > 0.62 else "dark"
+    mode_penalty = 0.0 if wallpaper_mode == theme["mode"] else 1.0
+
+    dominant = max(labs, key=lambda item: item[0])[1]
+    background = theme["palette"].get("background")
+    background_distance = oklab_distance(dominant, background) if background else 0.5
+
+    hues = [theme["palette"][key] for key in HUE_KEYS if key in theme["palette"]]
+    if hues:
+        accent_distance = 0.0
+        chromatic_weight = 0.0
+        for weight, lab in labs:
+            # Near-grey pixels say nothing about hue affinity; letting them vote
+            # would make every monochrome wallpaper match every theme equally.
+            saturation = chroma(lab)
+            if saturation < 0.02:
+                continue
+            weighted = weight * saturation
+            accent_distance += weighted * min(oklab_distance(lab, hue) for hue in hues)
+            chromatic_weight += weighted
+        accent_distance = accent_distance / chromatic_weight if chromatic_weight else 0.5
+    else:
+        accent_distance = 0.5
+
+    return 1.6 * mode_penalty + 1.0 * background_distance + 0.8 * accent_distance
+
+
+# --------------------------------------------------------------------------
+# Sources, state, and linking
+# --------------------------------------------------------------------------
+
+def read_sources(explicit: list[str]) -> list[Path]:
+    raw = list(explicit)
+    if not raw and SOURCES_FILE.is_file():
+        for line in SOURCES_FILE.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                raw.append(line)
+
+    sources = []
+    for item in raw:
+        path = Path(os.path.expanduser(os.path.expandvars(item))).resolve()
+        if path.is_dir() and path not in sources:
+            sources.append(path)
+    return sources
+
+
+def collect_wallpapers(sources: list[Path]) -> list[Path]:
+    wallpapers = []
+    seen = set()
+    for source in sources:
+        for path in sorted(source.rglob("*")):
+            if path.suffix.lower() not in IMAGE_SUFFIXES or not path.is_file():
+                continue
+            resolved = path.resolve()
+            if resolved not in seen:
+                seen.add(resolved)
+                wallpapers.append(path)
+    return wallpapers
+
+
+def load_state() -> dict:
+    if STATE_FILE.is_file():
+        try:
+            return json.loads(STATE_FILE.read_text())
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {"links": [], "sources": []}
+
+
+def save_state(state: dict) -> None:
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, indent=2) + "\n")
+
+
+def remove_previous_links(state: dict, sources: list[Path], dry_run: bool) -> int:
+    """Drop links this script created before, identified two ways.
+
+    The state file is authoritative, but a link whose target still resolves into
+    a known source directory is ours too -- that covers a lost state file and
+    keeps repeated runs from stacking up stale links.
+    """
+    known_sources = [Path(p) for p in state.get("sources", [])] + sources
+    candidates = {Path(p) for p in state.get("links", [])}
+
+    if BACKGROUNDS_DIR.is_dir():
+        for theme_dir in BACKGROUNDS_DIR.iterdir():
+            if not theme_dir.is_dir():
+                continue
+            for link in theme_dir.iterdir():
+                if not link.is_symlink():
+                    continue
+                try:
+                    target = link.resolve()
+                except OSError:
+                    continue
+                if any(target.is_relative_to(source) for source in known_sources):
+                    candidates.add(link)
+
+    removed = 0
+    for link in sorted(candidates):
+        if link.is_symlink() or link.exists():
+            if not dry_run:
+                try:
+                    link.unlink()
+                except OSError:
+                    continue
+            removed += 1
+    return removed
+
+
+def link_name(wallpaper: Path, rank: int) -> str:
+    """Prefix with the match rank so `theme bg next` cycles best matches first.
+
+    Omarchy sorts background filenames, and stock theme backgrounds are usually
+    named "1-foo.png", so a low prefix interleaves ours near the front.
+    """
+    return f"{rank}-{wallpaper.stem}{wallpaper.suffix.lower()}"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        prog="omarchy-wallpapers-sync",
+        description="Match personal wallpapers to Omarchy themes by color and seed them.",
+    )
+    parser.add_argument("--source", action="append", default=[], metavar="DIR",
+                        help=f"wallpaper directory (repeatable). Default: {SOURCES_FILE}")
+    parser.add_argument("--top", type=int, default=3, metavar="N",
+                        help="themes each wallpaper is seeded into (default: 3)")
+    parser.add_argument("--per-theme", type=int, default=150, metavar="N",
+                        help="minimum wallpapers guaranteed per theme (default: 150, 0 disables)")
+    parser.add_argument("--theme", action="append", default=[], metavar="SLUG",
+                        help="restrict to these theme slugs (repeatable)")
+    parser.add_argument("--clean", action="store_true",
+                        help="remove previously seeded links and exit")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="report what would change without touching the filesystem")
+    parser.add_argument("--quiet", action="store_true", help="only report the summary")
+    args = parser.parse_args()
+
+    if not shutil.which("magick"):
+        print("error: ImageMagick (magick) is required", file=sys.stderr)
+        return 1
+
+    state = load_state()
+    sources = read_sources(args.source)
+
+    if args.clean:
+        removed = remove_previous_links(state, sources, args.dry_run)
+        if not args.dry_run:
+            save_state({"links": [], "sources": [str(p) for p in sources]})
+        print(f"Removed {removed} seeded wallpaper link(s).")
+        return 0
+
+    if not sources:
+        print(f"error: no wallpaper sources. Pass --source DIR or list them in {SOURCES_FILE}",
+              file=sys.stderr)
+        return 1
+
+    wallpapers = collect_wallpapers(sources)
+    if not wallpapers:
+        print(f"error: no images found in {', '.join(str(s) for s in sources)}", file=sys.stderr)
+        return 1
+
+    themes = discover_themes()
+    if args.theme:
+        wanted = {t.lower() for t in args.theme}
+        themes = [t for t in themes if t["slug"].lower() in wanted]
+    if not themes:
+        print("error: no themes with a colors.toml were found", file=sys.stderr)
+        return 1
+
+    top = max(1, min(args.top, len(themes)))
+    print(f"Matching {len(wallpapers)} wallpaper(s) against {len(themes)} theme(s), "
+          f"top {top} each.")
+
+    removed = remove_previous_links(state, sources, args.dry_run)
+    if removed and not args.quiet:
+        print(f"Cleared {removed} link(s) from a previous run.")
+
+    cache = load_cache()
+    palettes, failures = extract_palettes(wallpapers, cache, args.quiet)
+    save_cache(cache)
+
+    created: list[str] = []
+    per_theme: dict[str, int] = {}
+    # Distinct wallpapers can share a stem ("wallpaper.jpg" from two folders),
+    # which would collide inside a theme directory. Track names per theme.
+    taken: dict[str, set[str]] = {}
+
+    # Score every wallpaper against every theme once, then select in two
+    # directions and union the results.
+    #
+    # Wallpaper-centric alone (top-N themes per wallpaper) skews badly: themes
+    # with muted, "central" palettes win most duels, while distinctive ones are
+    # rarely anybody's top pick and end up nearly empty. Adding a theme-centric
+    # pass -- each theme claims its own best-scoring wallpapers -- guarantees
+    # every theme is usable without dropping the per-wallpaper affinity.
+    scores: dict[Path, list[tuple[float, dict]]] = {}
+    for wallpaper in wallpapers:
+        palette = palettes.get(wallpaper)
+        if palette is None:
+            continue
+        scores[wallpaper] = sorted(
+            ((score_theme(palette, theme), theme) for theme in themes),
+            key=lambda pair: pair[0],
+        )
+
+    # (wallpaper, slug) -> rank, lower rank wins when both passes select a pair.
+    selection: dict[tuple[Path, str], int] = {}
+
+    for wallpaper, ranked in scores.items():
+        for rank, (_score, theme) in enumerate(ranked[:top], start=1):
+            key = (wallpaper, theme["slug"])
+            selection[key] = min(selection.get(key, rank), rank)
+
+    if args.per_theme > 0:
+        fill_rank = top + 1
+        for theme in themes:
+            slug = theme["slug"]
+            by_score = sorted(
+                ((next(s for s, t in scores[w] if t["slug"] == slug), w) for w in scores),
+                key=lambda pair: pair[0],
+            )[:args.per_theme]
+            for _score, wallpaper in by_score:
+                key = (wallpaper, slug)
+                if key not in selection:
+                    selection[key] = fill_rank
+
+    if not args.quiet:
+        print(f"Selected {len(selection)} wallpaper/theme pair(s).")
+
+    for wallpaper in wallpapers:
+        ranked = scores.get(wallpaper)
+        if ranked is None:
+            continue
+
+        chosen = [(rank, theme) for (_score, theme) in ranked
+                  for rank in [selection.get((wallpaper, theme["slug"]))] if rank is not None]
+
+        if not args.quiet and chosen:
+            summary = ", ".join(f"{theme['slug']}#{rank}" for rank, theme in chosen)
+            print(f"  {wallpaper.name} -> {summary}")
+
+        for rank, theme in chosen:
+            slug = theme["slug"]
+            destination = BACKGROUNDS_DIR / slug
+            names = taken.setdefault(slug, set())
+
+            name = link_name(wallpaper, rank)
+            if name in names:
+                stem, suffix = Path(name).stem, Path(name).suffix
+                counter = 2
+                while f"{stem}-{counter}{suffix}" in names:
+                    counter += 1
+                name = f"{stem}-{counter}{suffix}"
+            names.add(name)
+
+            link = destination / name
+            per_theme[slug] = per_theme.get(slug, 0) + 1
+
+            if args.dry_run:
+                created.append(str(link))
+                continue
+
+            destination.mkdir(parents=True, exist_ok=True)
+            if link.is_symlink() or link.exists():
+                link.unlink()
+            link.symlink_to(wallpaper.resolve())
+            created.append(str(link))
+
+    if not args.dry_run:
+        save_state({"links": created, "sources": [str(p) for p in sources]})
+
+    if per_theme and not args.quiet:
+        print("\nPer theme:")
+        for slug in sorted(per_theme, key=lambda s: -per_theme[s]):
+            print(f"  {per_theme[slug]:5d}  {slug}")
+
+    verb = "Would link" if args.dry_run else "Linked"
+    print(f"\n{verb} {len(created)} wallpaper(s) across {len(per_theme)} theme(s).")
+    if failures:
+        print(f"{failures} wallpaper(s) could not be read.", file=sys.stderr)
+    if not args.dry_run and created:
+        print("Cycle them with: omarchy theme bg next")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
