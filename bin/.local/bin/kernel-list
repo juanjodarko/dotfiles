@@ -1,3 +1,0 @@
-bspc rule -a Xfce4-terminal state=floating
-xfce4-terminal --title=Alikred -e "k_manage.sh" > /dev/null
-

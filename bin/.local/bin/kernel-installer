@@ -1,3 +1,0 @@
-bspc rule -a Xfce4-terminal state=floating
-xfce4-terminal --title=Alikred -e "kernel-installer-bin" > /dev/null
-

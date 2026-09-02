@@ -73,7 +73,7 @@ case "$choice" in
         update
         ;;
     8)
-        kernel-list
+        k_manage.sh
         ;;
     9)
         echo ""
