@@ -13,6 +13,7 @@ hyprland/.config/hypr/plugins/
 themes/.config/themes/current.css
 themes/.config/themes/current.rasi
 themes/.config/themes/current.ghostty
+themes/.config/themes/current.kitty
 themes/.config/themes/current.tmux
 themes/.config/themes/current.starship
 themes/.config/themes/current.conf

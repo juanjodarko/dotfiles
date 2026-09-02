@@ -1,0 +1,46 @@
+# vim:ft=kitty
+# Catppuccin Macchiato (Dark) — palette mirrors macchiato.ghostty (single source of truth).
+# This file is the switch target of ~/.config/themes/current.kitty.
+
+foreground            #cad3f5
+background            #24273a
+selection_foreground  #24273a
+selection_background  #f4dbd6
+
+cursor                #f4dbd6
+cursor_text_color     #24273a
+
+url_color             #8bd5ca
+
+active_border_color   #8aadf4
+inactive_border_color #5b6078
+
+active_tab_foreground   #24273a
+active_tab_background   #8aadf4
+inactive_tab_foreground #cad3f5
+inactive_tab_background #494d64
+
+# black
+color0  #494d64
+color8  #5b6078
+# red
+color1  #ed8796
+color9  #ed8796
+# green
+color2  #a6da95
+color10 #a6da95
+# yellow
+color3  #eed49f
+color11 #eed49f
+# blue
+color4  #8aadf4
+color12 #8aadf4
+# magenta
+color5  #f5bde6
+color13 #f5bde6
+# cyan
+color6  #8bd5ca
+color14 #8bd5ca
+# white
+color7  #b8c0e0
+color15 #a5adcb

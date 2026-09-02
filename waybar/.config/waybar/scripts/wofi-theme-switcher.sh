@@ -8,6 +8,7 @@ THEMES_DIR="$HOME/.config/themes"
 CURRENT_CSS="$THEMES_DIR/current.css"
 CURRENT_RASI="$THEMES_DIR/current.rasi"
 CURRENT_GHOSTTY="$THEMES_DIR/current.ghostty"
+CURRENT_KITTY="$THEMES_DIR/current.kitty"
 CURRENT_TMUX="$THEMES_DIR/current.tmux"
 CURRENT_HYPR="$THEMES_DIR/current.conf"
 CURRENT_STARSHIP="$THEMES_DIR/current.starship"
@@ -25,6 +26,7 @@ function init_theme_files() {
     [ ! -L "$CURRENT_CSS" ] && ln -sf "catppuccin/${default_theme}.css" current.css
     [ ! -L "$CURRENT_RASI" ] && ln -sf "catppuccin/${default_theme}.rasi" current.rasi
     [ ! -L "$CURRENT_GHOSTTY" ] && ln -sf "catppuccin/${default_theme}.ghostty" current.ghostty
+    [ ! -L "$CURRENT_KITTY" ] && ln -sf "catppuccin/${default_theme}.kitty" current.kitty
     [ ! -L "$CURRENT_TMUX" ] && ln -sf "catppuccin/${default_theme}.tmux" current.tmux
     [ ! -L "$CURRENT_HYPR" ] && ln -sf "../../../hyprland/.config/hypr/${default_theme}.conf" current.conf
     [ ! -L "$CURRENT_STARSHIP" ] && ln -sf "catppuccin/${default_theme}.starship" current.starship
@@ -111,6 +113,7 @@ cd "$THEMES_DIR"
 ln -sf "catppuccin/${theme_file}.css" current.css
 ln -sf "catppuccin/${theme_file}.rasi" current.rasi
 ln -sf "catppuccin/${theme_file}.ghostty" current.ghostty
+ln -sf "catppuccin/${theme_file}.kitty" current.kitty
 ln -sf "catppuccin/${theme_file}.tmux" current.tmux
 ln -sf "../../../hyprland/.config/hypr/${theme_file}.conf" current.conf
 ln -sf "catppuccin/${theme_file}.starship" current.starship
@@ -174,6 +177,9 @@ hyprctl dispatch exec waybar &
 
 # Reload Ghostty (terminal emulator)
 pkill -SIGUSR2 ghostty 2>/dev/null
+
+# Reload kitty (terminal emulator) — kitty re-reads its config on SIGUSR1
+pkill -SIGUSR1 kitty 2>/dev/null
 
 # Reload swaync (notification daemon)
 if command -v swaync-client &> /dev/null; then
