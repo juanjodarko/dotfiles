@@ -13,3 +13,6 @@
 [submodule "polybar/.config/polybar/pomobar"]
 	path = polybar/.config/polybar/pomobar
 	url = git@github.com:juanjodarko/pomobar.git
+[submodule "quickshell/.config/quickshell"]
+	path = quickshell/.config/quickshell
+	url = git@github.com:juanjodarko/dockshell.git
