@@ -31,6 +31,10 @@ function init_theme_files() {
     [ ! -L "$CURRENT_HYPR" ] && ln -sf "../../../hyprland/.config/hypr/${default_theme}.conf" current.conf
     [ ! -L "$CURRENT_STARSHIP" ] && ln -sf "catppuccin/${default_theme}.starship" current.starship
 
+    # Bar palette (real file, not symlink) for Quickshell/DockShell
+    [ ! -f "$THEMES_DIR/current.json" ] && [ -f "palettes/catppuccin/${default_theme}.json" ] \
+        && install -m644 "palettes/catppuccin/${default_theme}.json" current.json
+
     # Create flavor file if missing
     [ ! -f "$CURRENT_FLAVOR" ] && echo "$default_theme" > "$CURRENT_FLAVOR"
 }
@@ -117,6 +121,13 @@ ln -sf "catppuccin/${theme_file}.kitty" current.kitty
 ln -sf "catppuccin/${theme_file}.tmux" current.tmux
 ln -sf "../../../hyprland/.config/hypr/${theme_file}.conf" current.conf
 ln -sf "catppuccin/${theme_file}.starship" current.starship
+
+# Bar palette for Quickshell/DockShell — a REAL file written atomically (mv), NOT a symlink:
+# Quickshell's FileView watcher reliably fires on rename but can miss a symlink relink.
+if [ -f "palettes/catppuccin/${theme_file}.json" ]; then
+    install -m644 "palettes/catppuccin/${theme_file}.json" ".current.json.tmp" \
+        && mv -f ".current.json.tmp" "current.json"
+fi
 
 # Update Neovim flavor file
 echo "$theme_file" > "$CURRENT_FLAVOR"

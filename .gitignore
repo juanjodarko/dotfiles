@@ -17,4 +17,5 @@ themes/.config/themes/current.kitty
 themes/.config/themes/current.tmux
 themes/.config/themes/current.starship
 themes/.config/themes/current.conf
+themes/.config/themes/current.json
 themes/.config/themes/current_flavor.txt
