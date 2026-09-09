@@ -294,7 +294,8 @@ hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 -- System shortcuts
 hl.bind("SUPER + L", hl.dsp.exec_cmd("hyprlock"))
 hl.bind("SUPER + D", hl.dsp.exec_cmd(HOME .. "/.config/quickshell/plugins/indicators/bin/dictate toggle")) -- voice dictation (whisper.cpp); auto-stops on silence
-hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(HOME .. "/.config/hypr/change_wallpaper.sh"))
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(HOME .. "/.config/wallpaperd/bin/wallpaperd next")) -- re-roll wallpaper (wallpaperd)
+hl.bind("SUPER + W", hl.dsp.exec_cmd(HOME .. "/.config/wallpaperd/bin/wallpaperd pick")) -- wallpaper picker (wallpaperd)
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("swaync-client -t -sw"))
 hl.bind(mainMod .. " + F8", hl.dsp.exec_cmd(HOME .. "/.config/waybar/scripts/audio-device-cycle.sh"))
 
@@ -377,7 +378,7 @@ hl.window_rule({ match = { class = ".*" }, suppress_event = "maximize" })
 --------------------------------------------------------------------------------
 hl.on("hyprland.start", function()
     hl.exec_cmd("hyprctl setcursor catppuccin-mocha-dark-cursors 24")
-    hl.exec_cmd(HOME .. "/.config/hypr/generate_hyprpaper_config.sh")
+    hl.exec_cmd(HOME .. "/.config/wallpaperd/bin/wallpaperd generate")  -- pick + apply wallpaper at login
     hl.exec_cmd(HOME .. "/.config/hypr/monitor_change_handler.sh &")
     hl.exec_cmd("quickshell -p " .. HOME .. "/.config/quickshell & swaync & hypridle")  -- DockShell bar (replaces waybar)
     hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent")

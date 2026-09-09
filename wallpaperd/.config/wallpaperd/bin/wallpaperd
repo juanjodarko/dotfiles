@@ -1,0 +1,250 @@
+#!/bin/bash
+#
+# wallpaperd — pick, apply, and remember wallpapers (hyprpaper), and keep the
+# login greeter's background in sync. Config: ~/.config/wallpaperd/config.lua
+#
+#   wallpaperd generate   pick + apply wallpapers (use at session start)
+#   wallpaperd next        re-roll now (bind this to a key)
+#   wallpaperd current     print the current (primary) wallpaper
+#   wallpaperd config      print the resolved configuration
+#
+# Applies a random wallpaper per monitor via hyprpaper, keeps a symlink to the
+# primary one (for hyprlock), and — when enabled — refreshes the greetd/ReGreet
+# login background so the next login shows your last wallpaper.
+#
+# NOTE: ultrawide 2-wallpaper stitching is intentionally not here yet (coming on
+# a separate branch); an ultrawide monitor currently gets a single wallpaper.
+
+set -uo pipefail
+
+HERE="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"   # ~/.config/wallpaperd
+CONFIG="$HERE/config.lua"
+GREETER_BG="/usr/local/bin/update-greeter-bg"
+
+LUA="$(command -v lua || command -v lua5.4 || command -v luajit || true)"
+
+log() { printf '%s\n' "$*" >&2; }
+expand() { local p="$1"; p="${p/#\~/$HOME}"; p="${p/#\$HOME/$HOME}"; printf '%s' "$p"; }
+
+# ---- config (read the lua table once) ----
+read_config() {
+  local out=""
+  if [[ -n $LUA && -f $CONFIG ]]; then
+    out=$("$LUA" -e "local ok,c=pcall(dofile,'$CONFIG'); if not ok or type(c)~='table' then c={} end; local function g(k,d) local v=c[k]; if v==nil then return d else return tostring(v) end end; print(g('wallpapers_dir','~/.config/wallpaperd/wallpapers')); print(g('backend','hyprpaper')); print(g('per_monitor','true')); print(g('current_symlink','~/.cache/current_wallpaper')); print(g('update_greeter','true')); print(g('ultrawide_min_width','3440'))" 2>/dev/null)
+  fi
+  if [[ -z $out ]]; then
+    out=$'~/.config/wallpaperd/wallpapers\nhyprpaper\ntrue\n~/.cache/current_wallpaper\ntrue\n3440'
+    [[ -n $LUA ]] || log "wallpaperd: no lua interpreter found; using defaults"
+  fi
+  { IFS= read -r WALLPAPERS_DIR
+    IFS= read -r BACKEND
+    IFS= read -r PER_MONITOR
+    IFS= read -r CURRENT_SYMLINK
+    IFS= read -r UPDATE_GREETER
+    IFS= read -r ULTRAWIDE_MIN_WIDTH
+  } <<<"$out"
+  WALLPAPERS_DIR=$(expand "$WALLPAPERS_DIR")
+  CURRENT_SYMLINK=$(expand "$CURRENT_SYMLINK")
+}
+
+list_wallpapers() {
+  find -L "$WALLPAPERS_DIR" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) 2>/dev/null
+}
+
+# ---- thumbnail cache (for the picker) ----
+THUMB_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/wallpaperd/thumbnails"
+
+thumb_path_for() {
+  local img="$1" sig hash
+  sig=$(stat -Lc '%s:%Y' "$img" 2>/dev/null) || return 1
+  hash=$(printf '%s\t%s' "$img" "$sig" | md5sum | cut -d ' ' -f 1)
+  printf '%s/%s.jpg' "$THUMB_DIR" "$hash"
+}
+
+# generate one thumbnail (invoked in parallel via xargs) — exported for the subshell
+gen_one_thumb() {
+  local img="$1" thumb="$2" tmp
+  [[ -f $thumb ]] && return 0
+  tmp="$thumb.$$.jpg"
+  if env VIPS_CONCURRENCY=1 vipsthumbnail "$img" --size 960x960 -o "$tmp[Q=82,strip]" 2>/dev/null; then
+    mv -f "$tmp" "$thumb"
+  else
+    rm -f "$tmp"
+  fi
+}
+export -f gen_one_thumb
+
+# generate any missing thumbnails, in parallel
+gen_thumbs() {
+  command -v vipsthumbnail >/dev/null 2>&1 || return 0
+  mkdir -p "$THUMB_DIR"
+  local pending; pending=$(mktemp)
+  while IFS= read -r img; do
+    local t; t=$(thumb_path_for "$img") || continue
+    [[ -f $t ]] || printf '%s\0%s\0' "$img" "$t" >>"$pending"
+  done < <(list_wallpapers)
+  if [[ -s $pending ]]; then
+    xargs -a "$pending" -0 -n 2 -P "$(nproc)" bash -c 'gen_one_thumb "$1" "$2"' _ >/dev/null 2>&1 || true
+  fi
+  rm -f "$pending"
+}
+
+# emit "image<TAB>thumbnail" rows — the thumbnail is the intended cache path
+# whether or not it exists yet; the picker lazily generates missing ones as they
+# come into view. All the path+mtime hashing happens in ONE python pass (a
+# md5sum-per-file shell loop took ~15s for 1600 wallpapers; this is instant).
+build_rows() {
+  list_wallpapers | sort | python3 -c '
+import sys, os, hashlib
+td = sys.argv[1]
+for line in sys.stdin:
+    img = line.rstrip("\n")
+    if not img:
+        continue
+    try:
+        st = os.stat(img)
+    except OSError:
+        continue
+    h = hashlib.md5(("%s\t%d:%d" % (img, st.st_size, int(st.st_mtime))).encode()).hexdigest()
+    sys.stdout.write("%s\t%s/%s.jpg\n" % (img, td, h))
+' "$THUMB_DIR"
+}
+
+ensure_hyprpaper() {
+  pgrep -x hyprpaper >/dev/null 2>&1 && return 0
+  setsid -f hyprpaper >/dev/null 2>&1 || hyprpaper >/dev/null 2>&1 &
+  for _ in $(seq 1 20); do pgrep -x hyprpaper >/dev/null 2>&1 && return 0; sleep 0.1; done
+  return 1
+}
+
+update_greeter() {
+  [[ ${WALLPAPERD_SKIP_GREETER:-0} == 1 ]] && return 0
+  [[ $UPDATE_GREETER == true ]] || return 0
+  [[ -x $GREETER_BG ]] || { log "wallpaperd: $GREETER_BG not installed; skipping greeter update"; return 0; }
+  local wp="$1"
+  # Run synchronously (the blur is ~1s): pkexec needs the caller's session, which
+  # `setsid`-detaching would strip. Needs the passwordless polkit rule to be silent.
+  pkexec "$GREETER_BG" "$wp" >/dev/null 2>&1 \
+    || log "wallpaperd: greeter bg update failed (deploy the polkit rule for passwordless)"
+}
+
+apply() {
+  read_config
+  command -v hyprctl >/dev/null 2>&1 || { log "wallpaperd: hyprctl not found (Hyprland not running?)"; exit 1; }
+  [[ -d $WALLPAPERS_DIR ]] || { log "wallpaperd: wallpapers dir not found: $WALLPAPERS_DIR"; log "  create it or symlink your collection:  ln -s ~/wallpapers '$WALLPAPERS_DIR'"; exit 1; }
+
+  mapfile -t wallpapers < <(list_wallpapers)
+  [[ ${#wallpapers[@]} -gt 0 ]] || { log "wallpaperd: no wallpapers (.jpg/.jpeg/.png) in $WALLPAPERS_DIR"; exit 1; }
+  mapfile -t shuffled < <(printf '%s\n' "${wallpapers[@]}" | shuf)
+
+  # monitor name + width pairs
+  mapfile -t moninfo < <(hyprctl monitors -j 2>/dev/null | jq -r '.[] | "\(.name)\t\(.width)"')
+  [[ ${#moninfo[@]} -gt 0 ]] || { log "wallpaperd: no monitors detected"; exit 1; }
+
+  ensure_hyprpaper || { log "wallpaperd: could not start hyprpaper"; exit 1; }
+  local running=1  # hyprpaper is up now → use live IPC reload
+
+  local conf="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprpaper.conf"
+  { echo "# Auto-generated by wallpaperd"; echo "splash = false"; echo "ipc = on"; } >"$conf"
+
+  local i=0 primary="" wp mon width
+  declare -A preloaded=()
+  for line in "${moninfo[@]}"; do
+    mon="${line%%$'\t'*}"; width="${line##*$'\t'}"
+    if [[ $PER_MONITOR == true ]]; then wp="${shuffled[$((i % ${#shuffled[@]}))]}"; else wp="${shuffled[0]}"; fi
+    [[ -r $wp ]] || { i=$((i+1)); continue; }
+
+    if [[ -n $width && $width -ge $ULTRAWIDE_MIN_WIDTH ]]; then
+      log "wallpaperd: $mon is ultrawide (${width}px) — stitching not enabled yet, using a single wallpaper"
+    fi
+
+    [[ -n ${preloaded[$wp]:-} ]] || { echo "preload = $wp" >>"$conf"; preloaded[$wp]=1; }
+    echo "wallpaper = $mon,$wp" >>"$conf"
+    log "wallpaperd: $mon → $(basename "$wp")"
+    hyprctl hyprpaper reload "$mon,$wp" >/dev/null 2>&1 \
+      || { hyprctl hyprpaper preload "$wp" >/dev/null 2>&1; hyprctl hyprpaper wallpaper "$mon,$wp" >/dev/null 2>&1; }
+
+    [[ -z $primary ]] && primary="$wp"
+    i=$((i+1))
+  done
+  # a default for any monitor that appears later
+  [[ -n $primary ]] && echo "wallpaper = ,$primary" >>"$conf"
+
+  if [[ -n $primary ]]; then
+    ln -sf "$primary" "$CURRENT_SYMLINK"
+    update_greeter "$primary"
+    log "wallpaperd: done (primary: $(basename "$primary"))"
+  fi
+}
+
+# Apply one specific wallpaper to every monitor (used by the picker and `set`).
+apply_specific() {
+  read_config
+  local wp; wp=$(realpath -e "$1" 2>/dev/null) || { log "wallpaperd: not found: $1"; exit 1; }
+  command -v hyprctl >/dev/null 2>&1 || { log "wallpaperd: hyprctl not found"; exit 1; }
+  ensure_hyprpaper || { log "wallpaperd: could not start hyprpaper"; exit 1; }
+  mapfile -t mons < <(hyprctl monitors -j 2>/dev/null | jq -r '.[].name')
+  local conf="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/hyprpaper.conf"
+  { echo "# Auto-generated by wallpaperd"; echo "splash = false"; echo "ipc = on"; echo "preload = $wp"; } >"$conf"
+  local mon
+  for mon in "${mons[@]}"; do
+    echo "wallpaper = $mon,$wp" >>"$conf"
+    hyprctl hyprpaper reload "$mon,$wp" >/dev/null 2>&1 \
+      || { hyprctl hyprpaper preload "$wp" >/dev/null 2>&1; hyprctl hyprpaper wallpaper "$mon,$wp" >/dev/null 2>&1; }
+  done
+  echo "wallpaper = ,$wp" >>"$conf"
+  ln -sf "$wp" "$CURRENT_SYMLINK"
+  update_greeter "$wp"
+  log "wallpaperd: set $(basename "$wp") on ${#mons[@]} monitor(s)"
+}
+
+# Open the full-screen picker, then apply the choice.
+do_pick() {
+  read_config
+  local qs; qs=$(command -v quickshell || command -v qs || true)
+  [[ -n $qs ]] || { log "wallpaperd: quickshell not found (needed for the picker)"; exit 1; }
+  [[ -d $WALLPAPERS_DIR ]] || { log "wallpaperd: wallpapers dir not found: $WALLPAPERS_DIR"; exit 1; }
+  mkdir -p "$THUMB_DIR"
+  local rows sel
+  rows=$(mktemp); sel=$(mktemp)
+  build_rows >"$rows"
+  [[ -s $rows ]] || { log "wallpaperd: no wallpapers in $WALLPAPERS_DIR"; rm -f "$rows" "$sel"; exit 1; }
+  : >"$sel"
+  WALLPAPERD_PICK_ROWS_FILE="$rows" \
+  WALLPAPERD_PICK_SELECTION_FILE="$sel" \
+  WALLPAPERD_PICK_CURRENT="$(readlink -f "$CURRENT_SYMLINK" 2>/dev/null)" \
+    "$qs" -p "$HERE/picker/picker.qml" >/dev/null 2>&1
+  local chosen; chosen=$(head -1 "$sel" 2>/dev/null)
+  rm -f "$rows" "$sel"
+  if [[ -n $chosen && -r $chosen ]]; then
+    apply_specific "$chosen"
+  else
+    log "wallpaperd: pick cancelled"
+  fi
+}
+
+read_config_and_print() {
+  read_config
+  cat <<EOF
+wallpapers_dir     = $WALLPAPERS_DIR
+backend            = $BACKEND
+per_monitor        = $PER_MONITOR
+current_symlink    = $CURRENT_SYMLINK
+update_greeter     = $UPDATE_GREETER
+ultrawide_min_width= $ULTRAWIDE_MIN_WIDTH
+lua                = ${LUA:-<none>}
+greeter_helper     = $([[ -x $GREETER_BG ]] && echo present || echo absent)
+EOF
+}
+
+case "${1:-}" in
+  generate|next|apply) apply ;;   # picker thumbnails are generated lazily, on demand
+  set) [[ -n ${2:-} ]] || { echo "usage: wallpaperd set <path>" >&2; exit 2; }; apply_specific "$2" ;;
+  pick) do_pick ;;
+  thumbs) read_config; gen_thumbs; log "wallpaperd: thumbnail cache ready ($THUMB_DIR)" ;;
+  current)
+    read_config
+    if [[ -L $CURRENT_SYMLINK ]]; then readlink -f "$CURRENT_SYMLINK"; else log "no current wallpaper"; exit 1; fi ;;
+  config) read_config_and_print ;;
+  *) echo "usage: wallpaperd generate|next|pick|set <path>|thumbs|current|config" >&2; exit 2 ;;
+esac
