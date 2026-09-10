@@ -380,6 +380,12 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprctl setcursor catppuccin-mocha-dark-cursors 24")
     hl.exec_cmd(HOME .. "/.config/wallpaperd/bin/wallpaperd generate")  -- pick + apply wallpaper at login
     hl.exec_cmd(HOME .. "/.config/hypr/monitor_change_handler.sh &")
-    hl.exec_cmd("quickshell -p " .. HOME .. "/.config/quickshell & swaync & hypridle")  -- DockShell bar (replaces waybar)
+    -- DockShell bar (replaces waybar). PATH is augmented with the user's tool
+    -- dirs (appended, so system tools keep priority for DockShell's own scripts)
+    -- so hosted plugins can find CLIs installed via mise / ~/.local/bin — e.g.
+    -- the HEY plugin shells out to the `hey` mise shim. The login session PATH
+    -- doesn't include these, so without this a plugin's probe reports "not
+    -- installed" even when the CLI works in a terminal.
+    hl.exec_cmd("PATH=\"$PATH:" .. HOME .. "/.local/bin:" .. HOME .. "/.local/share/mise/shims\" quickshell -p " .. HOME .. "/.config/quickshell & swaync & hypridle")
     hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent")
 end)
