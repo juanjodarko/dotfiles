@@ -385,7 +385,9 @@ hl.on("hyprland.start", function()
     -- so hosted plugins can find CLIs installed via mise / ~/.local/bin — e.g.
     -- the HEY plugin shells out to the `hey` mise shim. The login session PATH
     -- doesn't include these, so without this a plugin's probe reports "not
-    -- installed" even when the CLI works in a terminal.
-    hl.exec_cmd("PATH=\"$PATH:" .. HOME .. "/.local/bin:" .. HOME .. "/.local/share/mise/shims\" quickshell -p " .. HOME .. "/.config/quickshell & swaync & hypridle")
+    -- installed" even when the CLI works in a terminal. The omarchy-shims dir
+    -- provides stand-ins for the omarchy-* helper commands plugins call
+    -- (launch-webapp, notification-send, ...) so those actions work too.
+    hl.exec_cmd("PATH=\"$PATH:" .. HOME .. "/.local/bin:" .. HOME .. "/.local/share/mise/shims:" .. HOME .. "/.config/quickshell/PluginHost/omarchy-shims\" quickshell -p " .. HOME .. "/.config/quickshell & swaync & hypridle")
     hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent")
 end)
