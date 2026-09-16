@@ -80,7 +80,7 @@ load_monitors()
 --------------------------------------------------------------------------------
 local terminal    = "kitty"
 local fileManager = "nautilus"
-local menu        = "rofi -show drun"
+local menu        = "vicinae toggle"   -- launcher (rofi kept installed as fallback)
 
 --------------------------------------------------------------------------------
 -- ENVIRONMENT VARIABLES
@@ -231,9 +231,9 @@ hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen" })) -- full fullscreen
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "maximized" })) -- maximize
-hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
-hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("rofi -show calc -no-show-match -no-sort"))
-hl.bind(mainMod .. " + semicolon", hl.dsp.exec_cmd("rofi -show emoji"))
+hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))                                   -- Vicinae launcher (calc is inline: just type a math expression)
+hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("vicinae toggle"))                           -- open Vicinae for a quick calc/search
+hl.bind(mainMod .. " + semicolon", hl.dsp.exec_cmd("vicinae cmd launch core:search-emojis"))  -- emoji picker
 
 -- Dwindle layout controls
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
@@ -390,4 +390,9 @@ hl.on("hyprland.start", function()
     -- (launch-webapp, notification-send, ...) so those actions work too.
     hl.exec_cmd("PATH=\"$PATH:" .. HOME .. "/.local/bin:" .. HOME .. "/.local/share/mise/shims:" .. HOME .. "/.config/quickshell/PluginHost/omarchy-shims\" quickshell -p " .. HOME .. "/.config/quickshell & swaync & hypridle")
     hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent")
+    -- Vicinae launcher server (background: clipboard history, quick summon). Via
+    -- exec-once for parity with the rest — the shipped vicinae.service wants
+    -- graphical-session.target, which this session doesn't activate. If you ever
+    -- move to a uwsm/systemd session, re-enable that unit and drop this line.
+    hl.exec_cmd("vicinae server")
 end)

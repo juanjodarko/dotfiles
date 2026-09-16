@@ -104,6 +104,9 @@ done
 
 pgrep -x Hyprland >/dev/null 2>&1 && hyprctl reload >/dev/null 2>&1 &
 
+# Vicinae launcher (if installed): keep its UI theme in sync with the flavor.
+command -v vicinae >/dev/null 2>&1 && vicinae theme set "catppuccin-${flavor}" >/dev/null 2>&1 &
+
 # SDDM login screen (passwordless via polkit rule)
 if command -v pkexec >/dev/null 2>&1 && [ -f /usr/local/bin/update-sddm-theme ]; then
   pkexec /usr/local/bin/update-sddm-theme "$flavor" 2>/dev/null &
