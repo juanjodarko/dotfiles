@@ -11,19 +11,9 @@ if [ -z "$TARGET_RATIO" ]; then
     exit 1
 fi
 
-# Get current window info
-WINDOW_INFO=$(hyprctl activewindow -j)
+# Dwindle's split ratio runs 0..2 with 1.0 = even, so double the 0..1 share.
+RATIO=$(awk -v r="$TARGET_RATIO" 'BEGIN { print r * 2 }')
 
-# For dwindle layout, we need to reset to 0.5 first, then adjust
-# Reset to center (0.5)
-hyprctl dispatch splitratio exact
-
-# Small delay to ensure the reset completes
-sleep 0.05
-
-# Now set to target ratio
-# Calculate the change needed from 0.5
-DELTA=$(echo "$TARGET_RATIO - 0.5" | bc -l)
-
-# Apply the delta
-hyprctl dispatch splitratio "$DELTA"
+# Lua config (hyprland.lua) evaluates dispatch args as Lua; legacy syntax is the fallback.
+hyprctl dispatch "hl.dsp.layout(\"splitratio $RATIO exact\")" >/dev/null 2>&1 ||
+    hyprctl dispatch splitratio exact "$RATIO"

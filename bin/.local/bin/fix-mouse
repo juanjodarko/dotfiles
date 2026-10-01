@@ -36,7 +36,8 @@ hyprctl reload
 
 # Restart the cursor/pointer subsystem
 log "Dispatching cursor reset..."
-hyprctl dispatch exec "killall -SIGUSR1 hyprland" 2>/dev/null || true
+hyprctl dispatch 'hl.dsp.exec_cmd("killall -SIGUSR1 hyprland")' >/dev/null 2>&1 ||
+  hyprctl dispatch exec "killall -SIGUSR1 hyprland" 2>/dev/null || true
 
 sleep 0.2
 
