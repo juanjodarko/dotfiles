@@ -299,11 +299,54 @@ hl.bind("SUPER + W", hl.dsp.exec_cmd(HOME .. "/.config/wallpaperd/bin/wallpaperd
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("swaync-client -t -sw"))
 hl.bind(mainMod .. " + F8", hl.dsp.exec_cmd(HOME .. "/.config/waybar/scripts/audio-device-cycle.sh"))
 
--- Screenshots
-hl.bind("Print", hl.dsp.exec_cmd("hyprshot -m region --freeze"))
+-- Screenshots / capture (bin/.local/bin/capture-*, ported from Omarchy)
+-- Print: drag a region, click a window, Enter = highlighted window, Ctrl+Enter = whole screen
+hl.bind("Print", hl.dsp.exec_cmd(HOME .. "/.local/bin/capture-screenshot"))
 hl.bind("SHIFT + Print", hl.dsp.exec_cmd("hyprshot -m output"))
 hl.bind("CTRL + Print", hl.dsp.exec_cmd("hyprshot -m window"))
 hl.bind("ALT + Print", hl.dsp.exec_cmd("hyprshot -m output -m active"))
+-- Screen recording (gpu-screen-recorder): pick a region/monitor; press again to stop
+hl.bind("SUPER + Print", hl.dsp.exec_cmd(HOME .. "/.local/bin/capture-screenrecording"))
+hl.bind("SUPER + SHIFT + Print", hl.dsp.exec_cmd(HOME .. "/.local/bin/capture-screenrecording --with-desktop-audio --with-microphone-audio"))
+hl.bind("SUPER + CTRL + Print", hl.dsp.exec_cmd(HOME .. "/.local/bin/capture-text")) -- OCR region -> clipboard
+hl.bind("SUPER + ALT + Print", hl.dsp.exec_cmd("pkill hyprpicker || hyprpicker -a")) -- color picker -> clipboard
+
+-- Keyboard control for the capture region picker (see capture-region). The binds
+-- live exactly as long as a slurp selection layer is on screen (one per monitor),
+-- so they can't leak; each handle is removed individually so a same-key bind
+-- elsewhere in the config survives. Ported from Omarchy's utilities.lua.
+local capture_region = HOME .. "/.local/bin/capture-region"
+local selection_layers = 0
+local selection_binds = {}
+
+hl.on("layer.opened", function(layer)
+  if layer.namespace == "selection" then
+    selection_layers = selection_layers + 1
+    if selection_layers == 1 then
+      selection_binds = {
+        hl.bind("RETURN", hl.dsp.exec_cmd(capture_region .. " --take-window")),
+        hl.bind("CTRL + RETURN", hl.dsp.exec_cmd(capture_region .. " --take-fullscreen")),
+        hl.bind("TAB", hl.dsp.exec_cmd(capture_region .. " --select-window next")),
+        hl.bind("CTRL + TAB", hl.dsp.exec_cmd(capture_region .. " --select-window prev")),
+      }
+      for _, direction in ipairs({ "left", "right", "up", "down" }) do
+        table.insert(selection_binds, hl.bind(direction:upper(), hl.dsp.exec_cmd(capture_region .. " --select-window " .. direction)))
+      end
+    end
+  end
+end)
+
+hl.on("layer.closed", function(layer)
+  if layer.namespace == "selection" and selection_layers > 0 then
+    selection_layers = selection_layers - 1
+    if selection_layers == 0 then
+      for _, keybind in ipairs(selection_binds) do
+        keybind:unbind()
+      end
+      selection_binds = {}
+    end
+  end
+end)
 
 -- Multimedia keys (locked = works on lockscreen, repeating for volume/brightness)
 hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ && " .. HOME .. "/.local/bin/volume_notify"), { locked = true, repeating = true })

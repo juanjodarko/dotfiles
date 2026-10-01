@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# capture-screenshot — take a screenshot over a frozen screen.
+# Ported from Omarchy (basecamp/omarchy bin/omarchy-capture-screenshot, MIT).
+#
+# Usage: capture-screenshot [smart|region|windows|fullscreen] [slurp|copy|save] [--editor=<cmd>]
+#
+#   smart       drag a region; a bare click snaps to the window/monitor under it
+#               (Enter = highlighted window, Ctrl+Enter = whole screen, Tab/arrows = cycle windows)
+#   region      freeform drag
+#   windows     snap to a window or monitor
+#   fullscreen  the focused monitor, no interaction
+#
+#   slurp (default)  save to $XDG_PICTURES_DIR + copy to clipboard + clickable toast (opens editor)
+#   copy             clipboard only
+#   save             file only; prints the path
+
+BIN_DIR="$(dirname "$(readlink -f "$0")")"
+
+[[ -f ~/.config/user-dirs.dirs ]] && source ~/.config/user-dirs.dirs
+OUTPUT_DIR="${CAPTURE_SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}}"
+mkdir -p "$OUTPUT_DIR"
+
+# A second press while the picker is open cancels it.
+pkill slurp && exit 0
+
+SCREENSHOT_EDITOR="${CAPTURE_SCREENSHOT_EDITOR:-satty --filename}"
+
+ARGS=()
+for arg in "$@"; do
+  if [[ $arg == --editor=* ]]; then
+    SCREENSHOT_EDITOR="${arg#--editor=}"
+  else
+    ARGS+=("$arg")
+  fi
+done
+set -- "${ARGS[@]}"
+
+MODE="${1:-smart}"
+PROCESSING="${2:-slurp}"
+
+# Software-composited cursors get baked into grim's frames, so force hardware
+# cursors until grim has run and restore the setting on exit.
+NO_HW_CURSORS=$(hyprctl getoption cursor:no_hardware_cursors -j | jq '.int')
+
+set_no_hw_cursors() {
+  hyprctl eval "hl.config({ cursor = { no_hardware_cursors = $1 } })" &>/dev/null ||
+    hyprctl keyword cursor:no_hardware_cursors "$1" &>/dev/null
+}
+
+cleanup() {
+  [[ -n $FREEZE_PID ]] && kill $FREEZE_PID 2>/dev/null
+  set_no_hw_cursors "$NO_HW_CURSORS"
+}
+trap cleanup EXIT
+
+set_no_hw_cursors 0
+# The picker leaves the screen freeze running (PID on its first output line) so
+# grim captures the frozen overlay rather than live content shifting during teardown.
+{ read -r FREEZE_PID; read -r SELECTION; } < <("$BIN_DIR/capture-region" "$MODE" --keep-freeze)
+
+[[ -z $SELECTION ]] && exit 0
+
+FILEPATH="$OUTPUT_DIR/screenshot-$(date +'%Y-%m-%d_%H-%M-%S').png"
+
+case "$PROCESSING" in
+  slurp)
+    grim -g "$SELECTION" "$FILEPATH" || exit 1
+    echo "$FILEPATH"
+    wl-copy --type image/png <"$FILEPATH"
+
+    # Clicking the toast opens the editor. Detached and silenced so callers
+    # waiting on our stdout (Vicinae) don't block until the toast closes.
+    (
+      action=$(notify-send -a "Screenshot" -i "$FILEPATH" -A default=Edit --wait \
+        "Screenshot saved to clipboard and file" "Click to edit")
+      [[ $action == default ]] && $SCREENSHOT_EDITOR "$FILEPATH"
+    ) </dev/null &>/dev/null &
+    disown
+    ;;
+  copy)
+    grim -g "$SELECTION" - | wl-copy --type image/png
+    ;;
+  save)
+    grim -g "$SELECTION" "$FILEPATH" || exit 1
+    echo "$FILEPATH"
+    ;;
+esac

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# capture-text — OCR a selected screen region; the text goes to the clipboard.
+# Ported from Omarchy (basecamp/omarchy bin/omarchy-capture-text, MIT).
+# Languages: CAPTURE_OCR_LANGS (tesseract syntax, e.g. "eng+spa"; default eng).
+
+# Keep hyprpicker alive until after grim captures so the screenshot sees the
+# frozen overlay rather than live content shifting during teardown.
+cleanup_freeze() {
+  [[ -n $PID ]] && kill $PID 2>/dev/null
+}
+trap cleanup_freeze EXIT
+
+hyprpicker -r -z >/dev/null 2>&1 &
+PID=$!
+sleep .1
+SELECTION=$(slurp 2>/dev/null)
+
+[[ -z $SELECTION ]] && exit 0
+
+TEXT=$(grim -g "$SELECTION" - | tesseract stdin stdout --oem 1 --psm 6 -l "${CAPTURE_OCR_LANGS:-eng}" --dpi 300 -c preserve_interword_spaces=1 2>/dev/null) || exit 1
+
+if [[ -z $TEXT ]]; then
+  notify-send -a "Capture" -u critical "No text found" "Select a region containing text"
+  exit 1
+fi
+
+printf "%s" "$TEXT" | wl-copy
+notify-send -a "Capture" "Copied text from selection to clipboard"
