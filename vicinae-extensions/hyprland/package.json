@@ -1,0 +1,57 @@
+{
+  "$schema": "https://vicinae.com/schemas/extension.json",
+  "name": "hyprland",
+  "title": "Hyprland",
+  "description": "Native Hyprland helpers for Vicinae: switch windows, swap the Catppuccin theme, and capture the screen.",
+  "icon": "icon.png",
+  "author": "jjruiz",
+  "license": "MIT",
+  "categories": [
+    "System",
+    "Productivity"
+  ],
+  "commands": [
+    {
+      "name": "switch-window",
+      "title": "Switch Window",
+      "subtitle": "Hyprland",
+      "description": "List open Hyprland windows (most-recent first) and focus one.",
+      "mode": "view"
+    },
+    {
+      "name": "switch-theme",
+      "title": "Switch Theme",
+      "subtitle": "Catppuccin",
+      "description": "Swap the central Catppuccin flavor (drives your existing theme switcher).",
+      "mode": "view"
+    },
+    {
+      "name": "capture",
+      "title": "Capture",
+      "subtitle": "Screenshot · Record",
+      "description": "Screenshot, record the screen, OCR text, scan a QR code or pick a color (dotfiles capture-* scripts).",
+      "mode": "view",
+      "keywords": [
+        "screenshot",
+        "screen recording",
+        "record",
+        "ocr",
+        "qr",
+        "color picker"
+      ]
+    }
+  ],
+  "dependencies": {
+    "@vicinae/api": "^0.29.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.3.0",
+    "typescript": "^5.6.0"
+  },
+  "scripts": {
+    "build": "vicinae build",
+    "dev": "vicinae develop",
+    "lint": "vicinae lint"
+  }
+}
