@@ -2,6 +2,7 @@
 # This file is tracked in dotfiles and symlinked to ~/.config/mise/config.toml
 
 [tools]
+"github:basecamp/hey-cli" = "latest"
 # Default tool versions used globally unless overridden by project-specific config
 node = "26.3.0"
 python = "3.14.6"
@@ -13,7 +14,6 @@ experimental = true           # Enable experimental features
 legacy_version_file = true    # Support .node-version, .ruby-version, etc.
 always_keep_download = false  # Clean up downloads after installation
 always_keep_install = true    # Keep installed versions
-plugin_autoupdate_last_check_duration = "7d"  # Auto-update plugins weekly
 
 # Verbose output for debugging (set to false once stable)
 verbose = false
