@@ -1,0 +1,10 @@
+[Unit]
+Description=Run dotfiles-upstream weekly
+
+[Timer]
+OnCalendar=Mon *-*-* 10:00
+Persistent=true
+RandomizedDelaySec=30min
+
+[Install]
+WantedBy=timers.target

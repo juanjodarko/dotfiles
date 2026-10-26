@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# dockshell-restart — restart DockShell (quickshell) the way hyprland.lua starts it:
+# with ~/.local/bin, mise shims and the omarchy-* plugin shims on PATH (plugins'
+# own processes inherit it), and parented to Hyprland rather than this terminal.
+set -uo pipefail
+
+CFG="$HOME/.config/quickshell"
+EXTRA="$HOME/.local/bin:$HOME/.local/share/mise/shims:$CFG/PluginHost/omarchy-shims"
+
+pkill -x quickshell
+for _ in $(seq 50); do pgrep -x quickshell >/dev/null || break; sleep 0.1; done
+pgrep -x quickshell >/dev/null && { pkill -9 -x quickshell; sleep 0.3; }
+
+cmd="PATH=\"\$PATH:$EXTRA\" quickshell -p $CFG"
+if command -v hyprctl >/dev/null && [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] &&
+   hyprctl dispatch "hl.dsp.exec_cmd('${cmd//\'/\\\'}')" >/dev/null 2>&1; then :
+else
+  PATH="$PATH:$EXTRA" setsid -f quickshell -p "$CFG" >/dev/null 2>&1
+fi
+
+for _ in $(seq 50); do pgrep -x quickshell >/dev/null && { echo "DockShell restarted"; exit 0; }; sleep 0.1; done
+echo "dockshell-restart: quickshell did not come back — check: quickshell -p $CFG" >&2
+exit 1

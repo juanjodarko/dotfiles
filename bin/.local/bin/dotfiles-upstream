@@ -1,0 +1,325 @@
+#!/usr/bin/env bash
+# dotfiles-upstream — check/apply updates for code that tracks an upstream:
+#   vendor     files copied from another repo (Omarchy's qs.Commons/qs.Ui, agent
+#              collectors, capture scripts). `merge` mode 3-way merges upstream
+#              changes into the local copy (local patches survive; conflicts get
+#              markers); `watch` mode only shows what changed upstream.
+#   checkouts  git clones living outside the repo (DockShell plugins, Hyprland
+#              Lua plugins) — fast-forward pulls.
+#   npm        Vicinae extension deps — `npm update` within semver, then rebuild.
+#   packages   pacman/AUR packages this branch's code depends on — report only.
+#
+# What is tracked (and from which upstream commit) lives in $DOTFILES/upstreams.json.
+# Nothing is committed: review with `git diff` (dotfiles + the DockShell submodule).
+set -uo pipefail
+
+DOTFILES="${DOTFILES:-$HOME/dotfiles}"
+MANIFEST="$DOTFILES/upstreams.json"
+CACHE="${DOTFILES_UPSTREAM_CACHE:-$HOME/.cache/dotfiles-upstream}"
+NET_TIMEOUT="${NET_TIMEOUT:-60}"
+export PATH="$PATH:$HOME/.local/bin:$HOME/.local/share/mise/shims"
+
+if [ -t 1 ]; then B=$'\e[1m' DIM=$'\e[2m' G=$'\e[32m' Y=$'\e[33m' R=$'\e[31m' C=$'\e[36m' N=$'\e[0m'
+else B= DIM= G= Y= R= C= N=; fi
+
+die()  { echo "dotfiles-upstream: $*" >&2; exit 1; }
+# Section headers print lazily, so a section filtered down to nothing stays silent.
+SECTION=
+hdr()  { SECTION="$*"; }
+sec()  { [ -n "$SECTION" ] && printf '\n%s%s%s\n' "$B$C" "$SECTION" "$N"; SECTION=; }
+ok()   { sec; printf '  %s✓%s %s\n' "$G" "$N" "$*"; }
+upd()  { sec; printf '  %s↑%s %s\n' "$Y" "$N" "$*"; PENDING=$((PENDING+1)); SUMMARY+=("$1"); }
+warn() { sec; printf '  %s!%s %s\n' "$R" "$N" "$*"; }
+info() { sec; printf '    %s%s%s\n' "$DIM" "$*" "$N"; }
+
+usage() {
+  cat <<'EOF'
+dotfiles-upstream — keep upstream-tracked code current (no LLM involved)
+
+  dotfiles-upstream [check] [name...]   Fetch upstreams, report what is behind (default).
+  dotfiles-upstream apply   [name...]   Apply updates (all, or only the named entries).
+  dotfiles-upstream list                List tracked entries.
+
+  --no-fetch   Use cached upstream state (offline).
+  --notify     Also send a desktop notification when updates are pending.
+
+Names: vendor entries (dockshell-ui, capture, ...), checkout groups
+(dockshell-plugins, hypr-plugins), npm entries (vicinae-hyprland), or `packages`.
+Exit status of `check`: 0 = up to date, 10 = updates pending, 2 = couldn't check everything.
+EOF
+}
+
+# ---- args ------------------------------------------------------------------
+cmd=check; FETCH=1; NOTIFY=0; ONLY=()
+for a in "$@"; do
+  case "$a" in
+    check|apply|list) cmd="$a" ;;
+    --no-fetch) FETCH=0 ;;
+    --notify)   NOTIFY=1 ;;
+    -h|--help|help) usage; exit 0 ;;
+    -*) die "unknown flag: $a" ;;
+    *) ONLY+=("$a") ;;
+  esac
+done
+command -v jq  >/dev/null || die "jq is required"
+command -v git >/dev/null || die "git is required"
+[ -f "$MANIFEST" ] || die "no manifest at $MANIFEST"
+mkdir -p "$CACHE"
+
+selected() {   # selected <name> — true when no filter, or name is in the filter
+  [ ${#ONLY[@]} -eq 0 ] && return 0
+  local n; for n in "${ONLY[@]}"; do [ "$n" = "$1" ] && return 0; done; return 1
+}
+mf() { jq -r "$@" "$MANIFEST"; }
+PENDING=0; SUMMARY=(); TOUCHED_DOCKSHELL=0; RESTART_VICINAE=0; OFFLINE=0
+
+if [ "$cmd" = list ]; then
+  echo "vendor:    $(mf '[.vendor[] | "\(.name) (\(.mode))"] | join(", ")')"
+  echo "checkouts: $(mf '[.checkouts[] | .name] | join(", ")')"
+  echo "npm:       $(mf '[.npm[] | .name] | join(", ")')"
+  echo "packages:  $(mf '.packages | join(", ")')"
+  exit 0
+fi
+
+# ---- upstream source cache (blobless bare clones) ----------------------------
+declare -A TIP
+source_tip() {   # source_tip <source> — sets REPLY to the upstream commit, fetching once
+  local s="$1"
+  if [ -z "${TIP[$s]:-}" ]; then
+    local url ref dir; url=$(mf --arg s "$s" '.sources[$s].url'); ref=$(mf --arg s "$s" '.sources[$s].ref')
+    dir="$CACHE/$s.git"
+    if [ ! -d "$dir" ]; then
+      [ "$FETCH" = 1 ] || { REPLY=""; return; }
+      timeout "$NET_TIMEOUT" git clone -q --bare --filter=blob:none "$url" "$dir" 2>/dev/null \
+        || { rm -rf "$dir"; OFFLINE=1; REPLY=""; return; }
+    fi
+    if [ "$FETCH" = 1 ]; then
+      timeout "$NET_TIMEOUT" git -C "$dir" fetch -q --filter=blob:none origin "+refs/heads/$ref:refs/upstream/$ref" 2>/dev/null || OFFLINE=1
+    fi
+    TIP[$s]=$(git -C "$dir" rev-parse -q --verify "refs/upstream/$ref^{commit}" 2>/dev/null \
+           || git -C "$dir" rev-parse -q --verify "refs/heads/$ref^{commit}" 2>/dev/null || true)
+  fi
+  REPLY="${TIP[$s]}"
+}
+
+# Rewrite one entry's `base` in place (keeps the manifest's hand formatting).
+set_base() {   # set_base <entry-name> <new-sha>
+  local name="$1" sha="$2" tmp; tmp=$(mktemp "$DOTFILES/.upstreams.json.XXXXXX")
+  awk -v name="\"name\": \"$name\"" -v sha="$sha" '
+    index($0, name) { hit=1 }
+    hit && /"base":/ { sub(/"base": *"[0-9a-f]+"/, "\"base\": \"" sha "\""); hit=0 }
+    { print }' "$MANIFEST" > "$tmp"
+  if [ "$(jq -r --arg n "$name" '.vendor[] | select(.name==$n) | .base' "$tmp")" = "$sha" ]; then
+    mv "$tmp" "$MANIFEST"
+  else
+    rm -f "$tmp"; die "could not update base for $name in $MANIFEST"
+  fi
+}
+
+# ---- vendor ------------------------------------------------------------------
+# Upstream file content with the entry's `rewrite` pairs applied (literal
+# substitutions, e.g. omarchy → dockshell paths). Rewriting base and tip alike
+# means a local copy that differs only by those renames counts as pristine.
+REWRITES='[]'
+blob() {   # blob <rev> <path>  (uses $dir and $REWRITES)
+  git -C "$dir" show "$1:$2" | python3 -c '
+import json, sys
+data = sys.stdin.buffer.read()
+for a, b in json.loads(sys.argv[1]):
+    data = data.replace(a.encode(), b.encode())
+sys.stdout.buffer.write(data)' "$REWRITES"
+}
+do_vendor() {
+  local n_entries i; n_entries=$(mf '.vendor | length')
+  [ "$n_entries" -gt 0 ] || return
+  hdr "vendored code"
+  for ((i=0; i<n_entries; i++)); do
+    local e name src base mode tip dir
+    e=$(mf ".vendor[$i]"); name=$(jq -r .name <<<"$e")
+    selected "$name" || continue
+    src=$(jq -r .source <<<"$e"); base=$(jq -r .base <<<"$e"); mode=$(jq -r .mode <<<"$e")
+    dir="$CACHE/$src.git"; source_tip "$src"; tip="$REPLY"
+    if [ -z "$tip" ]; then warn "$name: no cached copy of '$src' (offline?)"; OFFLINE=1; continue; fi
+    if ! git -C "$dir" cat-file -e "$base^{commit}" 2>/dev/null; then warn "$name: base ${base:0:8} not found upstream"; continue; fi
+
+    local -a froms=() rows=()
+    mapfile -t froms < <(jq -r '.map[].from' <<<"$e")
+    local ncommits; ncommits=$(git -C "$dir" rev-list --count "$base..$tip" -- "${froms[@]}")
+    if [ "$ncommits" -eq 0 ]; then ok "$name ${DIM}(${mode}, at ${tip:0:8})${N}"; continue; fi
+
+    # name-status rows → "<status>\t<upstream path>\t<local path>"
+    local m from to
+    while IFS=$'\t' read -r from to; do
+      while IFS=$'\t' read -r st path; do
+        if [[ "$from" == */ ]]; then rows+=("$st"$'\t'"$path"$'\t'"$DOTFILES/$to${path#"$from"}")
+        else rows+=("$st"$'\t'"$path"$'\t'"$DOTFILES/$to"); fi
+      done < <(git -C "$dir" diff --no-renames --name-status "$base" "$tip" -- "$from")
+    done < <(jq -r '.map[] | "\(.from)\t\(.to)"' <<<"$e")
+
+    upd "$name ${DIM}(${mode})${N}: $ncommits upstream commit(s), ${#rows[@]} file(s)"
+    git -C "$dir" log --oneline --no-decorate -n 8 "$base..$tip" -- "${froms[@]}" | sed "s/^/    $DIM/; s/\$/$N/"
+
+    local -a theirs=(); mapfile -t theirs < <(jq -r '.theirs[]? // empty' <<<"$e")
+    REWRITES=$(jq -c '.rewrite // []' <<<"$e")
+    local row st up loc state conflicts=0
+    for row in "${rows[@]}"; do
+      IFS=$'\t' read -r st up loc <<<"$row"
+      # Is the local file still identical to the vendored base?
+      if [ -f "$loc" ] && blob "$base" "$up" 2>/dev/null | cmp -s - "$loc"; then state=pristine
+      elif [ -f "$loc" ]; then state=local-changes; else state=missing; fi
+      info "$st ${loc#"$DOTFILES/"} ($state)"
+      [ "$cmd" = apply ] && [ "$mode" = merge ] || continue
+
+      local mode_bits; mode_bits=$(git -C "$dir" ls-tree "$tip" -- "$up" | awk '{print $1}')
+      case "$st" in
+        A|M)
+          if [ "$st" = A ] && [ -f "$loc" ] && ! blob "$tip" "$up" | cmp -s - "$loc"; then
+            blob "$tip" "$up" > "$loc.upstream"
+            warn "upstream added ${loc#"$DOTFILES/"} but a different local file exists — kept; theirs at .upstream"
+            continue
+          fi
+          local is_theirs=0 t; for t in "${theirs[@]}"; do [ "$(basename "$loc")" = "$t" ] && is_theirs=1; done
+          if [ "$state" = local-changes ] && [ "$st" = M ] && [ "$is_theirs" = 0 ]; then
+            local tb tt; tb=$(mktemp); tt=$(mktemp)
+            blob "$base" "$up" > "$tb"; blob "$tip" "$up" > "$tt"
+            git merge-file -L local -L "upstream ${base:0:8}" -L "upstream ${tip:0:8}" "$loc" "$tb" "$tt"; local rc=$?
+            rm -f "$tb" "$tt"
+            if [ $rc -ne 0 ]; then conflicts=$((conflicts+1)); warn "CONFLICT ${loc#"$DOTFILES/"} — resolve the <<<<<<< markers"; fi
+          else
+            mkdir -p "$(dirname "$loc")"; blob "$tip" "$up" > "$loc"
+          fi
+          [ "$mode_bits" = 100755 ] && chmod +x "$loc"
+          ;;
+        D)
+          if [ "$state" = pristine ]; then rm -f "$loc"
+          elif [ "$state" = local-changes ]; then warn "upstream deleted ${loc#"$DOTFILES/"} but it has local changes — kept"; fi
+          ;;
+      esac
+    done
+
+    if [ "$cmd" = apply ]; then
+      if [ "$mode" = watch ]; then
+        local patch="$CACHE/patches/$name-${base:0:8}-${tip:0:8}.patch"
+        mkdir -p "$CACHE/patches"; git -C "$dir" diff "$base" "$tip" -- "${froms[@]}" > "$patch"
+        info "watch mode: port by hand from $patch"
+      fi
+      set_base "$name" "$tip"
+      [[ "$(jq -r '.map[0].to' <<<"$e")" == quickshell/* ]] && TOUCHED_DOCKSHELL=1
+      if [ "$conflicts" -gt 0 ]; then warn "$name: applied with $conflicts conflict(s)"; else ok "$name: base → ${tip:0:8}"; fi
+    fi
+  done
+}
+
+# ---- git checkouts -------------------------------------------------------------
+do_checkouts() {
+  local n i; n=$(mf '.checkouts | length')
+  [ "$n" -gt 0 ] || return
+  hdr "git checkouts"
+  for ((i=0; i<n; i++)); do
+    local name glob after pkg d
+    name=$(mf ".checkouts[$i].name"); selected "$name" || continue
+    glob=$(mf ".checkouts[$i].glob"); after=$(mf ".checkouts[$i].after // empty")
+    pkg=$(mf ".checkouts[$i].branchTracksPkg // empty")
+    glob="${glob/#\~/$HOME}"; [[ "$glob" == /* ]] || glob="$DOTFILES/$glob"
+    local any_updated=0
+    for d in $glob; do
+      [ -d "$d/.git" ] || continue
+      local label="$name/$(basename "$d")" branch behind
+      if [ "$FETCH" = 1 ]; then timeout "$NET_TIMEOUT" git -C "$d" fetch -q 2>/dev/null || OFFLINE=1; fi
+      branch=$(git -C "$d" rev-parse --abbrev-ref HEAD)
+      behind=$(git -C "$d" rev-list --count 'HEAD..@{u}' 2>/dev/null || echo "?")
+
+      if [ -n "$pkg" ] && [[ "$branch" =~ ^release/([0-9]+\.[0-9]+)\.x$ ]]; then
+        local want; want=$(pacman -Q "$pkg" 2>/dev/null | awk '{print $2}' | grep -oE '^[0-9]+\.[0-9]+')
+        if [ -n "$want" ] && [ "$want" != "${BASH_REMATCH[1]}" ]; then
+          warn "$label tracks $branch but $pkg is $want — switch: git -C $d switch release/$want.x"
+        fi
+      fi
+
+      if [ "$behind" = "?" ]; then warn "$label: no upstream branch"; continue; fi
+      if [ "$behind" -eq 0 ]; then ok "$label ${DIM}($branch)${N}"; continue; fi
+      upd "$label: $behind commit(s) behind on $branch"
+      git -C "$d" log --oneline --no-decorate -n 5 'HEAD..@{u}' | sed "s/^/    $DIM/; s/\$/$N/"
+      if [ "$cmd" = apply ]; then
+        if git -C "$d" pull -q --ff-only; then ok "$label updated"; any_updated=1
+        else warn "$label: fast-forward failed (local changes/diverged) — left alone"; fi
+      fi
+    done
+    if [ "$any_updated" = 1 ] && [ -n "$after" ]; then
+      if bash -c "$after" >/dev/null 2>&1; then ok "ran: $after"; else warn "'$after' failed — run it by hand"; fi
+    fi
+  done
+}
+
+# ---- npm -------------------------------------------------------------------------
+do_npm() {
+  local n i; n=$(mf '.npm | length')
+  [ "$n" -gt 0 ] || return
+  hdr "npm dependencies"
+  for ((i=0; i<n; i++)); do
+    local name dir build after out wanted latest
+    name=$(mf ".npm[$i].name"); selected "$name" || continue
+    dir="$DOTFILES/$(mf ".npm[$i].dir")"; build=$(mf ".npm[$i].build // empty"); after=$(mf ".npm[$i].after // empty")
+    command -v npm >/dev/null || { warn "$name: npm not found"; continue; }
+    if [ "$FETCH" = 0 ]; then info "$name: skipped (--no-fetch)"; continue; fi
+    out=$(cd "$dir" && timeout "$NET_TIMEOUT" npm outdated --json 2>/dev/null); [ -n "$out" ] || out='{}'
+    if ! jq -e 'type == "object" and (has("error") | not)' >/dev/null 2>&1 <<<"$out"; then warn "$name: npm outdated failed (offline?)"; OFFLINE=1; continue; fi
+    wanted=$(jq -r 'to_entries[] | select(.value.current != .value.wanted) | "\(.key) \(.value.current) → \(.value.wanted)"' <<<"$out")
+    latest=$(jq -r 'to_entries[] | select(.value.wanted != .value.latest) | "\(.key) \(.value.wanted) → \(.value.latest) (major; edit package.json)"' <<<"$out")
+    if [ -z "$wanted$latest" ]; then ok "$name"; continue; fi
+    if [ -n "$wanted" ]; then upd "$name: in-range updates"; while read -r l; do info "$l"; done <<<"$wanted"; else ok "$name ${DIM}(in-range deps current)${N}"; fi
+    [ -n "$latest" ] && while read -r l; do info "$l"; done <<<"$latest"
+    if [ "$cmd" = apply ] && [ -n "$wanted" ]; then
+      if (cd "$dir" && npm update --no-fund --no-audit >/dev/null && { [ -z "$build" ] || bash -c "$build" >/dev/null; }); then
+        ok "$name: updated${build:+ + rebuilt}"
+        [ "$after" = restart-vicinae ] && RESTART_VICINAE=1
+      else warn "$name: update/build failed — run it by hand in $dir"; fi
+    fi
+  done
+}
+
+# ---- packages (report only) ------------------------------------------------------
+do_packages() {
+  selected packages || return
+  hdr "packages ${DIM}(report only — install with yay)${N}"
+  local -a pkgs; mapfile -t pkgs < <(mf '.packages[]')
+  local avail="" p
+  if [ "$FETCH" = 0 ]; then info "skipped (--no-fetch)"; return; fi
+  # checkupdates: 0 = updates, 2 = none, anything else = couldn't sync
+  local cu; cu=$(timeout "$NET_TIMEOUT" checkupdates 2>/dev/null)
+  case $? in 0|2) avail+="$cu"$'\n' ;; *) warn "checkupdates failed (offline?) — repo packages unchecked"; OFFLINE=1 ;; esac
+  command -v yay >/dev/null && avail+=$(timeout "$NET_TIMEOUT" yay -Qua 2>/dev/null)
+  local -a todo=()
+  for p in "${pkgs[@]}"; do
+    local line; line=$(grep -E "^$p " <<<"$avail" | head -1)
+    if [ -n "$line" ]; then upd "$line"; todo+=("$p"); else ok "$p $(pacman -Q "$p" 2>/dev/null | awk '{print $2}')"; fi
+  done
+  [ ${#todo[@]} -gt 0 ] && info "yay -S ${todo[*]}"
+}
+
+# ---- run ---------------------------------------------------------------------------
+do_vendor; do_checkouts; do_npm; do_packages
+
+if [ "$RESTART_VICINAE" = 1 ]; then
+  # One clean server after a rebuild (two overlapping servers → "database is locked").
+  pkill -x vicinae-server 2>/dev/null; pkill -x vicinae 2>/dev/null
+  if command -v hyprctl >/dev/null && hyprctl dispatch 'hl.dsp.exec_cmd("vicinae server")' >/dev/null 2>&1; then :
+  else setsid -f vicinae server >/dev/null 2>&1; fi
+  ok "vicinae server restarted"
+fi
+
+SECTION=; echo
+[ "$OFFLINE" = 1 ] && warn "some upstreams could not be reached — results are incomplete/cached"
+if [ "$cmd" = apply ]; then
+  [ "$TOUCHED_DOCKSHELL" = 1 ] && info "DockShell files changed: review in quickshell/.config/quickshell, then dockshell-restart; commit + bump the submodule when happy"
+  info "review: git -C $DOTFILES diff --stat; git -C $DOTFILES/quickshell/.config/quickshell diff --stat"
+  exit 0
+fi
+if [ "$PENDING" -gt 0 ]; then
+  printf '%s%d update(s) pending%s — run: dotfiles-upstream apply [name...]\n' "$B" "$PENDING" "$N"
+  [ "$NOTIFY" = 1 ] && command -v notify-send >/dev/null && \
+    notify-send -a dotfiles-upstream "Upstream updates: $PENDING" "$(printf '%s\n' "${SUMMARY[@]}" | sed 's/\x1b\[[0-9;]*m//g' | head -8)"
+  exit 10
+fi
+if [ "$OFFLINE" = 1 ]; then echo "nothing pending among what could be checked"; exit 2; fi
+printf '%severything up to date%s%s\n' "$G" "$N" "$( [ "$FETCH" = 0 ] && echo ' (vs cached upstream state)')"

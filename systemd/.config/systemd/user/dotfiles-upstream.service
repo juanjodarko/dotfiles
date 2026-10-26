@@ -1,0 +1,10 @@
+[Unit]
+Description=Check upstream-tracked dotfiles code (notify if updates are pending)
+
+[Service]
+Type=oneshot
+# Persistent catch-up can fire right at boot, before Wi-Fi is up: wait (max 5 min).
+ExecStartPre=/bin/sh -c 'for i in $(seq 30); do getent hosts github.com >/dev/null && exit 0; sleep 10; done; exit 0'
+ExecStart=%h/.local/bin/dotfiles-upstream check --notify
+# 10 = updates pending, 2 = some upstreams unreachable — both are normal outcomes
+SuccessExitStatus=2 10

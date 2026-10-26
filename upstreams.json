@@ -1,0 +1,73 @@
+{
+  "_doc": "Upstream-tracked code. Read by bin/.local/bin/dotfiles-upstream. `base` is the upstream commit the local copy was taken from; `apply` advances it.",
+  "sources": {
+    "omarchy": { "url": "https://github.com/basecamp/omarchy.git", "ref": "quattro" }
+  },
+  "vendor": [
+    {
+      "name": "dockshell-commons",
+      "source": "omarchy",
+      "base": "4601078a7d84ece7a3329b9a7ca6fce0a47d254f",
+      "mode": "merge",
+      "_why": "I18n reads its catalogs from $OMARCHY_PATH; the English ones are vendored next to Commons",
+      "rewrite": [["root.omarchyPath + \"/default/i18n/", "Quickshell.shellDir + \"/Commons/i18n/"]],
+      "map": [
+        { "from": "shell/Commons/", "to": "quickshell/.config/quickshell/Commons/" },
+        { "from": "default/i18n/en/shell.json", "to": "quickshell/.config/quickshell/Commons/i18n/en/shell.json" },
+        { "from": "default/i18n/locales.json", "to": "quickshell/.config/quickshell/Commons/i18n/locales.json" }
+      ]
+    },
+    {
+      "name": "dockshell-ui",
+      "source": "omarchy",
+      "base": "4601078a7d84ece7a3329b9a7ca6fce0a47d254f",
+      "mode": "merge",
+      "theirs": ["qmldir"],
+      "map": [{ "from": "shell/Ui/", "to": "quickshell/.config/quickshell/Ui/" }]
+    },
+    {
+      "name": "dockshell-agents",
+      "source": "omarchy",
+      "rewrite": [
+        ["for collector in \"$OMARCHY_PATH\"/bin/omarchy-agent-usage-*; do", "HERE=\"$(cd \"$(dirname \"$0\")\" && pwd)\"\nfor collector in \"$HERE\"/agent-usage-*; do"],
+        ["*/omarchy-agent-usage-}", "*/agent-usage-}"],
+        ["$OMARCHY_PATH/bin/omarchy-agent-usage-", "$HERE/agent-usage-"],
+        ["/omarchy/agents/", "/dockshell/agents/"],
+        ["\"omarchy\" / \"agent-usage\"", "\"dockshell\" / \"agent-usage\""],
+        ["\"omarchy\" / \"agents\"", "\"dockshell\" / \"agents\""],
+        ["os.path.join(os.environ[\"OMARCHY_PATH\"], \"shell\", \"plugins\", \"agents\")", "os.path.dirname(os.path.dirname(os.path.realpath(__file__)))"]
+      ],
+      "base": "4601078a7d84ece7a3329b9a7ca6fce0a47d254f",
+      "mode": "merge",
+      "map": [
+        { "from": "bin/omarchy-agent-usage-claude",    "to": "quickshell/.config/quickshell/plugins/agents/bin/agent-usage-claude" },
+        { "from": "bin/omarchy-agent-usage-codex",     "to": "quickshell/.config/quickshell/plugins/agents/bin/agent-usage-codex" },
+        { "from": "bin/omarchy-agent-usage-fireworks", "to": "quickshell/.config/quickshell/plugins/agents/bin/agent-usage-fireworks" },
+        { "from": "bin/omarchy-agent-usage-update",    "to": "quickshell/.config/quickshell/plugins/agents/bin/agent-usage-update" },
+        { "from": "shell/plugins/agents/collectors.py", "to": "quickshell/.config/quickshell/plugins/agents/collectors.py" }
+      ]
+    },
+    {
+      "name": "capture",
+      "source": "omarchy",
+      "base": "4601078a7d84ece7a3329b9a7ca6fce0a47d254f",
+      "mode": "watch",
+      "_why": "rewritten port (no omarchy-* calls) — upstream changes are shown, not merged",
+      "map": [
+        { "from": "bin/omarchy-capture-region",          "to": "bin/.local/bin/capture-region" },
+        { "from": "bin/omarchy-capture-screenshot",      "to": "bin/.local/bin/capture-screenshot" },
+        { "from": "bin/omarchy-capture-screenrecording", "to": "bin/.local/bin/capture-screenrecording" },
+        { "from": "bin/omarchy-capture-text",            "to": "bin/.local/bin/capture-text" },
+        { "from": "bin/omarchy-capture-qr",              "to": "bin/.local/bin/capture-qr" }
+      ]
+    }
+  ],
+  "checkouts": [
+    { "name": "dockshell-plugins", "glob": "~/.config/dockshell/plugins/*", "after": "dockshell-restart" },
+    { "name": "hypr-plugins", "glob": "hyprland/.config/hypr/plugins/*", "branchTracksPkg": "hyprland", "after": "hyprctl reload" }
+  ],
+  "npm": [
+    { "name": "vicinae-hyprland", "dir": "vicinae-extensions/hyprland", "build": "npx vici build", "after": "restart-vicinae" }
+  ],
+  "packages": ["hyprland", "quickshell", "vicinae-bin", "gpu-screen-recorder", "satty", "whisper-cpp"]
+}
