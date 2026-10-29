@@ -139,10 +139,13 @@ update_greeter() {
   [[ ${WALLPAPERD_SKIP_GREETER:-0} == 1 ]] && return 0
   [[ $UPDATE_GREETER == true ]] || return 0
   [[ -x $GREETER_BG ]] || { log "wallpaperd: $GREETER_BG not installed; skipping greeter update"; return 0; }
-  local wp="$1"
+  local wp="$1" res
+  # target the largest monitor's resolution so the greeter never upscales the blur
+  res=$(hyprctl monitors -j 2>/dev/null | jq -r 'max_by(.width*.height) | "\(.width)x\(.height)"' 2>/dev/null)
+  [[ $res =~ ^[0-9]+x[0-9]+$ ]] || res=""
   # Run synchronously (the blur is ~1s): pkexec needs the caller's session, which
   # `setsid`-detaching would strip. Needs the passwordless polkit rule to be silent.
-  pkexec "$GREETER_BG" "$wp" >/dev/null 2>&1 \
+  pkexec "$GREETER_BG" "$wp" $res >/dev/null 2>&1 \
     || log "wallpaperd: greeter bg update failed (deploy the polkit rule for passwordless)"
 }
 
