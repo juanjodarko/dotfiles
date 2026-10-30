@@ -43,5 +43,5 @@ diff and comment out anything you disagree with before running.
 - [x] restic installed
 - [x] Backup run → Synology `HomeNAS` (sftp:homenas:/blade_backup/omarchy-restic-repo), snapshot `425fd5d3`, 2026-10-30
 - [x] **Test-restore verified** 2026-10-30 (`restic check` clean + ~/.ssh restore diff identical) ← the gate
-- [ ] `pre-omarchy-2026` tag pushed
+- [x] `pre-omarchy-2026` tag pushed (2026-10-30, on `edcea01`)
 - [ ] `cleanup` branch (de-cruft, per-item approval)
