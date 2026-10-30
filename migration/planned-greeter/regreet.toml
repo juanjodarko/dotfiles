@@ -1,0 +1,23 @@
+# /etc/greetd/regreet.toml  — ReGreet config.  STAGED SPEC — not installed.
+# ReGreet natively shows: a USER SELECTOR (dropdown) + PASSWORD field + session selector,
+# and remembers the last user/session. That is exactly "user selector with a password" — no custom UI needed.
+
+[background]
+# The pre-blurred copy of the CURRENT wallpaper (regenerated on wallpaper change — see update-greeter-bg).
+# A world-readable system path so the `greeter` user can read it.
+path = "/usr/share/backgrounds/greeter/current-blur.png"
+fit = "Cover"                       # Fill | Contain | Cover | ScaleDown
+
+[GTK]
+application_prefer_dark_theme = true
+cursor_theme_name = "catppuccin-mocha-dark-cursors"   # matches your Hyprland cursor
+font_name = "JetBrainsMono Nerd Font 12"
+# icon_theme_name / theme_name optional — colors come from the generated CSS (see regreet.css)
+
+[commands]
+reboot   = ["systemctl", "reboot"]
+poweroff = ["systemctl", "poweroff"]
+
+# ⚠ VERIFY against the installed greetd-regreet version:
+#   - the exact custom-CSS path/mechanism (this spec assumes ReGreet loads /etc/greetd/regreet.css);
+#   - available keys (older/newer ReGreet renamed a few). `regreet --help` + the shipped example config are canonical.

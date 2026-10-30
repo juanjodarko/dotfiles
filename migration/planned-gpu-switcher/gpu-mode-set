@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# gpu-mode-set — headless supergfx GPU mode switcher (the ONE write path).
+# Backend for the waybar module now, and the Quickshell GPU widget later —
+# mirrors the theme-switcher's "one headless backend, many thin frontends" shape.
+#
+# Usage: gpu-mode-set <Integrated|Hybrid|toggle> [--no-confirm]
+#   Integrated  → dGPU off (best battery; your default)
+#   Hybrid      → dGPU available on-demand (prime-run games / CUDA for LLMs)
+#   toggle      → flip between the two
+#   --no-confirm  skip the built-in confirm (use when the frontend menu already gated it)
+#
+# NOTE: Integrated<->Hybrid applies via a REBOOT (this box has always_reboot=true in
+#       /etc/supergfxd.conf — logout-based switching times out here: two sessions never
+#       fully clear). This script sets the mode and tells you to reboot; it does not force it.
+#
+# STAGED SKETCH — not deployed. Intended home when implemented: bin/.local/bin/gpu-mode-set
+set -euo pipefail
+
+TARGET="${1:-}"
+CONFIRM=1
+[ "${2:-}" = "--no-confirm" ] && CONFIRM=0
+
+note() { command -v notify-send >/dev/null && notify-send "${1:?}" "${2:-}" 2>/dev/null || true; }
+die()  { note "GPU switch failed" "$1"; echo "gpu-mode-set: $1" >&2; exit 1; }
+
+command -v supergfxctl >/dev/null || die "supergfxctl not found"
+
+CURRENT="$(supergfxctl -g 2>/dev/null)"       || die "supergfxd not responding"
+SUPPORTED="$(supergfxctl -s 2>/dev/null | tr -d '[]')"   # -> "Integrated, Hybrid, NvidiaNoModeset"
+
+# Resolve toggle against the current mode.
+if [ "$TARGET" = "toggle" ]; then
+    [ "$CURRENT" = "Integrated" ] && TARGET="Hybrid" || TARGET="Integrated"
+fi
+
+case "$TARGET" in
+    Integrated|Hybrid) ;;
+    *) die "usage: gpu-mode-set <Integrated|Hybrid|toggle> [--no-confirm]" ;;
+esac
+
+# Must be an actually-supported mode on this machine.
+echo "$SUPPORTED" | grep -qw "$TARGET" || die "$TARGET unsupported (have: $SUPPORTED)"
+
+# No-op if we're already there.
+if [ "$CURRENT" = "$TARGET" ]; then
+    note "GPU" "Already in $TARGET mode"; exit 0
+fi
+
+# Capability guard: don't switch INTO Hybrid on a driver that can't drive the Pascal dGPU.
+# nvidia-open can't init GTX 10-series — see migration/nvidia-580xx-migration.md.
+if [ "$TARGET" = "Hybrid" ] && command -v pacman >/dev/null && pacman -Qq nvidia-open &>/dev/null; then
+    die "driver is nvidia-open, which can't drive your Pascal GPU. Do the nvidia-580xx migration first."
+fi
+
+# Confirm — the switch reboots to apply, so never on a stray click.
+if [ "$CONFIRM" = 1 ]; then
+    menu=${GPU_MENU:-wofi --dmenu -p "GPU mode"}     # override: GPU_MENU="rofi -dmenu -p GPU"
+    ans="$(printf 'Cancel\nSwitch to %s (reboots to apply)\n' "$TARGET" | $menu 2>/dev/null || true)"
+    [[ "$ans" == "Switch to $TARGET"* ]] || exit 0
+fi
+
+# Commit the mode. With always_reboot=true, supergfxctl writes "mode" to config and
+# asks for a reboot; this script surfaces that (a --reboot flag could trigger it).
+if sudo supergfxctl -m "$TARGET" 2>/dev/null; then
+    if [ "$TARGET" = "Hybrid" ]; then
+        note "GPU → Hybrid" "NVIDIA on (higher battery). Reboot to apply, then prime-run your game."
+    else
+        note "GPU → Integrated" "NVIDIA off (best battery). Reboot to apply."
+    fi
+else
+    die "supergfxctl could not set $TARGET (needs privilege — polkit/sudo)"
+fi

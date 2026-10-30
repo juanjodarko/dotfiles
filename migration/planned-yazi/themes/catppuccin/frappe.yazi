@@ -1,0 +1,124 @@
+# Catppuccin Frappé — yazi theme for the central switcher (yazi ≥ 25.x schema).
+# Templated from catppuccin/yazi (mauve accent). UI chrome only: file icons and
+# code-preview syntax highlighting fall back to yazi's defaults.
+
+[app]
+overall = { bg = "#303446" }
+
+[mgr]
+cwd = { fg = "#81c8be" }
+
+find_keyword  = { fg = "#e5c890", italic = true }
+find_position = { fg = "#f4b8e4", bg = "reset", italic = true }
+
+marker_copied   = { fg = "#a6d189", bg = "#a6d189" }
+marker_cut      = { fg = "#e78284", bg = "#e78284" }
+marker_marked   = { fg = "#81c8be", bg = "#81c8be" }
+marker_selected = { fg = "#ca9ee6", bg = "#ca9ee6" }
+
+count_copied   = { fg = "#303446", bg = "#a6d189" }
+count_cut      = { fg = "#303446", bg = "#e78284" }
+count_selected = { fg = "#303446", bg = "#ca9ee6" }
+
+border_symbol = "│"
+border_style  = { fg = "#838ba7" }
+
+[tabs]
+active   = { fg = "#303446", bg = "#c6d0f5", bold = true }
+inactive = { fg = "#c6d0f5", bg = "#51576d" }
+
+[mode]
+normal_main = { fg = "#303446", bg = "#ca9ee6", bold = true }
+normal_alt  = { fg = "#ca9ee6", bg = "#414559" }
+
+select_main = { fg = "#303446", bg = "#a6d189", bold = true }
+select_alt  = { fg = "#a6d189", bg = "#414559" }
+
+unset_main  = { fg = "#303446", bg = "#eebebe", bold = true }
+unset_alt   = { fg = "#eebebe", bg = "#414559" }
+
+[indicator]
+parent  = { fg = "#303446", bg = "#c6d0f5" }
+current = { fg = "#303446", bg = "#ca9ee6" }
+preview = { fg = "#303446", bg = "#c6d0f5" }
+
+[status]
+sep_left  = { open = "", close = "" }
+sep_right = { open = "", close = "" }
+
+progress_label  = { fg = "#c6d0f5", bold = true }
+progress_normal = { fg = "#a6d189", bg = "#51576d" }
+progress_error  = { fg = "#e5c890", bg = "#e78284" }
+
+perm_type  = { fg = "#8caaee" }
+perm_read  = { fg = "#e5c890" }
+perm_write = { fg = "#e78284" }
+perm_exec  = { fg = "#a6d189" }
+perm_sep   = { fg = "#838ba7" }
+
+[input]
+border   = { fg = "#ca9ee6" }
+title    = {}
+value    = {}
+selected = { reversed = true }
+
+[pick]
+border   = { fg = "#ca9ee6" }
+active   = { fg = "#f4b8e4" }
+inactive = {}
+
+[confirm]
+border  = { fg = "#ca9ee6" }
+title   = { fg = "#ca9ee6" }
+body    = {}
+list    = {}
+btn_yes = { reversed = true }
+btn_no  = {}
+
+[cmp]
+border = { fg = "#ca9ee6" }
+
+[tasks]
+border  = { fg = "#ca9ee6" }
+title   = {}
+hovered = { fg = "#f4b8e4", bold = true }
+
+[which]
+border          = { fg = "#ca9ee6" }
+mask            = {}
+cand            = { fg = "#81c8be" }
+rest            = { fg = "#949cbb" }
+desc            = { fg = "#f4b8e4" }
+separator       = "  "
+separator_style = { fg = "#626880" }
+
+[help]
+border  = { fg = "#ca9ee6" }
+chord   = { fg = "#81c8be" }
+action  = { fg = "#949cbb" }
+hovered = { bg = "#626880", bold = true }
+
+[notify]
+title_info  = { fg = "#81c8be" }
+title_warn  = { fg = "#e5c890" }
+title_error = { fg = "#e78284" }
+
+[filetype]
+rules = [
+	{ mime = "**/image/*", fg = "#e5c890" },
+	{ mime = "**/{audio,video}/*", fg = "#f4b8e4" },
+	{ mime = "**/application/{zip,rar,7z*,tar,gzip,xz,zstd,bzip*,lzma,compress,archive,cpio,arj,xar,ms-cab*}", fg = "#e78284" },
+	{ mime = "**/application/{pdf,doc,rtf}", fg = "#99d1db" },
+	{ mime = "vfs/{absent,stale}", fg = "#51576d" },
+	{ url = "*", is = "orphan", bg = "#e78284" },
+	{ url = "*", is = "exec", fg = "#a6d189" },
+	{ url = "*", is = "dummy", bg = "#e78284" },
+	{ url = "*/", is = "dummy", bg = "#e78284" },
+	{ url = "*/", fg = "#ca9ee6" },
+]
+
+[spot]
+border   = { fg = "#ca9ee6" }
+title    = { fg = "#ca9ee6" }
+tbl_cell = { fg = "#ca9ee6", reversed = true }
+tbl_col  = { bold = true }

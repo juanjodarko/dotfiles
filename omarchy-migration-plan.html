@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omarchy Migration Plan</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --ink: #1c1b1a; --muted: #5f5b57;
+    --line: #e3e0db; --accent: #b5651d; --accent-soft: #f3e6d7;
+    --ok: #2f7d4f; --warn: #a8641b; --danger: #a53434; --code-bg: #f0ede8;
+    --shadow: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16150f; --panel: #201f18; --ink: #ece7dd; --muted: #a49e91;
+      --line: #34322a; --accent: #e0913f; --accent-soft: #2b2418;
+      --ok: #7bc48b; --warn: #e0a54a; --danger: #e07a7a; --code-bg: #2a281f;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 3rem 1.25rem 6rem; }
+  header.hero { border-bottom: 1px solid var(--line); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+  .kicker { text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; font-weight: 700; color: var(--accent); margin: 0 0 .6rem; }
+  h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 .5rem; letter-spacing: -.01em; }
+  .sub { color: var(--muted); margin: 0; font-size: 1.02rem; }
+  .meta { margin-top: 1rem; font-size: .82rem; color: var(--muted); }
+  .meta code { background: var(--code-bg); padding: .1rem .4rem; border-radius: 5px; }
+  h2 { font-size: 1.28rem; margin: 2.6rem 0 .9rem; letter-spacing: -.01em; scroll-margin-top: 1rem; border-top: 1px solid var(--line); padding-top: 1.8rem; }
+  h2:first-of-type { border-top: none; padding-top: 0; }
+  h2 .num { color: var(--accent); font-variant-numeric: tabular-nums; margin-right: .5rem; }
+  h3 { font-size: 1rem; margin: 1.4rem 0 .5rem; }
+  p { margin: .6rem 0; }
+  a { color: var(--accent); }
+  code { font-family: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace; font-size: .86em; background: var(--code-bg); padding: .08rem .38rem; border-radius: 5px; }
+  ul, ol { margin: .5rem 0 .8rem; padding-left: 1.35rem; }
+  li { margin: .35rem 0; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 1.25rem 1.4rem; box-shadow: var(--shadow); }
+  .decisions { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .8rem; margin: 1rem 0; }
+  .decision { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: .8rem .95rem; }
+  .decision .q { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 .25rem; font-weight: 700; }
+  .decision .a { font-weight: 650; }
+  .callout { border-radius: 12px; padding: 1rem 1.2rem; margin: 1.2rem 0; border: 1px solid var(--line); background: var(--accent-soft); }
+  .callout strong { color: var(--accent); }
+  .guardrails { list-style: none; padding-left: 0; }
+  .guardrails li { padding-left: 1.7rem; position: relative; }
+  .guardrails li::before { content: "🛡"; position: absolute; left: 0; }
+  .week { border: 1px solid var(--line); border-radius: 14px; margin: 1.1rem 0; overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+  .week > .head { display: flex; align-items: baseline; gap: .7rem; padding: 1rem 1.3rem .6rem; border-bottom: 1px solid var(--line); background: linear-gradient(0deg, transparent, var(--accent-soft)); flex-wrap: wrap; }
+  .week .tag { font-size: .7rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: var(--accent); padding: .2rem .55rem; border-radius: 20px; white-space: nowrap; }
+  .week .title { font-weight: 700; font-size: 1.05rem; }
+  .week .body { padding: .4rem 1.3rem 1.1rem; }
+  .goal { color: var(--muted); font-style: italic; margin: .5rem 0 .3rem; }
+  .deliv { margin-top: .7rem; font-size: .9rem; padding: .5rem .8rem; background: var(--code-bg); border-radius: 8px; }
+  .deliv b { color: var(--ok); }
+  .nope { list-style: none; padding-left: 0; }
+  .nope li { padding-left: 1.6rem; position: relative; }
+  .nope li::before { content: "✕"; color: var(--danger); font-weight: 700; position: absolute; left: 0; }
+  footer { margin-top: 3rem; padding-top: 1.4rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+  .filetag { font-family: "SF Mono", ui-monospace, monospace; font-size: .78rem; }
+  /* status pills */
+  .pill { display: inline-block; font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: .12rem .5rem; border-radius: 20px; border: 1px solid currentColor; white-space: nowrap; vertical-align: middle; }
+  .pill.done { color: var(--ok); }
+  .pill.decided { color: var(--accent); }
+  .pill.planned { color: var(--warn); }
+  .pill.pending, .pill.open { color: var(--danger); }
+  .pill.gate { color: var(--danger); background: var(--accent-soft); }
+  /* dashboard */
+  .dash { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .7rem; margin: 1rem 0; }
+  .dcard { border: 1px solid var(--line); border-radius: 11px; padding: .75rem .9rem; background: var(--panel); }
+  .dcard .n { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+  .dcard .l { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: .25rem; }
+  .dcard.done .n { color: var(--ok); } .dcard.decided .n { color: var(--accent); }
+  .dcard.planned .n { color: var(--warn); } .dcard.pending .n { color: var(--danger); }
+  /* tables */
+  .tblwrap { overflow-x: auto; margin: .8rem 0; border: 1px solid var(--line); border-radius: 12px; }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 560px; }
+  table.tbl th, table.tbl td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.tbl thead th { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--code-bg); position: sticky; top: 0; }
+  table.tbl tr:last-child td { border-bottom: none; }
+  table.tbl td.area { font-weight: 650; white-space: nowrap; }
+  .arts { list-style: none; padding-left: 0; }
+  .arts li { padding: .5rem 0; border-bottom: 1px dashed var(--line); }
+  .arts li:last-child { border-bottom: none; }
+  .arts .f { font-family: "SF Mono", ui-monospace, monospace; font-size: .82rem; color: var(--accent); }
+  .toc { font-size: .85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .3rem .9rem; margin-top: 1rem; }
+  .toc a { color: var(--muted); text-decoration: none; }
+  .toc a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <p class="kicker">Personal migration · consolidated plan</p>
+    <h1>Migrate to Omarchy 4 (Quattro)</h1>
+    <p class="sub">Pack an 8-year Arch + Hyprland setup into adaptable modules &amp; shareable plugins — adopting Omarchy's <em>premises</em>, not reinstalling the distro.</p>
+    <p class="meta">Drafted 2026-08-23 · Consolidated 2026-09-03 · Branch <code>omarchy-quattro</code> · Mode: <strong>planning — nothing executed on the real machine without your per-item go-ahead</strong></p>
+    <nav class="toc">
+      <a href="#status">Status</a> · <a href="#guardrails">Guardrails</a> · <a href="#ledger">Decisions</a> ·
+      <a href="#reality">Omarchy 4 reality</a> · <a href="#stack">Desktop stack</a> · <a href="#decruft">De-cruft</a> ·
+      <a href="#roadmap">Roadmap</a> · <a href="#artifacts">Artifacts</a> · <a href="#open">Open decisions</a> · <a href="#nope">Not doing</a>
+    </nav>
+  </header>
+
+  <!-- ─────────────── STATUS ─────────────── -->
+  <h2 id="status">Where things stand</h2>
+  <div class="dash">
+    <div class="dcard done"><div class="n">4</div><div class="l">Done</div></div>
+    <div class="dcard decided"><div class="n">9</div><div class="l">Decided</div></div>
+    <div class="dcard planned"><div class="n">1</div><div class="l">Planned &amp; staged</div></div>
+    <div class="dcard pending"><div class="n">5</div><div class="l">Open decisions</div></div>
+  </div>
+  <div class="callout">
+    <strong>The reframe:</strong> not starting cold. <code>omarchy-quattro</code> already carries commit <code>41a4efc "Add Omarchy-scoped dotfiles"</code> with a production-grade <code>omarchy/</code> tree — reversible installer, keybind layer, themed <code>.tpl</code> templates, a menu extension, an Oklab wallpaper classifier. Since then this session added a <strong>managed kitty package</strong> (<code>0e4a58a</code>) and <strong>removed the dead bspwm/xfce4 wrappers</strong> (<code>1012182</code>). So this is <strong>finish + test + de-cruft + adopt the stack we want</strong>, not "figure it out."
+  </div>
+  <div class="callout" style="background:var(--panel)">
+    <strong>Still the one hard gate:</strong> the <em>verified</em> restic backup. No irreversible/untracked deletion happens before a test-restore passes. (Git-tracked deletes like the bin wrappers are reversible via <code>git restore</code>, so a couple ran ahead on explicit go — the backup gate protects the <em>untracked, irreplaceable</em> state.)
+  </div>
+
+  <!-- ─────────────── GUARDRAILS ─────────────── -->
+  <h2 id="guardrails">Guardrails <span style="font-weight:400;color:var(--muted);font-size:.9rem">(apply to every step)</span></h2>
+  <ul class="guardrails">
+    <li><strong>Nothing irreversible on the real laptop</strong> — Omarchy lives only in a VM until you deliberately cut over.</li>
+    <li><strong>A verified backup exists before the first (untracked) deletion.</strong></li>
+    <li><strong>Deletions on a branch</strong>, after the <code>pre-omarchy-2026</code> tag, reviewed as a diff before merge.</li>
+    <li><strong>I propose per item; you approve per item.</strong> No bulk auto-deletion.</li>
+    <li><strong>Plan, don't implement.</strong> We stay in planning; I touch live config only on an explicit "implement / deploy" — like the kitty item, never by inferring it from an ambiguous ask.</li>
+  </ul>
+
+  <!-- ─────────────── DECISIONS LEDGER ─────────────── -->
+  <h2 id="ledger">Decisions ledger</h2>
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>Area</th><th>Decision</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="area">Test bed</td><td>A VM on this laptop first — zero risk to the current install.</td><td><span class="pill decided">Decided</span></td></tr>
+      <tr><td class="area">Backups</td><td>restic → external drive; <strong>verify with a test-restore</strong> before any untracked deletion. Package manifests captured.</td><td><span class="pill gate">Gate</span></td></tr>
+      <tr><td class="area">De-cruft method</td><td>Tag <code>pre-omarchy-2026</code>, delete outright on a <code>cleanup</code> branch, per-item approved, reviewed as a diff.</td><td><span class="pill decided">Decided</span></td></tr>
+      <tr><td class="area">Terminal</td><td>Keep <strong>kitty</strong>, managed in-repo, wired to the central Catppuccin switcher (was unmanaged + static Mocha).</td><td><span class="pill done">Done · 0e4a58a</span></td></tr>
+      <tr><td class="area">Dead bin wrappers</td><td>Removed the 5 bspwm/xfce4 wrappers (kept real impls); repointed <code>system_maintain.sh</code>.</td><td><span class="pill done">Done · 1012182</span></td></tr>
+      <tr><td class="area">Launchers (now)</td><td>Keep <strong>rofi + wofi</strong> live until Vicinae is proven — both drive real functionality today.</td><td><span class="pill decided">Decided</span></td></tr>
+      <tr><td class="area">Notifications</td><td>Keep <strong>swaync</strong>. Under Omarchy's shell: <code>omarchy plugin disable omarchy.notifications</code>.</td><td><span class="pill decided">Decided</span></td></tr>
+      <tr><td class="area">Launcher / menu (target)</td><td>Adopt <strong>Vicinae</strong> (Raycast-compatible, native Linux). Replaces rofi drun; absorbs wofi menus over time.</td><td><span class="pill decided">Decided · VM-first</span></td></tr>
+      <tr><td class="area">File manager</td><td><strong>Nautilus</strong> (GUI) + <strong>yazi</strong> (TUI); yazi joins the switcher. Configs staged, not deployed.</td><td><span class="pill planned">Planned</span></td></tr>
+      <tr><td class="area">Bar / desktop shell</td><td><strong>DockShell</strong> — standalone Quickshell bar, own repo (<code>github.com/juanjodarko/dockshell</code>, MIT), tracked as a submodule at <code>quickshell/.config/quickshell/</code>. <strong>Basic bar renders</strong> (per-monitor workspaces + clock, live <code>Theme</code> singleton). Built from scratch — <em>not</em> omarchy-shell (too coupled). Crib config/theming patterns from <code>end-4/dots-hyprland</code> &amp; <code>doannc2212</code>; harvest wanted Omarchy plugins as <strong>forks</strong> via a compat shim. North star (later): switcher-driven theming + TUI integrations. Concrete design: <code>quickshell-bar-design.html</code>; see dossier §K.</td><td><span class="pill decided">Leaning (b)</span></td></tr>
+      <tr><td class="area">First QML plugin</td><td><strong>GPU-mode / hybrid-GPU switcher</strong> bar-widget — indicator → interactive Integrated⇄Hybrid toggle (your supergfx/nvidia niche). Shared headless <code>gpu-mode-set</code> backend; waybar module now, QML later. See <code>gpu-switcher-design.html</code> + dossier §M.</td><td><span class="pill decided">Decided</span></td></tr>
+      <tr><td class="area">NVIDIA driver / dGPU</td><td>GTX 1060 (Pascal) <strong>now works in Hybrid.</strong> Swapped <code>nvidia-open</code>→<code>nvidia-580xx</code>, removed the <code>system76-power</code> leftover, took nvidia out of the initramfs <code>MODULES</code> (boot-race), set supergfxd <code>always_reboot</code>, denied the dGPU in TLP. Verified via <code>nvidia-smi</code>. Real-system change (not a repo commit) — see dossier §M.</td><td><span class="pill done">Done · verified</span></td></tr>
+      <tr><td class="area">Hyprland core / plugins</td><td>On <strong>0.56.2 (latest)</strong>, config already Lua &amp; modern. <strong>Keep <code>split-monitor-workspaces</code> as-is</strong> (Lua package, not hyprpm — still needed, no native equivalent). Resist cosmetic <code>.so</code> plugins. See <code>hyprland-ecosystem-audit.html</code> + dossier §L.</td><td><span class="pill decided">Decided</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <!-- ─────────────── OMARCHY 4 REALITY ─────────────── -->
+  <h2 id="reality">Omarchy 4 reality — it's one shell</h2>
+  <p>Quattro replaced the separate <code>waybar / walker / mako / swayosd / hyprlock / polkit-agent</code> stack with <strong>one long-running Quickshell process, <code>omarchy-shell</code></strong>. Everything on screen is a <em>plugin</em> inside it: <code>omarchy.bar</code>, <code>.menu</code>, <code>.lock</code>, <code>.osd</code>, <code>.polkit</code>, <code>.notifications</code>, <code>.clipboard</code>, <code>.emojis</code>, <code>.panels</code>, <code>.reminders</code>, <code>.background</code>, <code>.services</code>, <code>.agents</code>. (Confirmed by <code>base.packages</code>: <code>quickshell</code> present; no mako/swaync/waybar/walker/swayosd/hyprlock.)</p>
+  <p>Consequences that shape the whole plan:</p>
+  <ul>
+    <li><strong>"The bar" and "the plugins" are the same thing.</strong> Wanting them = adopting <code>omarchy-shell</code> as the desktop shell — the heaviest, most Omarchy-coupled piece (assumes <code>$OMARCHY_PATH</code>, <code>~/.config/omarchy/</code>, the <code>omarchy-*</code> bin suite).</li>
+    <li><strong>Modularity is the escape hatch.</strong> Keep our own tools by disabling the matching plugin: <code>omarchy.notifications</code> → swaync, <code>omarchy.lock</code> → hyprlock, launcher → Vicinae. Only one daemon owns each DBus name.</li>
+    <li>Plugins are QML, distributed git-first via <a href="https://plugins.omarchy.org/">omarchyplugins.com</a> (<code>omarchy plugin add &lt;url&gt;</code>) — a different ecosystem from Vicinae's TS/React store. The two are <strong>complementary</strong>: Vicinae = launcher + its extensions; omarchy-shell = bar + QML desktop plugins.</li>
+  </ul>
+  <p style="font-size:.9rem;color:var(--muted)">Full feature audit, ranked easiest→hardest to graft: <span class="filetag">migration/omarchy-feature-migration-map.html</span></p>
+  <div class="callout"><strong>The fork (leaning (b)):</strong> the bar and its marketplace are <em>only</em> usable by running <code>omarchy-shell</code> — a Quickshell config coupled to <code>$OMARCHY_PATH</code> + the <code>omarchy-*</code> suite (the <code>omarchy-shell</code> command is just an IPC forwarder; Hyprland launches it as <code>quickshell -p $OMARCHY_PATH/shell</code>). So we lean to a <strong>standalone Quickshell bar, not omarchy-shell</strong>. To still benefit from the marketplace, the plan is to <strong>fork individual Omarchy plugins</strong> onto plain Quickshell via a small compat shim — a plugin-loader + a <code>Theme</code>/<code>Config</code> singleton mapped to our Catppuccin <code>current.*</code>. Script-driven bar-widgets port nearly verbatim; feasibility + shim shape in dossier §K. <span class="filetag">migration/decruft-dossier.md</span></div>
+
+  <!-- ─────────────── DESKTOP STACK ─────────────── -->
+  <h2 id="stack">The desktop stack — Omarchy default vs our choice</h2>
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>Component</th><th>Omarchy Quattro</th><th>Our choice</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="area">Theme system</td><td>Per-app theming, 11 themes</td><td>Central Catppuccin switcher (4 flavors), symlink + live-reload</td><td><span class="pill done">Ours, done</span></td></tr>
+      <tr><td class="area">Terminal</td><td>ghostty / kitty / alacritty (themed)</td><td>kitty (managed) + ghostty</td><td><span class="pill done">Done</span></td></tr>
+      <tr><td class="area">Notifications</td><td><code>omarchy.notifications</code></td><td>swaync (keep; disable the plugin)</td><td><span class="pill decided">Decided</span></td></tr>
+      <tr><td class="area">Launcher / menu</td><td><code>omarchy-shell</code> menu plugin</td><td>Vicinae</td><td><span class="pill decided">Decided</span></td></tr>
+      <tr><td class="area">Bar</td><td><code>omarchy.bar</code> (in the shell)</td><td>waybar now → standalone Quickshell bar later (<em>not</em> omarchy-shell)</td><td><span class="pill decided">Leaning</span></td></tr>
+      <tr><td class="area">Lock / idle</td><td><code>omarchy.lock</code> / idle plugins</td><td>hyprlock / hypridle (keep)</td><td><span class="pill decided">Decided</span></td></tr>
+      <tr><td class="area">Login / greeter</td><td>autologin + LUKS (no user picker)</td><td><strong>greetd + ReGreet</strong> — deployed &amp; working: blurred wallpaper (ffmpeg, hyprlock-look), Catppuccin frappe CSS, user+session picker, multi-user. SDDM disabled (still installed, rollback ready). Switcher retint hooks = TODO. See dossier §N.</td><td><span class="pill done">Done · live</span></td></tr>
+      <tr><td class="area">File mgr (GUI)</td><td>Nautilus + sushi + gvfs</td><td>Same</td><td><span class="pill planned">Planned</span></td></tr>
+      <tr><td class="area">File mgr (TUI)</td><td>yazi (blessed alternative)</td><td>yazi, on the switcher</td><td><span class="pill planned">Planned</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <!-- ─────────────── DE-CRUFT ─────────────── -->
+  <h2 id="decruft">De-cruft catalog</h2>
+  <p>Full read-only usage evidence lives in <span class="filetag">migration/decruft-dossier.md</span> (sections A–J). Summary:</p>
+  <div class="tblwrap">
+  <table class="tbl">
+    <thead><tr><th>Cat</th><th>What</th><th>Action</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="area">A</td><td>macOS-only modules (<code>aerospace/ yabai/ skhd/ mac_zsh/ mac_personal/</code>, <code>./mac</code>)</td><td>Delete</td><td><span class="pill pending">Backup-gated</span></td></tr>
+      <tr><td class="area">B</td><td>Superseded X11/awesome (<code>awesome/</code>, <code>archived/</code>, <code>./arch</code>, <code>./install</code>)</td><td>Delete</td><td><span class="pill pending">Backup-gated</span></td></tr>
+      <tr><td class="area">C</td><td>Dead/empty: <code>utilities/</code>, <code>vim/.vimrc</code>, <code>bash/</code></td><td>Delete / keep as fallback?</td><td><span class="pill open">Your call</span></td></tr>
+      <tr><td class="area">D</td><td>Dangling <code>polybar/pomobar</code> submodule stanza</td><td>Fix (deinit)</td><td><span class="pill pending">Backup-gated</span></td></tr>
+      <tr><td class="area">E</td><td>Committed backup/example files (hypr backup snapshot, <code>.bak</code>, <code>.example</code>)</td><td>Delete</td><td><span class="pill pending">Backup-gated</span></td></tr>
+      <tr><td class="area">F</td><td>Vendored plugin <code>.git</code> clones (tmux plugins ≈28M; split-monitor-workspaces)</td><td>gitignore / keep — careful</td><td><span class="pill open">Low priority</span></td></tr>
+      <tr><td class="area">G</td><td>Terminal overlap → kitty managed</td><td>Resolve</td><td><span class="pill done">Done · 0e4a58a</span></td></tr>
+      <tr><td class="area">G</td><td>Dead bspwm/xfce4 bin wrappers ×5</td><td>Delete</td><td><span class="pill done">Done · 1012182</span></td></tr>
+      <tr><td class="area">G</td><td><code>bin/.local/bin/settings</code> — half-dead rofi menu, unbound, dangling entries</td><td>Delete / rebuild / leave</td><td><span class="pill open">Your call</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <!-- ─────────────── ROADMAP ─────────────── -->
+  <h2 id="roadmap">Roadmap (revised)</h2>
+
+  <div class="week">
+    <div class="head"><span class="tag">Week 1</span><span class="title">Safety net + de-cruft</span></div>
+    <div class="body">
+      <p class="goal">Goal: a verified backup, a tagged snapshot, and a lean main repo you fully understand.</p>
+      <ol>
+        <li><strong>Full system backup, verify-restore first.</strong> Manifests (<code>pacman -Qqe</code>, <code>-Qqm</code> — already captured in <code>migration/manifests/</code>); home/data to an external drive via <code>restic</code> (<code>migration/omarchy-backup.sh</code>); <strong>test-restore a sample path</strong> — the real gate.</li>
+        <li><strong>Tag:</strong> <code>git tag pre-omarchy-2026 &amp;&amp; git push origin pre-omarchy-2026</code>.</li>
+        <li><strong>De-cruft on a <code>cleanup</code> branch, category by category</strong> (A–F), per-item approved. <em>Already done ahead (git-reversible): kitty <code>0e4a58a</code>, bin wrappers <code>1012182</code>.</em> Decide the open items: <code>settings</code>, <code>vim/.vimrc</code>, <code>bash/</code>.</li>
+        <li>Review the full <code>cleanup</code> diff together, then merge.</li>
+      </ol>
+      <p class="deliv"><b>Deliverable:</b> verified backup + <code>pre-omarchy-2026</code> tag + merged <code>cleanup</code>.</p>
+    </div>
+  </div>
+
+  <div class="week">
+    <div class="head"><span class="tag">Week 2</span><span class="title">Omarchy VM + validate the <code>omarchy/</code> track + Vicinae (early win)</span></div>
+    <div class="body">
+      <p class="goal">Goal: prove the branch installs cleanly and reversibly on real Omarchy 4; land the cheapest high-value change.</p>
+      <ol>
+        <li><strong>Build + snapshot the VM</strong> (QEMU/virt-manager) on Omarchy 4.x; verify version.</li>
+        <li><strong>Deploy the branch:</strong> <code>omarchy/install.sh --dry-run</code> → review → real run. Confirm ALT bindings, starship/lazygit/ghostty/bat retint, wallpaper seeding, clean <code>hyprctl configerrors</code>. Round-trip via <code>uninstall.sh</code> + snapshot revert.</li>
+        <li><strong>Vicinae — prototype early &amp; independently</strong> (low-risk, no shell swap): install, <code>bind = SUPER, SPACE, exec, vicinae toggle</code>, and lift the sketch in <span class="filetag">migration/vicinae-hyprland-extension/</span> (Switch Window / Switch Theme). De-risks the launcher question before the big shell decision.</li>
+        <li><strong>Prereq refactor:</strong> extract a headless <code>bin/.local/bin/theme-set &lt;flavor&gt;</code> from <code>wofi-theme-switcher.sh</code> so wofi, Vicinae, and any future bar share one backend.</li>
+      </ol>
+      <p class="deliv"><b>Deliverable:</b> <code>install.sh</code>/<code>uninstall.sh</code> green on a real Omarchy 4 VM + Vicinae driving the launcher.</p>
+    </div>
+  </div>
+
+  <div class="week">
+    <div class="head"><span class="tag">Week 3</span><span class="title">Stack in the VM + onboard to QML</span></div>
+    <div class="body">
+      <p class="goal">Goal: the desktop we actually want, proven in the VM; ability to build a QML plugin.</p>
+      <ol>
+        <li><strong>Deploy the file-manager stack</strong> (staged in <span class="filetag">migration/planned-yazi/</span>): <code>yay -S</code> yazi + Nautilus stacks; move the themes/config into place; apply the 5 switcher edits; yazi on the switcher, Nautilus for GUI moments.</li>
+        <li><strong>Stand up a standalone Quickshell bar</strong> (<em>not</em> omarchy-shell): built from scratch on Quickshell, cribbing config/theming patterns from <code>end-4/dots-hyprland</code> &amp; <code>doannc2212</code>. <em>Stretch:</em> a plugin-loader + <code>Theme</code>/<code>Config</code> shim so wanted Omarchy plugins can be <strong>forked</strong> to run outside Omarchy (dossier §K). Keep swaync + Vicinae.</li>
+        <li><strong>Learn QML by cloning a built-in:</strong> <code>omarchy plugin clone omarchy.clock --edit</code>; read <code>manifest.json</code> + QML entry points; <code>omarchy plugin validate</code> + <code>qmllint</code>; lifecycle loop.</li>
+        <li><strong>Scaffold the GPU-mode <em>switcher</em></strong> bar-widget (<code>io.github.juanjodarko.gpu-mode</code>) on the shared <code>gpu-mode-set</code> backend — step 3 of "GPU switcher — build order" (waybar version ships earlier; both gated behind the driver migration).</li>
+      </ol>
+      <p class="deliv"><b>Deliverable:</b> yazi/Nautilus live in VM, an omarchy-shell keep/drop verdict, a working GPU-mode widget.</p>
+    </div>
+  </div>
+
+  <div class="week">
+    <div class="head"><span class="tag">Week 4</span><span class="title">Publish the plugin + plan the real cutover</span></div>
+    <div class="body">
+      <p class="goal">Goal: one shared plugin, a tidy repo, and a written (not executed) cutover runbook.</p>
+      <ol>
+        <li><strong>Ship the plugin:</strong> <code>validate</code> + <code>qmllint</code> clean, README + LICENSE, publish to its own repo, install via <code>omarchy plugin add &lt;url&gt; --enable</code>, list on omarchyplugins.com.</li>
+        <li><strong>Repo strategy:</strong> merge <code>omarchy-quattro</code>'s <code>omarchy/</code> into <code>main</code> (root = plain-Arch packages, <code>omarchy/</code> = Omarchy-native); delete stale branches.</li>
+        <li><strong>Write the laptop cutover runbook</strong> (execute later, your call): fresh backup → fresh Omarchy 4 → clone → stow portable packages + <code>omarchy/install.sh</code> → restore personal data → keep the old desktop as a week-long fallback before wiping the last backup.</li>
+      </ol>
+      <p class="deliv"><b>Deliverable:</b> published plugin + consolidated repo + a runbook you can run when ready.</p>
+    </div>
+  </div>
+
+  <!-- ─────────────── GPU SWITCHER BUILD ORDER ─────────────── -->
+  <h2 id="gpu-track">GPU switcher — build order &amp; the migration gate</h2>
+  <p style="color:var(--muted)"><strong>Gate 0 (driver) is DONE ✅ — the dGPU works in Hybrid.</strong> The switcher is now unblocked, but per decision it <strong>lands with the standalone Quickshell bar</strong> (see §K), not as a throwaway waybar module — so the waybar version is an optional interim we're <em>skipping for now</em>. Sketches ready in <span class="filetag">migration/planned-gpu-switcher/</span>. Full detail: <span class="f">migration/gpu-switcher-design.html</span>, runbook <span class="f">migration/nvidia-580xx-migration.md</span>, dossier §M.</p>
+
+  <div class="week">
+    <div class="head"><span class="tag">Gate 0</span><span class="title">Driver migration — <span class="pill done">DONE ✅</span> dGPU verified working in Hybrid (2026-09-03)</span></div>
+    <div class="body">
+      <p class="goal">Two independent blockers keep the GTX 1060 (Pascal) dark today. Both must clear before anything below has a GPU to switch to.</p>
+      <ol>
+        <li><strong>0a · Blocker B</strong> — remove the orphaned <code>/etc/modprobe.d/system76-power.conf</code> (leftover <code>alias nvidia off</code> + blacklists; the package isn't even installed).</li>
+        <li><strong>0b · Blocker A</strong> — <code>yay -S nvidia-580xx-dkms nvidia-580xx-utils lib32-nvidia-580xx-utils</code> (accept removing <code>nvidia-open</code>/<code>nvidia-utils</code>/<code>lib32</code>) → <code>sudo mkinitcpio -P</code> → <code>dkms status</code> shows the module built.</li>
+        <li><strong>0c · verify</strong> — <code>supergfxctl -m Hybrid</code> → log out/in → <code>nvidia-smi -L</code> must list the GTX 1060 → back to <code>Integrated</code>. <span class="pill gate">Gate</span> nothing below proceeds until this prints the card.</li>
+      </ol>
+      <p class="deliv"><b>Deliverable:</b> a dGPU that actually powers on in Hybrid (verified with <code>nvidia-smi</code>).</p>
+    </div>
+  </div>
+
+  <div class="week">
+    <div class="head"><span class="tag">Then</span><span class="title">Build the switcher — it lands <em>with the bar</em> (deferred to the bar track)</span></div>
+    <div class="body">
+      <p class="goal">One headless backend, thin frontend — the theme-switcher shape. Reuses <code>gpu-mode-check.sh</code> + <code>gpu-mode-monitor.sh</code>. Decision (2026-09-03): don't ship the throwaway waybar version; the switcher's real home is the Quickshell bar, so it waits on the bar track (§K).</p>
+      <ol>
+        <li><strong>1 · backend</strong> — ship <span class="filetag">planned-gpu-switcher/gpu-mode-set</span> → <code>bin/.local/bin/</code>: validate → capability-guard → confirm (<em>reboots to apply</em> — supergfxd <code>always_reboot</code>) → <code>supergfxctl -m</code> → notify. Small, surface-agnostic; can drop in anytime. <span class="pill decided">sketched</span></li>
+        <li><strong>2 · waybar interim</strong> — <span class="filetag">planned-gpu-switcher/waybar/</span> exists (status + click-menu + CSS) but is <strong>optional / skipped for now</strong> — we go straight to the bar instead of investing in waybar we'll replace. <span class="pill planned">deferred</span></li>
+        <li><strong>3 · Quickshell widget (the target)</strong> — the <code>io.github.juanjodarko.gpu-mode</code> GPU-mode toggle, built as part of the standalone bar (§K). This is where the switcher actually ships. <span class="pill planned">with the bar</span></li>
+      </ol>
+      <p class="deliv"><b>Deliverable (later):</b> click-to-switch GPU from the Quickshell bar, on the shared <code>gpu-mode-set</code> backend.</p>
+    </div>
+  </div>
+
+  <!-- ─────────────── ARTIFACTS ─────────────── -->
+  <h2 id="artifacts">Artifacts &amp; working files</h2>
+  <ul class="arts">
+    <li><span class="f">omarchy-migration-plan.html</span> — this consolidated plan (the source of truth).</li>
+    <li><span class="f">migration/decruft-dossier.md</span> — read-only usage evidence + every decision, sections A–M.</li>
+    <li><span class="f">migration/omarchy-feature-migration-map.html</span> — Omarchy 4 features ranked easiest→hardest to graft onto our setup.</li>
+    <li><span class="f">migration/hyprland-ecosystem-audit.html</span> — 2026 Hyprland plugins/hypr* audit vs your config: keep/add/skip/fix + the split-monitor verdict.</li>
+    <li><span class="f">migration/gpu-switcher-design.html</span> — hybrid-GPU switcher design (Integrated⇄Hybrid QoL) + the Pascal/<code>nvidia-open</code> driver blocker.</li>
+    <li><span class="f">migration/nvidia-580xx-migration.md</span> — gated, copy-pasteable driver-swap runbook (open→580xx) + the <code>system76-power.conf</code> leftover fix. Unblocks the GPU switcher.</li>
+    <li><span class="f">migration/planned-gpu-switcher/</span> — sketched <code>gpu-mode-set</code> backend + waybar module (status/menu/config/CSS) + README. Staged, not deployed; see "GPU switcher — build order".</li>
+    <li><span class="f">migration/quickshell-bar-design.html</span> — the standalone Quickshell bar design: architecture, live-theming <code>Theme</code> singleton, empty-bar plugin system + multi-user, widget catalog, per-monitor workspaces, crib/licenses, build phases.</li>
+    <li><span class="f">migration/planned-bar/</span> — 4 Catppuccin <strong>semantic palettes</strong> (your exact hex, 16 roles + 26 colors) + README: empty-bar plugin architecture, minimal core (<code>core.workspaces</code> + <code>core.syscontrol</code> w/ <strong>multi-user</strong>), the <code>bar</code> plugin CLI. Staged, not deployed.</li>
+    <li><span class="f">migration/planned-greeter/</span> — <strong>greetd + ReGreet</strong> login-screen spec: greetd/regreet configs, Catppuccin-templated <code>regreet.css</code>, ffmpeg blurred-wallpaper pipeline (hyprlock-look, verified), switcher hooks, polkit rule, VM-first install + rollback. Staged, not deployed.</li>
+    <li><span class="f">migration/vicinae-hyprland-extension/</span> — <code>@vicinae/api</code> sketch (Switch Window / Switch Theme). A liftable prototype; not installed.</li>
+    <li><span class="f">migration/planned-yazi/</span> — yazi themes (4 flavors) + <code>yazi.toml</code> + deploy README. Staged, not deployed.</li>
+    <li><span class="f">migration/omarchy-backup.sh</span> — restic backup script (the gate) · <span class="f">migration/manifests/</span> — package lists.</li>
+    <li><span class="f">omarchy/</span> (on branch) — reversible installer, keybind layer, themed templates, menu extension.</li>
+  </ul>
+
+  <!-- ─────────────── OPEN DECISIONS ─────────────── -->
+  <h2 id="open">Open decisions — need your call</h2>
+  <div class="decisions">
+    <div class="decision"><p class="q">bin/.local/bin/settings</p><p class="a">Delete (X11-era, unbound) · rebuild for Wayland · or leave. <span class="pill open">open</span></p></div>
+    <div class="decision"><p class="q">vim/.vimrc + bash/</p><p class="a">Delete (superseded by nvim/zsh) or keep as tiny fallback. <span class="pill open">open</span></p></div>
+    <div class="decision"><p class="q">Vicinae sequencing</p><p class="a">Early &amp; independent (recommended) or batched with the shell prototype? <span class="pill open">open</span></p></div>
+    <div class="decision"><p class="q">yazi/Nautilus deploy</p><p class="a">VM-first, or approved additive change on the real setup like kitty? <span class="pill open">open</span></p></div>
+    <div class="decision"><p class="q">Hyprland cleanup + adds</p><p class="a">Dead <code>hyprland.conf</code>: keep as marked rollback / move to <code>migration/</code> / delete. Add <code>hyprpicker</code> + <code>hyprsunset</code>? <code>pcall</code>-guard the plugin require? Refresh stale CLAUDE.md/README. <span class="pill open">open</span></p></div>
+  </div>
+
+  <!-- ─────────────── VERIFICATION ─────────────── -->
+  <h2 id="verify">Verification</h2>
+  <ul>
+    <li><strong>Backup:</strong> test-restore a sample path before any untracked deletion.</li>
+    <li><strong>De-cruft:</strong> <code>git diff pre-omarchy-2026..cleanup</code> reviewed; <code>stow -n</code> clean after removals.</li>
+    <li><strong>Config track (VM):</strong> <code>install.sh --dry-run</code> → real → <code>hyprctl configerrors</code> none → retint verified → <code>uninstall.sh</code> restores → snapshot revert reproduces.</li>
+    <li><strong>Vicinae/yazi:</strong> launcher + extensions work; theme switch drives <code>current.yazi</code>; both survive a fresh VM snapshot.</li>
+    <li><strong>Plugin:</strong> <code>validate</code> + <code>qmllint</code> pass; lifecycle behaves; installs fresh from its public URL.</li>
+    <li><strong>Real laptop</strong> changes nothing until you deliberately run the Week-4 runbook.</li>
+  </ul>
+
+  <!-- ─────────────── NOT DOING ─────────────── -->
+  <h2 id="nope">What I will NOT do</h2>
+  <ul class="nope">
+    <li>Delete anything from the repo without your explicit per-item OK.</li>
+    <li>Touch live config or the real system on my own — implement/deploy only on an explicit go-ahead, VM-first.</li>
+    <li>Reformat, or execute the cutover runbook, on my own.</li>
+  </ul>
+
+  <footer>
+    <p><strong>Next step, your call:</strong> resolve an open decision above, or greenlight <em>Week 1, step 1 — the backup</em> (the one true gate). Nothing on your system has changed except the two git-reversible commits noted.</p>
+    <p class="filetag">File: omarchy-migration-plan.html · untracked in your repo · consolidates migration/decruft-dossier.md + the migration/ artifacts.</p>
+  </footer>
+
+</div>
+</body>
+</html>

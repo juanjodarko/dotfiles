@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omarchy Feature Migration Map</title>
+<style>
+  :root{
+    --base:#1e1e2e; --mantle:#181825; --crust:#11111b;
+    --s0:#313244; --s1:#45475a; --s2:#585b70;
+    --text:#cdd6f4; --sub:#a6adc8; --sub2:#9399b2;
+    --mauve:#cba6f7; --blue:#89b4fa; --sapphire:#74c7ec; --teal:#94e2d5;
+    --green:#a6e3a1; --yellow:#f9e2af; --peach:#fab387; --red:#f38ba8; --maroon:#eba0ac;
+    --overlay:#6c7086;
+    --mono:"JetBrainsMono Nerd Font","JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--base);color:var(--text);font-family:var(--sans);
+       line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,kbd{font-family:var(--mono);font-size:.86em}
+  code{background:var(--crust);color:var(--peach);padding:.1em .4em;border-radius:5px;
+       border:1px solid var(--s0);white-space:nowrap}
+  kbd{background:var(--s0);color:var(--text);padding:.08em .45em;border-radius:5px;
+      border:1px solid var(--s1);border-bottom-width:2px;font-size:.8em}
+
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px 90px}
+
+  header.top{padding:44px 0 26px;border-bottom:1px solid var(--s0);margin-bottom:8px}
+  header.top .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--mauve);margin:0 0 12px}
+  header.top h1{font-size:2.05rem;line-height:1.12;margin:0 0 14px;font-weight:800;letter-spacing:-.02em}
+  header.top h1 .accent{color:var(--mauve)}
+  header.top p.lede{margin:0;color:var(--sub);max-width:74ch;font-size:1.02rem}
+  .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:var(--mono);font-size:.72rem;background:var(--mantle);border:1px solid var(--s0);
+        color:var(--sub);padding:5px 10px;border-radius:999px}
+  .chip b{color:var(--text)}
+
+  .guard{margin:22px 0 6px;background:linear-gradient(180deg,rgba(243,139,168,.09),rgba(243,139,168,.03));
+         border:1px solid rgba(243,139,168,.35);border-left:4px solid var(--red);
+         border-radius:12px;padding:14px 18px}
+  .guard b{color:var(--maroon)}
+  .guard p{margin:.35em 0 0;color:var(--sub);font-size:.92rem}
+
+  /* legend */
+  .legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin:26px 0 8px}
+  .legend .lg{background:var(--mantle);border:1px solid var(--s0);border-radius:12px;padding:13px 15px;
+        border-top:3px solid var(--tier)}
+  .legend .lg .t{font-family:var(--mono);font-weight:700;font-size:.82rem;color:var(--tier);
+        display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .legend .lg .t .n{background:var(--tier);color:var(--crust);border-radius:6px;
+        min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
+        font-size:.78rem;font-weight:800}
+  .legend .lg .d{font-size:.82rem;color:var(--sub)}
+
+  /* sticky nav */
+  nav.jump{position:sticky;top:0;z-index:20;background:rgba(17,17,27,.86);
+      backdrop-filter:blur(9px);border-bottom:1px solid var(--s0);margin:30px -20px 0;
+      padding:11px 20px;display:flex;flex-wrap:wrap;gap:7px}
+  nav.jump a{font-family:var(--mono);font-size:.74rem;padding:5px 11px;border-radius:8px;
+      background:var(--mantle);border:1px solid var(--s0);color:var(--sub)}
+  nav.jump a:hover{color:var(--text);border-color:var(--s2);text-decoration:none}
+  nav.jump a .dot{display:inline-block;width:8px;height:8px;border-radius:50%;
+      background:var(--tier);margin-right:6px;vertical-align:middle}
+
+  section.tier{margin-top:40px;scroll-margin-top:58px}
+  .tier-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:6px}
+  .tier-head .badge{flex:none;width:42px;height:42px;border-radius:12px;background:var(--tier);
+      color:var(--crust);font-family:var(--mono);font-weight:800;font-size:1.3rem;
+      display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px -6px var(--tier)}
+  .tier-head h2{margin:0;font-size:1.28rem;letter-spacing:-.01em;color:var(--text)}
+  .tier-head h2 .eff{font-family:var(--mono);font-size:.72rem;color:var(--tier);
+      display:block;letter-spacing:.12em;text-transform:uppercase;margin-top:3px;font-weight:700}
+  .tier-intro{color:var(--sub);margin:6px 0 18px;max-width:82ch;font-size:.95rem}
+  .tier-intro code{white-space:normal}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:13px}
+  .card{background:var(--mantle);border:1px solid var(--s0);border-radius:13px;padding:15px 16px;
+        border-left:3px solid var(--tier);display:flex;flex-direction:column;gap:9px}
+  .card h3{margin:0;font-size:1rem;color:var(--text);display:flex;align-items:baseline;
+        gap:8px;flex-wrap:wrap}
+  .card h3 .ic{font-size:1.05rem;line-height:1}
+  .card .om{font-size:.88rem;color:var(--sub)}
+  .card .om .lbl,.card .mig .lbl{font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;
+        text-transform:uppercase;color:var(--sub2);display:block;margin-bottom:2px}
+  .card .mig{font-size:.88rem;color:var(--text);background:var(--crust);border:1px solid var(--s0);
+        border-radius:9px;padding:9px 11px;margin-top:auto}
+  .card .mig.have{border-color:rgba(166,227,161,.34);background:rgba(166,227,161,.06)}
+  .card .mig.have .lbl{color:var(--green)}
+  .pkgs{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+  .pkgs code{font-size:.74em;background:var(--base);color:var(--sub);border-color:var(--s0)}
+
+  .banner{background:var(--mantle);border:1px solid var(--s0);border-left:3px solid var(--tier);
+        border-radius:13px;padding:14px 17px;margin-bottom:14px;color:var(--sub);font-size:.9rem}
+  .banner b{color:var(--text)}
+
+  footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--s0);color:var(--sub2);font-size:.85rem}
+  footer h4{color:var(--sub);font-family:var(--mono);font-size:.74rem;letter-spacing:.12em;
+        text-transform:uppercase;margin:0 0 10px}
+  footer ul{margin:0;padding-left:18px;columns:2;column-gap:34px}
+  footer li{margin-bottom:5px}
+  @media(max-width:620px){footer ul{columns:1}header.top h1{font-size:1.7rem}}
+  .tag{font-family:var(--mono);font-size:.66rem;padding:2px 7px;border-radius:6px;border:1px solid var(--tier);
+        color:var(--tier);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Omarchy 4 “Quattro” · feature audit</p>
+  <h1>Omarchy Feature <span class="accent">Migration Map</span></h1>
+  <p class="lede">Every feature and moving part Omarchy ships — sorted from <b>easiest</b> to <b>hardest</b>
+     to graft onto an existing Arch&nbsp;+&nbsp;Hyprland system, <i>without</i> installing Omarchy itself.
+     The ranking assumes what you already run: a central Catppuccin theme switcher, Waybar, rofi&nbsp;+&nbsp;wofi,
+     kitty&nbsp;+&nbsp;ghostty, Neovim, tmux, starship.</p>
+  <div class="meta">
+    <span class="chip">Source: <b>omacom/omarchy@quattro</b></span>
+    <span class="chip">Bundled pkgs: <b>~180</b></span>
+    <span class="chip"><code>omarchy-*</code> CLI: <b>~150 scripts</b></span>
+    <span class="chip">Audited: <b>2026-09-03</b></span>
+  </div>
+
+  <div class="guard">
+    <b>Guardrails still hold.</b>
+    <p>This is a read-only map, not a to-do list. Nothing here is installed. Anything that touches live
+       config or system state goes through the same gate as the rest of the migration:
+       cherry-pick per-item, on a branch, after the verified backup — Omarchy lives in a VM until a
+       deliberate cutover. Adopt <i>premises</i>, not the whole distro.</p>
+  </div>
+</header>
+
+<div class="legend">
+  <div class="lg" style="--tier:var(--teal)">
+    <div class="t"><span class="n">0</span> Already yours</div>
+    <div class="d">Parity done or trivial — your setup already covers it. Confirm & align, don’t rebuild.</div>
+  </div>
+  <div class="lg" style="--tier:var(--green)">
+    <div class="t"><span class="n">1</span> Install a package</div>
+    <div class="d">One <code>pacman -S</code> / <code>yay -S</code> away. Pure additive, zero config risk.</div>
+  </div>
+  <div class="lg" style="--tier:var(--blue)">
+    <div class="t"><span class="n">2</span> Drop-in config</div>
+    <div class="d">Copy a config file or extend your theme switcher. Small, reversible.</div>
+  </div>
+  <div class="lg" style="--tier:var(--yellow)">
+    <div class="t"><span class="n">3</span> Vendor a subsystem</div>
+    <div class="d">Adopt Omarchy scripts/tooling that assume its layout. Cherry-pick & adapt.</div>
+  </div>
+  <div class="lg" style="--tier:var(--peach)">
+    <div class="t"><span class="n">4</span> Swap a subsystem</div>
+    <div class="d">Replace a component you already run, or wire in system services. Real work.</div>
+  </div>
+  <div class="lg" style="--tier:var(--red)">
+    <div class="t"><span class="n">5</span> Reinstall-level</div>
+    <div class="d">Filesystem / bootloader / firmware territory. Not cherry-pickable without a rebuild.</div>
+  </div>
+</div>
+
+<nav class="jump">
+  <a href="#t0" style="--tier:var(--teal)"><span class="dot"></span>0 · Already yours</a>
+  <a href="#t1" style="--tier:var(--green)"><span class="dot"></span>1 · Install</a>
+  <a href="#t2" style="--tier:var(--blue)"><span class="dot"></span>2 · Drop-in config</a>
+  <a href="#t3" style="--tier:var(--yellow)"><span class="dot"></span>3 · Vendor</a>
+  <a href="#t4" style="--tier:var(--peach)"><span class="dot"></span>4 · Swap</a>
+  <a href="#t5" style="--tier:var(--red)"><span class="dot"></span>5 · Reinstall-level</a>
+</nav>
+
+<!-- ══════════════ TIER 0 ══════════════ -->
+<section class="tier" id="t0" style="--tier:var(--teal)">
+  <div class="tier-head">
+    <div class="badge">0</div>
+    <div><h2>Already in your setup<span class="eff">effort: confirm &amp; align</span></h2></div>
+  </div>
+  <p class="tier-intro">You built most of Omarchy’s desktop skeleton independently. For these, migration means
+     <b>aligning defaults</b> (maybe borrowing a palette or a keybind), not adopting anything. Omarchy’s versions
+     are worth a look mainly as a reference.</p>
+  <div class="cards">
+    <div class="card"><h3><span class="ic">🧱</span> Arch + Hyprland base</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Opinionated Arch install driving the Hyprland tiling WM, on Wayland.</div>
+      <div class="mig have"><span class="lbl">You already have</span> Same foundation. This is why you can cherry-pick instead of install.</div></div>
+
+    <div class="card"><h3><span class="ic">🎨</span> Unified theme switcher</h3>
+      <div class="om"><span class="lbl">Omarchy</span> One command reskins terminal, btop, Chromium, Hyprland, Hyprlock, Mako, SwayOSD, Walker, Waybar. Ships 11 themes.</div>
+      <div class="mig have"><span class="lbl">You already have</span> Your Catppuccin switcher (4 flavors, symlink + live-reload) is the same idea. Borrow extra palettes, not the engine.</div></div>
+
+    <div class="card"><h3><span class="ic">📊</span> Status bar</h3>
+      <div class="om"><span class="lbl">Omarchy 4</span> The bar is the <code>omarchy.bar</code> plugin inside <code>omarchy-shell</code> (one Quickshell/QML process) — no standalone Waybar anymore.</div>
+      <div class="mig"><span class="lbl">You run</span> Waybar. Parity today. The bar you like <i>is</i> the whole shell — that’s the Tier&nbsp;4 <code>omarchy-shell</code> decision.</div></div>
+
+    <div class="card"><h3><span class="ic">🚀</span> App launcher / menu</h3>
+      <div class="om"><span class="lbl">Omarchy 4</span> Launcher + the Omarchy <code>menu</code> are plugins in <code>omarchy-shell</code> — no separate Walker/rofi process.</div>
+      <div class="mig"><span class="lbl">You run</span> rofi (drun) + wofi (waybar popups). Parity; these arrive bundled if you adopt <code>omarchy-shell</code> (Tier&nbsp;4).</div></div>
+
+    <div class="card"><h3><span class="ic">💻</span> Terminal</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Themes Ghostty / Alacritty / Kitty; <code>foot</code> in base; <code>omarchy-default-terminal</code> picks one.</div>
+      <div class="mig have"><span class="lbl">You already have</span> kitty + ghostty, both wired to your switcher. Done last session.</div></div>
+
+    <div class="card"><h3><span class="ic">📝</span> Neovim</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-nvim</code> — a LazyVim-based config, themed with the rest.</div>
+      <div class="mig"><span class="lbl">You run</span> your own <code>nvim/</code>. Keep it; optionally cherry-pick their theme hookup (see Tier&nbsp;3).</div></div>
+
+    <div class="card"><h3><span class="ic">🐚</span> Shell stack</h3>
+      <div class="om"><span class="lbl">Omarchy</span> tmux, starship, zoxide, fzf, bat, eza, fd, ripgrep, fastfetch.</div>
+      <div class="mig have"><span class="lbl">You already have</span> the same stack (tmux + starship + the modern coreutils). Compare configs at most.</div></div>
+
+    <div class="card"><h3><span class="ic">🔔</span> Notifications / OSD <span class="tag">decided: keep swaync</span></h3>
+      <div class="om"><span class="lbl">Omarchy 4</span> Both are shell plugins — <code>omarchy.notifications</code> + <code>omarchy.osd</code>, hosted by <code>omarchy-shell</code>.</div>
+      <div class="mig have"><span class="lbl">Your call — keep yours</span> Even if you adopt the shell, <code>omarchy plugin disable omarchy.notifications</code> keeps swaync as the notification daemon. Modular by design.</div></div>
+  </div>
+</section>
+
+<!-- ══════════════ TIER 1 ══════════════ -->
+<section class="tier" id="t1" style="--tier:var(--green)">
+  <div class="tier-head">
+    <div class="badge">1</div>
+    <div><h2>Just install the package<span class="eff">effort: pacman -S / yay -S</span></h2></div>
+  </div>
+  <p class="tier-intro">Omarchy’s app selection is its most portable part. Everything here is a stock Arch/AUR package —
+     additive, no config coupling, uninstall to reverse. Pull only what you’ll use.</p>
+  <div class="cards">
+    <div class="card"><h3><span class="ic">🛠️</span> Dev toolchains</h3>
+      <div class="om"><span class="lbl">Omarchy base</span> Container + language tooling, ready to go.</div>
+      <div class="pkgs"><code>docker</code><code>docker-compose</code><code>docker-buildx</code><code>lazydocker</code><code>lazygit</code><code>mise-bin</code><code>ruby</code><code>clang</code><code>llvm</code><code>dotnet-runtime</code><code>tree-sitter-cli</code><code>luarocks</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> <code>yay -S &lt;pick&gt;</code>. <code>mise</code> replaces asdf/nvm for runtime versions.</div></div>
+
+    <div class="card"><h3><span class="ic">⌨️</span> CLI utilities</h3>
+      <div class="om"><span class="lbl">Omarchy base</span> The TUI/CLI daily drivers.</div>
+      <div class="pkgs"><code>btop</code><code>fastfetch</code><code>jq</code><code>tldr</code><code>dua-cli</code><code>plocate</code><code>gum</code><code>yt-dlp</code><code>imagemagick</code><code>yay</code><code>expac</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> straight installs. <code>gum</code> powers the pretty bash prompts across the <code>omarchy-*</code> suite.</div></div>
+
+    <div class="card"><h3><span class="ic">🖼️</span> GUI apps</h3>
+      <div class="om"><span class="lbl">Omarchy base</span> The graphical daily set.</div>
+      <div class="pkgs"><code>chromium</code><code>mpv</code><code>imv</code><code>obsidian</code><code>libreoffice-fresh</code><code>kdenlive</code><code>obs-studio</code><code>pinta</code><code>xournalpp</code><code>evince</code><code>nautilus</code><code>sushi</code><code>localsend</code><code>moonlight-qt</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> install à la carte. <code>nautilus</code>+<code>sushi</code> = file manager with spacebar preview; <code>localsend</code> = AirDrop-alike; <code>moonlight-qt</code> = game streaming.</div></div>
+
+    <div class="card"><h3><span class="ic">🔊</span> Audio / media backend</h3>
+      <div class="om"><span class="lbl">Omarchy base</span> PipeWire everywhere.</div>
+      <div class="pkgs"><code>pipewire</code><code>pipewire-pulse</code><code>pipewire-alsa</code><code>pipewire-jack</code><code>wireplumber</code><code>pamixer</code><code>mpv-mpris</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> almost certainly already installed — verify, don’t reinstall.</div></div>
+
+    <div class="card"><h3><span class="ic">🔤</span> Fonts</h3>
+      <div class="om"><span class="lbl">Omarchy base</span> Default typefaces for UI, terminal, docs, emoji.</div>
+      <div class="pkgs"><code>ttf-jetbrains-mono-nerd</code><code>noto-fonts</code><code>noto-fonts-cjk</code><code>noto-fonts-emoji</code><code>ttf-ia-writer</code><code>woff2-font-awesome</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> install for full glyph/emoji coverage. (You use SauceCodePro NF in kitty — no need to switch.)</div></div>
+
+    <div class="card"><h3><span class="ic">🍥</span> Omarchy’s own mini-apps</h3>
+      <div class="om"><span class="lbl">Omarchy repo</span> Small bespoke tools it authors and ships.</div>
+      <div class="pkgs"><code>omacut</code><code>omawrite</code><code>omacalc</code><code>cliamp</code><code>aether</code><code>tensaku</code><code>herdr</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">slightly harder</span> not in the main repos — need Omarchy’s package repo/AUR. Optional flavor, not essential plumbing.</div></div>
+
+    <div class="card"><h3><span class="ic">📄</span> PDF / documents</h3>
+      <div class="om"><span class="lbl">Omarchy base</span> View, annotate, fill forms.</div>
+      <div class="pkgs"><code>evince</code><code>xournalpp</code><code>ttf-ia-writer</code><code>libreoffice-fresh</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> installs. <code>xournalpp</code> is the manual’s recommendation for filling/signing PDFs.</div></div>
+
+    <div class="card"><h3><span class="ic">🖨️</span> Printing &amp; scanning</h3>
+      <div class="om"><span class="lbl">Omarchy base</span> CUPS stack pre-wired.</div>
+      <div class="pkgs"><code>cups</code><code>cups-filters</code><code>cups-pk-helper</code><code>system-config-printer</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> install + <code>systemctl enable --now cups</code> when you actually need a printer.</div></div>
+  </div>
+</section>
+
+<!-- ══════════════ TIER 2 ══════════════ -->
+<section class="tier" id="t2" style="--tier:var(--blue)">
+  <div class="tier-head">
+    <div class="badge">2</div>
+    <div><h2>Drop-in config / extend your switcher<span class="eff">effort: copy a file, add a symlink</span></h2></div>
+  </div>
+  <p class="tier-intro">These are config-only. Because you already own a symlink-based theme switcher and a Hyprland config,
+     most reduce to “add one more app to the switcher” (exactly like the kitty work you just did) or “drop in a
+     <code>.conf</code> and bind a key.” Small blast radius, easy to revert.</p>
+  <div class="cards">
+    <div class="card"><h3><span class="ic">🎨</span> More apps on your switcher</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Themes btop, Mako, Hyprlock, Chromium, Walker/Quickshell from the active palette.</div>
+      <div class="mig"><span class="lbl">Migrate</span> add <code>current.&lt;app&gt;</code> entries to your switcher (you did <code>current.kitty</code> already). Highest-value: <b>btop</b>, <b>mako</b>, <b>hyprlock</b>.</div></div>
+
+    <div class="card"><h3><span class="ic">🔒</span> Hyprlock lock screen</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Themed lock screen; <code>omarchy-apply-lock</code> restyles it per theme.</div>
+      <div class="mig"><span class="lbl">Migrate</span> drop a <code>hyprlock.conf</code>, feed it <code>current.*</code> colors, bind it. Config-only.</div></div>
+
+    <div class="card"><h3><span class="ic">🌙</span> Idle / DPMS management</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>hypridle</code> + <code>omarchy-idle</code>: dim → lock → screen-off → suspend, with inhibitors.</div>
+      <div class="mig"><span class="lbl">Migrate</span> add a <code>hypridle.conf</code> tuned to your battery prefs. Plus <code>hyprsunset</code> for night-shift.</div></div>
+
+    <div class="card"><h3><span class="ic">🎚️</span> SwayOSD overlay</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Sliding on-screen volume/brightness/caps-lock indicator.</div>
+      <div class="mig"><span class="lbl">Migrate</span> <code>yay -S swayosd</code>, run the daemon, repoint your volume/brightness binds at <code>swayosd-client</code>.</div></div>
+
+    <div class="card"><h3><span class="ic">📋</span> Clipboard history</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Persistent clipboard + history (<code>omarchy-clipboard-*</code>), picker in the menu.</div>
+      <div class="pkgs"><code>wl-clipboard</code><code>cliphist</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> run <code>wl-paste --watch cliphist store</code>, bind a picker (rofi/wofi <code>cliphist list</code>). Small.</div></div>
+
+    <div class="card"><h3><span class="ic">📸</span> Screenshot &amp; screen-record binds</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-capture-screenshot/-region/-screenrecording(-with-webcam)</code>.</div>
+      <div class="pkgs"><code>grim</code><code>slurp</code><code>gpu-screen-recorder</code><code>wl-clipboard</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> install tools, bind the scripts (they’re standalone). GPU-accelerated recording is the upgrade over plain wf-recorder.</div></div>
+
+    <div class="card"><h3><span class="ic">🔲</span> QR &amp; region utilities</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-capture-qr</code> (screen → decode), QR generation.</div>
+      <div class="pkgs"><code>zbar</code><code>qrencode</code><code>slurp</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> install + bind. Tiny, self-contained scripts.</div></div>
+
+    <div class="card"><h3><span class="ic">⌨️</span> Omarchy keybinding scheme</h3>
+      <div class="om"><span class="lbl">Omarchy</span> A consistent, documented Super-based Hyprland keymap (windows, workspaces, media, capture, menu).</div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">reconcile conflicts</span> read their <code>bindings</code>, adopt the parts you like into your <code>hyprland.conf</code>. Config-only but overlaps your existing binds — diff carefully.</div></div>
+  </div>
+</section>
+
+<!-- ══════════════ TIER 3 ══════════════ -->
+<section class="tier" id="t3" style="--tier:var(--yellow)">
+  <div class="tier-head">
+    <div class="badge">3</div>
+    <div><h2>Vendor an Omarchy subsystem<span class="eff">effort: cherry-pick scripts, adapt paths</span></h2></div>
+  </div>
+  <p class="tier-intro">Here’s the “special sauce”: the <code>omarchy-*</code> command suite (~150 standalone bash scripts). Individually
+     copyable, but many assume Omarchy’s layout (<code>~/.local/share/omarchy</code>, <code>~/.config/omarchy</code>, its
+     theme dir, its menu). Vendor selectively and rewire paths to your dotfiles — don’t swallow the whole tree.</p>
+  <div class="cards">
+    <div class="card"><h3><span class="ic">🎛️</span> The Omarchy Menu</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-menu</code> (<kbd>Super</kbd>+<kbd>Alt</kbd>+<kbd>Space</kbd>) — one control surface for theme, wifi, bluetooth, audio, capture, power, install, update.</div>
+      <div class="mig"><span class="lbl">Migrate</span> the crown jewel, but it ties the whole suite + Walker together. Port as a project, or rebuild the idea on your rofi/wofi. Highest effort in this tier.</div></div>
+
+    <div class="card"><h3><span class="ic">🌐</span> Web apps as PWAs</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-webapp</code> installs sites as Chromium <code>--app</code> windows with real <code>.desktop</code> entries + icons.</div>
+      <div class="mig"><span class="lbl">Migrate</span> small, self-contained script — one of the easiest wins in this tier. Needs <code>chromium</code>.</div></div>
+
+    <div class="card"><h3><span class="ic">🔡</span> Text extraction (OCR)</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-capture-text</code> — select a region, OCR it to the clipboard.</div>
+      <div class="pkgs"><code>tesseract</code><code>tesseract-data-eng</code><code>slurp</code><code>grim</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> install + copy the one script + bind. Genuinely useful, low effort.</div></div>
+
+    <div class="card"><h3><span class="ic">🎙️</span> Dictation</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Push-to-talk speech→text into the focused field (Whisper-based).</div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">model download</span> needs a Whisper backend + model + the script. Heavier setup; optional.</div></div>
+
+    <div class="card"><h3><span class="ic">🔉</span> Audio device suite</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-audio-output-switch</code>, source switch, per-sink volume, input mute, tuning.</div>
+      <div class="mig"><span class="lbl">Migrate</span> you already have a waybar audio-router — compare and cherry-pick the extra device-cycling scripts.</div></div>
+
+    <div class="card"><h3><span class="ic">📶</span> Network / BT / VPN / DNS menus</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-wifi</code>, <code>-bluetooth-*</code>, <code>-vpn</code>, <code>-dns</code> — TUI/menu front-ends over nmcli/bluetoothctl.</div>
+      <div class="mig"><span class="lbl">Migrate</span> you already have bluetooth-menu/wifi waybar scripts — diff against theirs, adopt the better ones.</div></div>
+
+    <div class="card"><h3><span class="ic">☀️</span> Brightness (incl. external)</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-brightness-display</code> (DDC for external monitors via <code>ddcutil</code>), Apple-panel path, keyboard backlight.</div>
+      <div class="pkgs"><code>brightnessctl</code><code>ddcutil</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> the DDC external-monitor brightness is the notable pickup vs. laptop-only <code>brightnessctl</code>.</div></div>
+
+    <div class="card"><h3><span class="ic">📝</span> LazyVim config (omarchy-nvim)</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Curated LazyVim + theme integration that follows the switcher.</div>
+      <div class="mig"><span class="lbl">Migrate</span> keep your <code>nvim/</code>; optionally borrow the <code>colorscheme</code>-on-theme-switch hook (your switcher already messages running nvim sockets).</div></div>
+
+    <div class="card"><h3><span class="ic">🤖</span> Agentic / AI layer</h3>
+      <div class="om"><span class="lbl">Omarchy 4</span> The headline “OS for the age of agents”: <code>omarchy-agent</code>, usage meters for Claude / Codex / Fireworks, <code>omarchy-default-agent</code>, an <code>agents/skills/</code> tree.</div>
+      <div class="mig"><span class="lbl">Migrate</span> install your agent CLIs; the usage/skill scaffolding is copyable but Omarchy-flavored. Adopt loosely.</div></div>
+
+    <div class="card"><h3><span class="ic">🔁</span> Update &amp; migration framework</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-update</code> + <code>channel-set</code> (stable/master) + a versioned <code>migrations/</code> system that evolves configs safely.</div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">adopts their layout</span> only makes sense if you mirror Omarchy’s repo structure. For your own dotfiles, your git flow already does this job.</div></div>
+
+    <div class="card"><h3><span class="ic">🔀</span> Default-app switchers</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-default-terminal/-browser/-editor/-agent</code> set <code>$TERMINAL</code>/<code>xdg</code> handlers consistently.</div>
+      <div class="mig"><span class="lbl">Migrate</span> thin, portable helpers — nice quality-of-life, low effort.</div></div>
+  </div>
+</section>
+
+<!-- ══════════════ TIER 4 ══════════════ -->
+<section class="tier" id="t4" style="--tier:var(--peach)">
+  <div class="tier-head">
+    <div class="badge">4</div>
+    <div><h2>Swap a whole subsystem<span class="eff">effort: replace a component / enable services</span></h2></div>
+  </div>
+  <p class="tier-intro">Now it costs something real: replacing a component you already run or standing up
+     system-level services. Reversible, but each is a project with its own testing. The headline here is
+     <code>omarchy-shell</code> — the one swap that carries the bar and the whole plugin ecosystem. This is exactly
+     what the VM is for — prove it there first.</p>
+  <div class="cards">
+    <div class="card"><h3><span class="ic">🐚</span> <code>omarchy-shell</code> — the whole desktop shell</h3>
+      <div class="om"><span class="lbl">Omarchy 4 core</span> One long-running Quickshell process hosting <b>everything on screen as plugins</b>: bar, drop-down panels, launcher/menu, emoji + clipboard overlays, lock screen, polkit dialog, OSD, notifications, reminders, background, headless services. IPC-scriptable via <code>omarchy-shell</code>.</div>
+      <div class="pkgs"><code>quickshell</code><code>omarchy.bar</code><code>omarchy.menu</code><code>omarchy.lock</code><code>omarchy.osd</code><code>omarchy.polkit</code><code>omarchy.notifications</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">biggest single swap</span> the bar + plugins you want come <i>as</i> this shell — it subsumes Waybar, Walker/rofi/wofi, mako, swayosd, hyprlock and the polkit agent at once. Most Omarchy-coupled piece: assumes <code>$OMARCHY_PATH</code>, <code>~/.config/omarchy/</code> and calls the <code>omarchy-*</code> bin suite. <b>Prototype in the VM first.</b></div></div>
+
+    <div class="card"><h3><span class="ic">🧩</span> Plugins — keep the surfaces you like</h3>
+      <div class="om"><span class="lbl">Omarchy 4</span> First-party plugins in <code>$OMARCHY_PATH/shell/plugins/</code>; yours in <code>~/.config/omarchy/plugins/&lt;id&gt;/</code>. Manage with <code>omarchy plugin list|enable|disable</code> + <code>omarchy-shell shell rescanPlugins</code> (or menu → Setup → Plugins).</div>
+      <div class="mig have"><span class="lbl">This is the win</span> Modularity lets you take the bar and drop what you don’t want: <code>omarchy plugin disable omarchy.notifications</code> → keep swaync; same pattern for <code>omarchy.lock</code> (keep hyprlock), <code>omarchy.osd</code>, launcher. Only one daemon owns each DBus name, so disable the plugin wherever you keep your own tool.</div></div>
+
+    <div class="card"><h3><span class="ic">🖥️</span> SDDM login theme</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Themed SDDM greeter that tracks the active theme (you already call <code>update-sddm-theme</code>).</div>
+      <div class="pkgs"><code>sddm</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> system-level theme files under <code>/usr/share/sddm</code> + a polkit hook. You have the plumbing; adopting theirs is drop-in-ish but root-owned.</div></div>
+
+    <div class="card"><h3><span class="ic">🌊</span> Plymouth boot splash</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Branded silent boot splash via Plymouth.</div>
+      <div class="pkgs"><code>plymouth</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">initramfs rebuild</span> add the hook to <code>mkinitcpio.conf</code>, regenerate, add kernel params. Reversible but touches boot.</div></div>
+
+    <div class="card"><h3><span class="ic">💤</span> Hibernation</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-hibernation-setup</code> — swap/resume wiring, incl. availability checks.</div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">swap + resume</span> needs swapfile/partition + <code>resume=</code> + initramfs hook. Per-machine.</div></div>
+
+    <div class="card"><h3><span class="ic">🛡️</span> System services</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Firewall, power, thermal, memory-compression defaults.</div>
+      <div class="pkgs"><code>ufw</code><code>ufw-docker</code><code>power-profiles-daemon</code><code>thermald</code><code>zram-generator</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> install + enable each + drop config. <code>ufw-docker</code> matters if you run Docker (it bypasses ufw otherwise).</div></div>
+
+    <div class="card"><h3><span class="ic">🈶</span> Input method (CJK/emoji)</h3>
+      <div class="om"><span class="lbl">Omarchy</span> fcitx5 framework pre-wired for non-Latin input.</div>
+      <div class="pkgs"><code>fcitx5</code><code>fcitx5-gtk</code><code>fcitx5-qt</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> install + env vars (<code>GTK_IM_MODULE</code>…) + autostart. Skip unless you type CJK.</div></div>
+
+    <div class="card"><h3><span class="ic">🧩</span> Hardware auto-tuning profiles</h3>
+      <div class="om"><span class="lbl">Omarchy</span> ~40 <code>omarchy-hw-*</code> profiles: nvidia (gsp / open / 580xx), intel, hybrid-GPU, Asus ROG/Zenbook, Dell XPS (OLED, haptic touchpad, sidecar amps), Framework 16, Surface, MacBook/T2, fingerprint, clamshell, webcam, touchscreen, Vulkan.</div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">device-specific</span> cherry-pick only the profile(s) for your laptop; each applies quirks/firmware/kernel params. Fingerprint auth (<code>omarchy-hw-fingerprint</code>) is a standout pickup.</div></div>
+
+    <div class="card"><h3><span class="ic">🪟</span> Windows VM</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Documented QEMU-based Windows guest for the odd Windows-only app.</div>
+      <div class="pkgs"><code>qemu-user-static-binfmt</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> follow the manual’s VM chapter if/when you need it. Self-contained, optional.</div></div>
+  </div>
+</section>
+
+<!-- ══════════════ TIER 5 ══════════════ -->
+<section class="tier" id="t5" style="--tier:var(--red)">
+  <div class="tier-head">
+    <div class="badge">5</div>
+    <div><h2>Reinstall-level / not cherry-pickable<span class="eff">effort: rebuild the machine</span></h2></div>
+  </div>
+  <p class="tier-intro">These live at the filesystem, bootloader, or firmware layer. On a running system you don’t adopt them —
+     you’d re-provision the disk. This is the strongest argument for keeping Omarchy in a <b>VM</b>: it’s the only place
+     you get these <i>as Omarchy does them</i>, without touching your real laptop.</p>
+  <div class="cards">
+    <div class="banner" style="grid-column:1/-1"><b>Reality check.</b> You already have a working Arch install. Everything below assumes Omarchy’s
+       opinionated provisioning — adopting it means reinstalling, which the guardrails explicitly rule out for the real laptop.
+       Evaluate in the VM; don’t retrofit.</div>
+
+    <div class="card"><h3><span class="ic">💽</span> Installer / ISO</h3>
+      <div class="om"><span class="lbl">Omarchy</span> One-command Arch bootstrap (<code>install/</code>: config, hardware, login, post-install, provisioning) → full desktop.</div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">N/A</span> its whole job is the fresh install you’re not doing. It’s the <i>source</i> you mine, not a thing you run.</div></div>
+
+    <div class="card"><h3><span class="ic">🗂️</span> Disk layout: Btrfs + Limine + Snapper</h3>
+      <div class="om"><span class="lbl">Omarchy base</span> Btrfs subvolumes, Limine bootloader, <code>limine-snapper-sync</code> tying boot entries to snapshots.</div>
+      <div class="pkgs"><code>btrfs-progs</code><code>limine</code><code>snapper</code><code>limine-snapper-sync</code></div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">reinstall</span> requires that filesystem + bootloader from the start. If you’re not already on Btrfs+Limine, this is a rebuild.</div></div>
+
+    <div class="card"><h3><span class="ic">📸</span> System snapshots &amp; rollback</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Pre-update Snapper snapshots you can boot into to roll back a bad update.</div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">depends on above</span> only works atop the Btrfs+Snapper layout. Not bolt-on-able to a non-Btrfs root.</div></div>
+
+    <div class="card"><h3><span class="ic">🔐</span> Secure Boot</h3>
+      <div class="om"><span class="lbl">Omarchy</span> Documented Secure Boot enrollment path.</div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">firmware</span> key enrollment in UEFI + signed boot chain. Doable independently, but firmware-level and easy to lock yourself out — VM-test the concept.</div></div>
+
+    <div class="card"><h3><span class="ic">™️</span> Branding / boot identity</h3>
+      <div class="om"><span class="lbl">Omarchy</span> <code>omarchy-branding-*</code>: boot logo, about screen, screensaver identity.</div>
+      <div class="mig"><span class="lbl">Migrate</span> <span class="tag">skip</span> pure Omarchy identity — no reason to adopt on your own system.</div></div>
+  </div>
+</section>
+
+<footer>
+  <h4>Sources</h4>
+  <ul>
+    <li><a href="https://omarchy.org">omarchy.org</a> — landing / ISO 4.0.2</li>
+    <li><a href="https://learn.omacom.io/2/the-omarchy-manual">The Omarchy Manual</a> — feature chapters</li>
+    <li><a href="https://github.com/omacom/omarchy">github.com/omacom/omarchy</a> — <code>quattro</code> branch</li>
+    <li><code>install/omarchy-base.packages</code> — base package list</li>
+    <li><code>install/omarchy-other.packages</code> — hardware/optional packages</li>
+    <li><code>bin/omarchy-*</code> — the ~150-command CLI suite</li>
+  </ul>
+  <p style="margin-top:16px">Audited 2026-09-03 against Omarchy 4 “Quattro”. Difficulty is relative to <i>your</i> current
+     Arch + Hyprland dotfiles (central Catppuccin switcher, Waybar, rofi + wofi, kitty + ghostty, Neovim, tmux, starship).
+     Package names verbatim from the <code>quattro</code> branch; a few Omarchy-authored packages
+     (<code>omacut</code>, <code>omawrite</code>, <code>omacalc</code>, <code>cliamp</code>…) live in Omarchy’s own repo, not the main Arch repos.</p>
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hybrid GPU Switcher Design</title>
+<style>
+  :root{
+    --base:#1e1e2e; --mantle:#181825; --crust:#11111b;
+    --s0:#313244; --s1:#45475a; --s2:#585b70;
+    --text:#cdd6f4; --sub:#a6adc8; --sub2:#9399b2;
+    --mauve:#cba6f7; --blue:#89b4fa; --sapphire:#74c7ec; --teal:#94e2d5;
+    --green:#a6e3a1; --yellow:#f9e2af; --peach:#fab387; --red:#f38ba8; --maroon:#eba0ac;
+    --overlay:#6c7086;
+    --mono:"JetBrainsMono Nerd Font","JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--base);color:var(--text);font-family:var(--sans);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
+  a{color:var(--blue);text-decoration:none} a:hover{text-decoration:underline}
+  code,kbd{font-family:var(--mono);font-size:.86em}
+  code{background:var(--crust);color:var(--peach);padding:.1em .4em;border-radius:5px;border:1px solid var(--s0);white-space:nowrap}
+  kbd{background:var(--s0);color:var(--text);padding:.08em .45em;border-radius:5px;border:1px solid var(--s1);font-size:.8em}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 20px 90px}
+  header.top{padding:44px 0 24px;border-bottom:1px solid var(--s0)}
+  header.top .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--mauve);margin:0 0 12px}
+  header.top h1{font-size:2rem;line-height:1.12;margin:0 0 14px;font-weight:800;letter-spacing:-.02em}
+  header.top h1 .accent{color:var(--mauve)}
+  header.top p.lede{margin:0;color:var(--sub);max-width:76ch;font-size:1.02rem}
+  .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:var(--mono);font-size:.72rem;background:var(--mantle);border:1px solid var(--s0);color:var(--sub);padding:5px 10px;border-radius:999px}
+  .chip b{color:var(--text)}
+  .guard{margin:22px 0 6px;background:linear-gradient(180deg,rgba(243,139,168,.09),rgba(243,139,168,.03));border:1px solid rgba(243,139,168,.35);border-left:4px solid var(--red);border-radius:12px;padding:14px 18px}
+  .guard b{color:var(--maroon)} .guard p{margin:.35em 0 0;color:var(--sub);font-size:.92rem}
+  nav.jump{position:sticky;top:0;z-index:20;background:rgba(17,17,27,.86);backdrop-filter:blur(9px);border-bottom:1px solid var(--s0);margin:26px -20px 0;padding:11px 20px;display:flex;flex-wrap:wrap;gap:7px}
+  nav.jump a{font-family:var(--mono);font-size:.74rem;padding:5px 11px;border-radius:8px;background:var(--mantle);border:1px solid var(--s0);color:var(--sub)}
+  nav.jump a:hover{color:var(--text);border-color:var(--s2);text-decoration:none}
+  h2{font-size:1.4rem;margin:44px 0 6px;letter-spacing:-.01em;scroll-margin-top:58px}
+  h2 .num{font-family:var(--mono);color:var(--mauve);font-size:1rem;margin-right:.5em}
+  h3{font-size:1.02rem;margin:22px 0 4px}
+  p{color:var(--sub)} .lead{color:var(--text)}
+  table{width:100%;border-collapse:collapse;margin:0;font-size:.87rem}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--s0);vertical-align:top}
+  th{font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--sub2);font-weight:700}
+  td.n{font-family:var(--mono);color:var(--text);white-space:nowrap}
+  tr:hover td{background:rgba(203,166,247,.04)}
+  .tbl-wrap{overflow-x:auto;border:1px solid var(--s0);border-radius:12px;margin:14px 0}
+  .yes{color:var(--green);font-weight:700} .no{color:var(--red);font-weight:700} .warn{color:var(--yellow);font-weight:700}
+  .box{background:var(--mantle);border:1px solid var(--s0);border-left:3px solid var(--tone,var(--mauve));border-radius:10px;padding:13px 16px;margin:14px 0}
+  .box.good{--tone:var(--green)} .box.warn{--tone:var(--yellow)} .box.bad{--tone:var(--red)} .box.info{--tone:var(--blue)}
+  .box .h{font-weight:700;color:var(--text);margin-bottom:4px;display:flex;gap:8px;align-items:center}
+  .box b{color:var(--text)}
+  ul.tight{margin:.4em 0;padding-left:1.2em} ul.tight li{margin:.3em 0;color:var(--sub)} ul.tight li b,li strong{color:var(--text)}
+  .pill{display:inline-block;font-family:var(--mono);font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:.13rem .5rem;border-radius:20px;border:1px solid currentColor}
+  .p-block{color:var(--red)} .p-now{color:var(--blue)} .p-later{color:var(--mauve)} .p-gate{color:var(--peach)}
+  .flow{counter-reset:step;margin:16px 0;padding:0;list-style:none}
+  .flow li{position:relative;padding:10px 12px 10px 46px;margin:8px 0;background:var(--mantle);border:1px solid var(--s0);border-radius:10px;color:var(--sub)}
+  .flow li::before{counter-increment:step;content:counter(step);position:absolute;left:10px;top:10px;width:26px;height:26px;background:var(--mauve);color:var(--crust);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:800;font-size:.82rem}
+  .flow li b{color:var(--text)}
+  .diagram{font-family:var(--mono);font-size:.8rem;background:var(--crust);border:1px solid var(--s0);border-radius:10px;padding:14px 16px;color:var(--sub);overflow-x:auto;white-space:pre;margin:14px 0}
+  .foot{margin-top:50px;padding-top:18px;border-top:1px solid var(--s0);color:var(--sub2);font-size:.82rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Omarchy migration · hybrid-GPU QoL · Arch + Hyprland planning</p>
+  <h1>Hybrid <span class="accent">GPU switcher</span> — design &amp; the driver blocker</h1>
+  <p class="lede">A quality-of-life way to flip the NVIDIA dGPU on for the occasional road-trip game and back off for
+  battery — designed against your real hardware (Razer Blade, Intel HD 630 + <b>GTX 1060 Mobile</b>), your existing
+  supergfx read-layer, and the planned Quickshell GPU widget. Usage target: <b>off by default, Hybrid now and then.</b></p>
+  <div class="meta">
+    <span class="chip">Razer Blade · Kaby Lake-H</span>
+    <span class="chip">dGPU <b>GTX 1060 Mobile</b> (Pascal, <code>10de:1c20</code>)</span>
+    <span class="chip">supergfxctl <b>5.2.7</b></span>
+    <span class="chip">modes: Integrated / Hybrid / NvidiaNoModeset</span>
+    <span class="chip">driver: <b>nvidia-open 610</b> ⚠</span>
+  </div>
+</header>
+
+<div class="guard">
+  <b>⛔ Planning only — nothing implemented.</b>
+  <p>This is a design + a flagged blocker. No driver, config, or system change has been made. The driver fix in §0 is a
+  <i>real-laptop graphics-stack change</i> → strictly gated (VM/careful, your explicit go-ahead), per the migration guardrails.</p>
+</div>
+
+<nav class="jump">
+  <a href="#blocker">§0 Driver blocker</a>
+  <a href="#modes">§1 Mode reality</a>
+  <a href="#design">§2 The design</a>
+  <a href="#flow">§3 The flow</a>
+  <a href="#crib">§4 Crib / watch</a>
+  <a href="#seq">§5 Sequencing</a>
+</nav>
+
+<!-- ─────────── BLOCKER ─────────── -->
+<h2 id="blocker"><span class="num">§0</span>Blocker first: your dGPU almost certainly can't initialize right now</h2>
+<div class="box bad">
+  <div class="h"><span class="pill p-block">blocker</span> GTX 1060 (Pascal) + <code>nvidia-open</code> = no working driver</div>
+  <p style="margin:.2em 0 0">You have <b>only <code>nvidia-open 610.57.04</code></b> installed (no proprietary <code>nvidia</code>, no legacy
+  branch). The <b>open kernel modules require a GSP processor, first shipped in Turing</b> — Maxwell/Pascal/Volta are
+  <b>not supported by the open module</b>, and NVIDIA's 590 release dropped Pascal from the main packages. Your GTX 1060 is
+  Pascal (GP106). <b>So in Hybrid mode the dGPU won't bind/initialize — no CUDA, no game offload.</b> You likely haven't
+  noticed because you live in Integrated (dGPU removed, so <code>nvidia-smi</code> is expected to be silent there anyway).</p>
+</div>
+<div class="box good">
+  <div class="h">The fix — switch to the legacy proprietary branch</div>
+  <p style="margin:.2em 0 0">Replace <code>nvidia-open</code>/<code>nvidia-utils</code> with the last Pascal-capable proprietary branch,
+  available in the AUR: <b><code>nvidia-580xx-dkms</code> + <code>nvidia-580xx-utils</code> + <code>lib32-nvidia-580xx-utils</code></b>
+  (currently <code>580.178.04</code>; the lib32 one is needed for Steam/Proton). Trade-off: it's a <b>frozen branch</b> — no new
+  features, and DKMS can eventually break against very new kernels, so it becomes a thing to watch on updates.</p>
+  <p style="margin:.5em 0 0"><b>Verify in one step</b> (after the swap): switch to Hybrid, log out/in, then
+  <code>nvidia-smi -L</code> should list the GTX 1060. Until that prints the card, no switcher is worth building.</p>
+</div>
+<div class="box bad">
+  <div class="h"><span class="pill p-block">blocker B</span> A rogue leftover also disables the dGPU</div>
+  <p style="margin:.2em 0 0">Separately, <code>/etc/modprobe.d/system76-power.conf</code> — an <b>orphaned, unowned leftover</b>
+  from the uninstalled <code>system76-power</code> tool — does <code>alias nvidia off</code> and blacklists the modules, so nvidia
+  <b>can never load even with the right driver</b>. It must be removed too. (Your <code>supergfxd.conf</code> is fine — supergfxd
+  manages it; <code>nvidia-pm.conf</code>'s <code>NVreg_DynamicPowerManagement=0x02</code> is a Turing-only no-op on Pascal, optional to drop.)</p>
+</div>
+<p class="lead" style="font-size:.88rem">Confidence on Blocker A: high (architectural — the open module fundamentally can't drive pre-Turing), but not watched
+succeed live, since confirming needs a Hybrid logout on the real laptop. Both fixes + verification are written up as an exact,
+gated runbook: <b><code>migration/nvidia-580xx-migration.md</code></b>.</p>
+
+<!-- ─────────── MODE REALITY ─────────── -->
+<h2 id="modes"><span class="num">§1</span>Mode reality — what each supergfx mode actually gives you</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Mode</th><th>dGPU</th><th>CUDA / LLM</th><th>Games</th><th>Switch cost</th><th>Battery</th></tr>
+  <tr>
+    <td class="n">Integrated</td><td>off, removed from bus</td>
+    <td class="no">✗ gone</td><td class="no">✗</td>
+    <td><b>logout</b> to leave</td><td class="yes">best — your default</td>
+  </tr>
+  <tr>
+    <td class="n">Hybrid</td><td>on; idles <span class="warn">~10–15 W</span> (Pascal can't RTD3)</td>
+    <td class="yes">✓ directly, <b>no prime-run</b></td><td class="yes">✓ via <code>prime-run</code></td>
+    <td><b>logout</b> to enter</td><td class="no">worst</td>
+  </tr>
+  <tr>
+    <td class="n">NvidiaNoModeset</td><td>off (same removal as Integrated)</td>
+    <td class="no">✗</td><td class="no">✗</td>
+    <td>live, but needs <code>nvidia-drm.modeset=0</code></td><td>n/a — not useful here</td>
+  </tr>
+</table></div>
+<ul class="tight">
+  <li><b>Your flow is Integrated ⇄ Hybrid, and each direction is a logout</b> (a Wayland-session restart, not a reboot). Confirmed from supergfxctl source; there's no live path on this non-mux Razer.</li>
+  <li><b>Pascal can't idle cheaply.</b> Fine-grained runtime power-down (RTD3/D3cold) is <b>Turing+ only</b>, and it also wants a Coffee-Lake-or-newer host — your Kaby Lake fails on both counts. So "just stay in Hybrid" is <i>not</i> a battery option; the real off-switch (Integrated) is genuinely needed. This is exactly why your "keep it off" instinct is right.</li>
+  <li><b>NvidiaNoModeset is a red herring</b> for you: it switches live but it's a <i>power-off</i> state (no CUDA/games), and it isn't even offered because you boot with <code>nvidia-drm.modeset=1</code> (which you want for Wayland). Ignore it.</li>
+  <li><b>LLM work = Hybrid, no prime-run.</b> <code>prime-run</code> only sets GL/Vulkan offload env; CUDA (ollama, llama.cpp, PyTorch) sees the card directly once it's powered. Games need <code>prime-run</code> (render offload).</li>
+</ul>
+
+<!-- ─────────── DESIGN ─────────── -->
+<h2 id="design"><span class="num">§2</span>The design — one backend, two surfaces (reusing what you already built)</h2>
+<p class="lead">You already have the hard half: <code>gpu-mode-check.sh</code> (mode→state) and <code>gpu-mode-monitor.sh</code> (watches
+supergfxd's D-Bus <code>NotifyGfx</code> signal) + its user service. The switcher just adds a <b>write</b> path and a UI surface —
+mirroring the theme-switcher's "headless backend + thin frontends" shape.</p>
+<div class="diagram">        ┌─────────────────────────────────────────────┐
+        │  gpu-mode-set &lt;Integrated|Hybrid&gt;  (headless)  │  ← new; the one write path
+        │   • validate mode                             │
+        │   • confirm (logs you out!)                   │
+        │   • supergfxctl -m &lt;mode&gt;                      │
+        │   • notify-send "log out to apply"            │
+        └───────────────┬───────────────────────────────┘
+      reads state via   │            ▲ both surfaces call the SAME backend
+   gpu-mode-check.sh    │            │
+        ┌───────────────┴────┐   ┌───┴───────────────────┐
+        │ waybar custom mod   │   │ Quickshell GPU widget │
+        │  (NOW — fast win)   │   │ (LATER — planned QML) │
+        │  icon + on-click →  │   │  same click→menu      │
+        │  menu → gpu-mode-set│   │  io.github…gpu-mode   │
+        └─────────────────────┘   └───────────────────────┘
+   change events ← gpu-mode-monitor.sh (D-Bus) refresh both surfaces live</div>
+<ul class="tight">
+  <li><b>Backbone — <code>gpu-mode-set</code>:</b> a headless script (same pattern you'll use for <code>theme-set</code>). Validates the target mode, shows a <b>confirm</b> (because it logs you out), calls <code>supergfxctl -m</code>, then notifies. Both UIs call it — no logic duplicated.</li>
+  <li><b>Surface A — waybar module (now):</b> icon driven by <code>gpu-mode-check.sh</code>; <code>on-click</code> opens a small menu (wofi/rofi/Vicinae) → confirm → <code>gpu-mode-set</code>. Fastest QoL; you already run waybar. Crib <code>theo-donacik/supergfxctl-waybar-module</code>.</li>
+  <li><b>Surface B — Quickshell widget (later):</b> this <i>is</i> your roadmap's "first QML plugin" (<code>io.github.juanjodarko.gpu-mode</code>), upgraded from indicator → interactive toggle. Same backend, nicer surface; lands with the standalone bar.</li>
+  <li><b>Game step:</b> once in Hybrid, launch with <code>prime-run &lt;game&gt;</code> (Steam: set launch option <code>prime-run %command%</code>). Optional: wrap with <code>gamemode</code>/<code>gamescope</code>.</li>
+  <li><b>Robust capability detection</b> (avoid Omarchy's bug, below): decide "is this machine hybrid-capable?" from the <b>supergfx mode name</b> (your <code>gpu-mode-check.sh</code> already does this), <i>not</i> from counting live PCI devices — in Integrated the dGPU is gone from the bus, and a PCI-count check would make the toggle vanish exactly when you need it to switch back.</li>
+</ul>
+
+<!-- ─────────── FLOW ─────────── -->
+<h2 id="flow"><span class="num">§3</span>The everyday flow — "off by default, a game on the road"</h2>
+<ol class="flow">
+  <li><b>Default:</b> Integrated. Bar shows a subtle iGPU glyph. Zero dGPU draw.</li>
+  <li><b>Want to game:</b> click the indicator → <b>"Enable NVIDIA (Hybrid) — will log you out"</b> → confirm → <code>gpu-mode-set Hybrid</code> → notify "Save work &amp; log out to activate." You log out/in.</li>
+  <li><b>In Hybrid:</b> bar switches to a dGPU glyph with a <b>battery-warning tint</b> (reminder it's costing power). Launch the game with <code>prime-run</code>.</li>
+  <li><b>Done:</b> click → <b>"Disable NVIDIA (Integrated)"</b> → confirm → <code>gpu-mode-set Integrated</code> → log out/in → back to iGPU, best battery.</li>
+</ol>
+<div class="box info">
+  <div class="h">UX refinements that matter for the occasional/on-the-road pattern</div>
+  <ul class="tight" style="margin:.2em 0 0">
+    <li><b>Always confirm</b> — the switch logs you out; you never want that by a stray click mid-work.</li>
+    <li><b>Post-login nudge</b> — on first login in Hybrid, a notification "NVIDIA is ON (higher battery use) — revert when done" with a one-click <b>back-to-Integrated</b> action, so you don't forget and drain the battery.</li>
+    <li><b>Make "return to Integrated" as prominent as "enable"</b> — for a road pattern, getting back to off is the action you'll want most.</li>
+  </ul>
+</div>
+
+<!-- ─────────── CRIB / WATCH ─────────── -->
+<h2 id="crib"><span class="num">§4</span>What to crib, and what to watch</h2>
+<ul class="tight">
+  <li><b>Crib (waybar):</b> <code>theo-donacik/supergfxctl-waybar-module</code> — mode display + click-to-switch via supergfxctl; closest ready-made starting point.</li>
+  <li><b>Mirror (logic):</b> Omarchy ships <code>omarchy-toggle-hybrid-gpu</code> (supergfxctl Hybrid↔Integrated). <b>But note its bug (#5428):</b> its capability check counts live PCI devices, so once in Integrated the toggle disappears and you can't switch back from the menu. Your <code>gpu-mode-check.sh</code> keys off the mode <i>name</i> and already avoids this — keep it that way.</li>
+  <li><b>Watch (future, maybe better):</b> <b>supergfxctl is now deprecated / its GitLab archived.</b> It still works, but Omarchy is evaluating <b><code>cardwire</code></b> (eBPF + LSM hooks) as the successor — it can block/unblock the dGPU <b>without a logout or reboot</b> and stop background apps from waking it. If live, logout-free switching is worth it to you later, cardwire is the thing to evaluate. Not today (new/unproven; would replace supergfx).</li>
+  <li><b>No ready GUI applies:</b> rog-control-center is ASUS-only; optimus-manager-qt is X11-only; envycontrol is CLI + reboot; switcheroo-control's "discrete GPU" launcher is GNOME-only and broken on Wayland+NVIDIA. Building the small custom module is the realistic path.</li>
+</ul>
+
+<!-- ─────────── SEQUENCING ─────────── -->
+<h2 id="seq"><span class="num">§5</span>Sequencing &amp; recommendation</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Step</th><th>What</th><th>Gate</th></tr>
+  <tr><td class="n">0</td><td><b>Fix the driver</b> — <code>nvidia-open</code> → <code>nvidia-580xx-dkms</code>/<code>-utils</code>/<code>lib32</code>. Verify with <code>nvidia-smi -L</code> in Hybrid. <b>Everything else is moot until this passes.</b></td><td><span class="pill p-gate">real-laptop · your go-ahead</span></td></tr>
+  <tr><td class="n">1</td><td>Headless <code>gpu-mode-set &lt;mode&gt;</code> backend (confirm + supergfxctl -m + logout notify).</td><td><span class="pill p-now">low risk</span></td></tr>
+  <tr><td class="n">2</td><td>waybar custom module (icon + click-menu) wired to the backend — the fast QoL win.</td><td><span class="pill p-now">additive</span></td></tr>
+  <tr><td class="n">3</td><td>Fold into the Quickshell <b>GPU-mode widget</b> when the standalone bar lands (already your first-QML-plugin item).</td><td><span class="pill p-later">with the bar</span></td></tr>
+</table></div>
+<div class="box warn">
+  <div class="h">Honest bottom line</div>
+  <p style="margin:.2em 0 0">The switcher is a small, clean build on top of what you already have — but its whole point is a <b>working
+  dGPU</b>, and right now the driver almost certainly isn't. <b>Do §0 first</b> (or decide the GTX 1060 stays dark and this feature is
+  shelved). Given "off by default, occasional game," the target design is deliberately minimal: a confirmed, logout-aware
+  Integrated⇄Hybrid toggle with a strong "get back to off" affordance — not live per-app juggling.</p>
+</div>
+
+<div class="foot">
+  <p><b>Sources</b> (2026-09-03): supergfxctl (gitlab.com/asus-linux/supergfxctl, archived) · Arch Wiki NVIDIA Optimus / Hybrid graphics / Supergfxctl ·
+  NVIDIA driver README (open modules &amp; dynamic power management) · Arch news (nvidia 590 drops Pascal) ·
+  theo-donacik/supergfxctl-waybar-module · Omarchy (omarchy-toggle-hybrid-gpu, issues #5428/#1776, discussion #5982 cardwire) ·
+  OpenGamingCollective/cardwire · your live <code>pacman -Q</code>, <code>journalctl -k</code>, <code>/proc/cmdline</code>.</p>
+  <p>Companion docs: <code>omarchy-migration-plan.html</code> · <code>migration/decruft-dossier.md</code> §M ·
+  <code>migration/hyprland-ecosystem-audit.html</code>. Everything here is a proposal; nothing has been changed on the system.</p>
+</div>
+
+</div>
+</body>
+</html>

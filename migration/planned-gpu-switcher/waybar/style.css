@@ -1,0 +1,21 @@
+/* waybar — GPU module styling (merge into ~/.config/waybar/style.css).
+   Colors reference your Catppuccin waybar palette; adjust names to your setup.
+   STAGED SKETCH — not deployed. */
+
+#custom-gpu {
+  padding: 0 8px;
+  margin: 0 2px;
+}
+
+/* off — good for battery */
+#custom-gpu.integrated { color: @green; }
+
+/* ON — battery-warning tint so you never forget the dGPU is running */
+#custom-gpu.hybrid {
+  color: @base;
+  background-color: @peach;
+  border-radius: 6px;
+}
+
+#custom-gpu.nomodeset { color: @yellow; }
+#custom-gpu.unknown   { color: @overlay; }

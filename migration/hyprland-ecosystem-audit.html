@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hyprland Ecosystem Audit</title>
+<style>
+  :root{
+    --base:#1e1e2e; --mantle:#181825; --crust:#11111b;
+    --s0:#313244; --s1:#45475a; --s2:#585b70;
+    --text:#cdd6f4; --sub:#a6adc8; --sub2:#9399b2;
+    --mauve:#cba6f7; --blue:#89b4fa; --sapphire:#74c7ec; --teal:#94e2d5;
+    --green:#a6e3a1; --yellow:#f9e2af; --peach:#fab387; --red:#f38ba8; --maroon:#eba0ac;
+    --overlay:#6c7086;
+    --mono:"JetBrainsMono Nerd Font","JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--base);color:var(--text);font-family:var(--sans);
+       line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
+  a{color:var(--blue);text-decoration:none} a:hover{text-decoration:underline}
+  code,kbd{font-family:var(--mono);font-size:.86em}
+  code{background:var(--crust);color:var(--peach);padding:.1em .4em;border-radius:5px;
+       border:1px solid var(--s0);white-space:nowrap}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px 90px}
+
+  header.top{padding:44px 0 26px;border-bottom:1px solid var(--s0);margin-bottom:8px}
+  header.top .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--mauve);margin:0 0 12px}
+  header.top h1{font-size:2.05rem;line-height:1.12;margin:0 0 14px;font-weight:800;letter-spacing:-.02em}
+  header.top h1 .accent{color:var(--mauve)}
+  header.top p.lede{margin:0;color:var(--sub);max-width:76ch;font-size:1.02rem}
+  .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:var(--mono);font-size:.72rem;background:var(--mantle);border:1px solid var(--s0);
+        color:var(--sub);padding:5px 10px;border-radius:999px}
+  .chip b{color:var(--text)}
+
+  .guard{margin:22px 0 6px;background:linear-gradient(180deg,rgba(243,139,168,.09),rgba(243,139,168,.03));
+         border:1px solid rgba(243,139,168,.35);border-left:4px solid var(--red);
+         border-radius:12px;padding:14px 18px}
+  .guard b{color:var(--maroon)}
+  .guard p{margin:.35em 0 0;color:var(--sub);font-size:.92rem}
+
+  nav.jump{position:sticky;top:0;z-index:20;background:rgba(17,17,27,.86);
+      backdrop-filter:blur(9px);border-bottom:1px solid var(--s0);margin:30px -20px 0;
+      padding:11px 20px;display:flex;flex-wrap:wrap;gap:7px}
+  nav.jump a{font-family:var(--mono);font-size:.74rem;padding:5px 11px;border-radius:8px;
+      background:var(--mantle);border:1px solid var(--s0);color:var(--sub)}
+  nav.jump a:hover{color:var(--text);border-color:var(--s2);text-decoration:none}
+
+  h2{font-size:1.4rem;margin:44px 0 6px;letter-spacing:-.01em;scroll-margin-top:58px}
+  h2 .num{font-family:var(--mono);color:var(--mauve);font-size:1rem;margin-right:.5em}
+  h3{font-size:1.02rem;margin:22px 0 4px;color:var(--text)}
+  p{color:var(--sub)} .lead{color:var(--text)}
+
+  /* verdict cards */
+  .verdicts{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:20px 0 4px}
+  .vc{background:var(--mantle);border:1px solid var(--s0);border-radius:12px;padding:15px 16px;border-top:3px solid var(--vc)}
+  .vc .q{font-weight:700;color:var(--text);font-size:.95rem;margin:0 0 6px}
+  .vc .v{font-size:.86rem;color:var(--sub)}
+  .vc .verdict{font-family:var(--mono);font-size:.72rem;font-weight:800;text-transform:uppercase;
+      letter-spacing:.04em;color:var(--vc);display:block;margin-bottom:7px}
+
+  /* pills */
+  .pill{display:inline-block;font-family:var(--mono);font-size:.66rem;font-weight:800;text-transform:uppercase;
+      letter-spacing:.04em;padding:.13rem .5rem;border-radius:20px;border:1px solid currentColor;white-space:nowrap;vertical-align:middle}
+  .p-keep{color:var(--green)} .p-add{color:var(--blue)} .p-skip{color:var(--overlay)}
+  .p-fix{color:var(--yellow)} .p-open{color:var(--peach)} .p-flag{color:var(--red)}
+
+  table{width:100%;border-collapse:collapse;margin:14px 0 6px;font-size:.87rem}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--s0);vertical-align:top}
+  th{font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--sub2);font-weight:700}
+  td.n{font-family:var(--mono);color:var(--text);white-space:nowrap}
+  tr:hover td{background:rgba(203,166,247,.04)}
+  .tbl-wrap{overflow-x:auto;border:1px solid var(--s0);border-radius:12px;margin:14px 0}
+  .tbl-wrap table{margin:0} .tbl-wrap td,.tbl-wrap th{padding:9px 13px}
+
+  .box{background:var(--mantle);border:1px solid var(--s0);border-left:3px solid var(--tone,var(--mauve));
+       border-radius:10px;padding:13px 16px;margin:14px 0}
+  .box.good{--tone:var(--green)} .box.warn{--tone:var(--yellow)} .box.bad{--tone:var(--red)} .box.info{--tone:var(--blue)}
+  .box b{color:var(--text)}
+  .box .h{font-weight:700;color:var(--text);margin-bottom:4px;display:flex;gap:8px;align-items:center}
+
+  ul.tight{margin:.4em 0;padding-left:1.2em} ul.tight li{margin:.28em 0;color:var(--sub)}
+  ul.tight li b, li strong{color:var(--text)}
+  .src{font-family:var(--mono);font-size:.7rem;color:var(--sub2)}
+  .foot{margin-top:50px;padding-top:18px;border-top:1px solid var(--s0);color:var(--sub2);font-size:.82rem}
+  .kbd-note{font-size:.8rem;color:var(--sub2);font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Omarchy migration · Arch + Hyprland planning</p>
+  <h1>Hyprland <span class="accent">ecosystem audit</span> — plugins, hypr*, & your config</h1>
+  <p class="lede">Where the 2026 Hyprland ecosystem stands, measured against your live setup, with a concrete
+  keep / add / skip / fix list. Headline question answered: <b>do you still need the "split screen" plugin from hyprpm?</b>
+  Research current as of 2026-09-03; every claim cross-checked against your running config and log.</p>
+  <div class="meta">
+    <span class="chip">Hyprland <b>0.56.2</b> · latest stable</span>
+    <span class="chip">Config: <b>hyprland.lua</b> (authoritative)</span>
+    <span class="chip">Plugins loaded: <b>0 hyprpm</b></span>
+    <span class="chip"><b>split-monitor-workspaces</b> v0.56.0 · Lua pkg</span>
+    <span class="chip">Layout: <b>dwindle</b> · dual-monitor</span>
+  </div>
+</header>
+
+<div class="guard">
+  <b>⛔ Planning only — nothing here is implemented.</b>
+  <p>This is analysis + a decision menu. No live Hyprland config was touched. Every "fix" and "add" below is a
+  <i>proposal</i> that waits for an explicit go-ahead, per the migration guardrails (VM-first, per-item approval).</p>
+</div>
+
+<nav class="jump">
+  <a href="#tldr">TL;DR</a>
+  <a href="#split">The split-monitor answer</a>
+  <a href="#state">Your current state</a>
+  <a href="#fix">Config hygiene</a>
+  <a href="#tools">Ecosystem tools</a>
+  <a href="#plugins">Plugins: keep/skip</a>
+  <a href="#clock">The hyprlang clock</a>
+  <a href="#flag">Flagged</a>
+  <a href="#next">Next actions</a>
+</nav>
+
+<!-- ─────────── TL;DR ─────────── -->
+<h2 id="tldr"><span class="num">§1</span>TL;DR — five verdicts</h2>
+<div class="verdicts">
+  <div class="vc" style="--vc:var(--green)">
+    <span class="verdict">Keep as-is</span>
+    <p class="q">Split-monitor plugin</p>
+    <p class="v">Still needed (no native equivalent in 0.56), and you're already on the correct modern
+    <b>Lua-package</b> path — not hyprpm. Best practice. Don't switch.</p>
+  </div>
+  <div class="vc" style="--vc:var(--green)">
+    <span class="verdict">You're current</span>
+    <p class="q">Core + syntax</p>
+    <p class="v">0.56.2 is the latest stable. Your config already uses the modern forms
+    (unified <code>windowrule</code>, <code>gesture =</code>, nested <code>shadow{}</code>). Nothing deprecated in use.</p>
+  </div>
+  <div class="vc" style="--vc:var(--blue)">
+    <span class="verdict">Worth adding</span>
+    <p class="q">hyprsunset + hyprpicker</p>
+    <p class="v">Two first-party tools, no ABI tax: blue-light/temp for the laptop, and a color picker that
+    pairs with your Catppuccin work.</p>
+  </div>
+  <div class="vc" style="--vc:var(--yellow)">
+    <span class="verdict">Cleanup</span>
+    <p class="q">Dead config + stale docs</p>
+    <p class="v"><code>hyprland.conf</code> is silently ignored (the only place your hyprpm cruft lives);
+    <code>CLAUDE.md</code>/<code>README.md</code> still describe an hyprpm workflow you no longer use.</p>
+  </div>
+  <div class="vc" style="--vc:var(--red)">
+    <span class="verdict">Resilience + flag</span>
+    <p class="q">Lua safety + an EGL error</p>
+    <p class="v">A Lua error aborts your <i>whole</i> config — worth a <code>pcall</code> guard around the plugin.
+    Also: a recurring <code>EGL_BAD_ALLOC</code> in the log to diagnose separately.</p>
+  </div>
+</div>
+
+<!-- ─────────── SPLIT MONITOR ─────────── -->
+<h2 id="split"><span class="num">§2</span>The headline question: do you still need the "split-screen" plugin from hyprpm?</h2>
+
+<div class="box info">
+  <div class="h">Three-part answer</div>
+  <p style="margin:.2em 0 0">
+  <b>(1) It isn't from hyprpm anymore.</b> Your log confirms it loads as a Lua <code>require()</code> package, not a
+  compiled <code>.so</code>. The hyprpm bits (<code>permission = …hyprpm…</code>, <code>exec-once = hyprpm reload -n</code>)
+  live only in the dead <code>hyprland.conf</code> — you have <b>zero</b> hyprpm plugins.<br>
+  <b>(2) Yes, you still need the plugin's job.</b> Hyprland 0.56 <i>still</i> has no native "each monitor owns its own
+  independent workspaces 1–10." Native workspace rules only do <i>static</i> binding
+  (<code>workspace = 1, monitor:eDP-1</code>) — not the dynamic per-monitor sets you rely on.<br>
+  <b>(3) You're on the right version of it.</b> Keep it exactly as-is.</p>
+</div>
+
+<h3>What "split-monitor-workspaces" actually does — and its status</h3>
+<ul class="tight">
+  <li>Gives each monitor its <b>own</b> set of workspaces (key <kbd>ALT+1</kbd> acts on the focused monitor's set, independently numbered). This is <b>workspace isolation</b>, not window "split-screen" tiling.</li>
+  <li><b>Alive &amp; maintained</b>: repo moved <code>Duckonaut → zjeffer/split-monitor-workspaces</code> (old URL 301-redirects). 788★, last commit <b>2026-08-23</b>, <code>release/0.56.x</code> branch tracks Hyprland 0.56.x. Your <code>v0.56.0</code> matches your 0.56.2 correctly.</li>
+  <li><b>You're on the surviving path.</b> It's now a pure-Lua package; the old C++ <code>.so</code> is deprecated and <b>dropped at Hyprland 0.57.0</b>. You already migrated off it — future-proof.</li>
+  <li><b>hy3 interop</b>: it auto-detects hy3 and uses hy3's dispatchers — so if you ever adopt manual tiling, this is the safe pairing.</li>
+</ul>
+
+<h3>Alternative considered — <code>hyprsplit</code> (shezdy)</h3>
+<p>Same job, also a Lua library, actively maintained (314★). Keys workspaces by monitor ID, recovers windows on
+monitor hotplug, has a swap-all-windows-between-monitors dispatcher. <b>No reason to switch</b>: you're on the more
+popular, hy3-compatible option. Only reconsider if you hit multi-monitor hotplug bugs.</p>
+
+<div class="box good">
+  <div class="h">Verdict <span class="pill p-keep">keep as-is</span></div>
+  <p style="margin:.2em 0 0">Keep <code>split-monitor-workspaces</code> on <code>release/0.56.x</code>, loaded as a Lua package.
+  On a major Hyprland bump (e.g. 0.57), the only maintenance is re-pointing that one branch — a one-line pull, not an ABI rebuild.
+  This is the <b>lowest-maintenance, highest-correctness</b> setup available; the whole "should I still run this?" worry is a non-issue.</p>
+</div>
+
+<!-- ─────────── CURRENT STATE ─────────── -->
+<h2 id="state"><span class="num">§3</span>Your current state (verified from the running session)</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Thing</th><th>State</th><th>Reading</th></tr>
+  <tr><td class="n">Hyprland</td><td>0.56.2 (built 2026-08-05)</td><td><span class="pill p-keep">latest</span> nothing to chase; 0.57 ~20% done, unreleased</td></tr>
+  <tr><td class="n">Active config</td><td><code>hyprland.lua</code> loads <i>instead of</i> <code>hyprland.conf</code> (log-confirmed)</td><td><span class="pill p-keep">modern</span> ahead of the hyprlang deprecation</td></tr>
+  <tr><td class="n">Plugins (hyprpm)</td><td>none loaded</td><td><span class="pill p-keep">good</span> zero ABI-rebuild exposure</td></tr>
+  <tr><td class="n">split-monitor-workspaces</td><td>v0.56.0, Lua package via <code>require</code></td><td><span class="pill p-keep">keep</span> correct path</td></tr>
+  <tr><td class="n">hyprlock / hypridle / hyprpaper</td><td>0.9.6 / 0.1.8 / 0.8.4</td><td><span class="pill p-keep">current</span> configs valid</td></tr>
+  <tr><td class="n">hyprshot / hyprpolkitagent</td><td>installed &amp; wired</td><td><span class="pill p-keep">keep</span></td></tr>
+  <tr><td class="n">New ecosystem libs</td><td>hyprtoolkit, hyprwire, hyprland-guiutils, hyprland-qt-support</td><td>transitive deps of the Qt→native rewrite; not yours to manage</td></tr>
+  <tr><td class="n">Not installed</td><td>hyprsunset, hyprpicker</td><td><span class="pill p-add">consider</span> see §5</td></tr>
+</table></div>
+
+<!-- ─────────── CONFIG HYGIENE ─────────── -->
+<h2 id="fix"><span class="num">§4</span>Config hygiene &amp; correctness (all proposals, gated)</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>#</th><th>Finding</th><th>Why it matters</th><th>Proposed</th></tr>
+  <tr>
+    <td class="n">H1</td>
+    <td><b>Dead <code>hyprland.conf</code></b> (17 KB) is silently ignored — and holds the <i>only</i> live-looking hyprpm references + config drift (<code>keep_focused=0</code> vs the Lua's <code>true</code>).</td>
+    <td>Misleading: reads like the active config but isn't. Also on borrowed time (hyprlang dropped ~0.57/0.58).</td>
+    <td><span class="pill p-open">your call</span> keep as marked rollback · move to <code>migration/</code> · or delete</td>
+  </tr>
+  <tr>
+    <td class="n">H2</td>
+    <td><b>Guard the plugin <code>require</code> with <code>pcall</code></b> in <code>hyprland.lua</code>.</td>
+    <td>A Lua runtime error <b>aborts the rest of the file</b> — if the plugin breaks on a Hyprland bump, you'd lose <i>all</i> keybinds, not just per-monitor workspaces.</td>
+    <td><span class="pill p-fix">resilience</span> wrap require+setup; on failure, fall back to plain <code>workspace</code> binds</td>
+  </tr>
+  <tr>
+    <td class="n">H3</td>
+    <td><b>Stale docs</b>: <code>CLAUDE.md</code> says "split-monitor via hyprpm" &amp; "locks after 30 min"; <code>README.md</code> has a whole hyprpm section.</td>
+    <td>Docs describe a workflow you no longer run (Lua package, not hyprpm; actual idle is dim@10/lock@15/suspend@20).</td>
+    <td><span class="pill p-fix">doc fix</span> rewrite to the Lua-package reality</td>
+  </tr>
+  <tr>
+    <td class="n">H4</td>
+    <td><b><code>keep_focused</code> drift</b> — Lua uses <code>true</code>, dead conf had <code>0</code>.</td>
+    <td>Cosmetic (Lua wins), but pick intentionally so behaviour is documented.</td>
+    <td><span class="pill p-fix">confirm</span> decide focus-follows-monitor on/off</td>
+  </tr>
+  <tr>
+    <td class="n">H5</td>
+    <td><b>De-cruft note</b>: <code>hyprland-guiutils</code> is a <i>hard dependency of the <code>hyprland</code> package</i>.</td>
+    <td>Must never be proposed for removal in the package de-cruft pass.</td>
+    <td><span class="pill p-keep">record</span> pin as "keep — hard dep"</td>
+  </tr>
+</table></div>
+
+<!-- ─────────── ECOSYSTEM TOOLS ─────────── -->
+<h2 id="tools"><span class="num">§5</span>The hypr* ecosystem — have / add / skip</h2>
+
+<h3>What you have — all current, keep</h3>
+<ul class="tight">
+  <li><b>hyprpaper 0.8.4</b> — per-monitor + IPC; still the right default (swww only for animated, mpvpaper for video). Your script-driven static setup needs nothing newer.</li>
+  <li><b>hyprlock 0.9.6</b> — your fingerprint-via-libfprint setup is the mature path; Catppuccin conf fully valid. <span class="kbd-note">Gotcha unchanged: no conf file → it refuses to lock, so keep the conf present.</span></li>
+  <li><b>hypridle 0.1.8</b> — respects app idle-inhibitors (video/Steam); unchanged in shape.</li>
+  <li><b>Libraries</b> (nothing to manage): hyprutils, hyprlang, hyprgraphics, hyprcursor, hyprwayland-scanner + the new hyprtoolkit / hyprwire / hyprland-qt-support / hyprland-guiutils.</li>
+</ul>
+
+<h3>Worth adding <span class="pill p-add">consider</span></h3>
+<div class="tbl-wrap"><table>
+  <tr><th>Tool</th><th>Value for you</th><th>Cost / note</th></tr>
+  <tr><td class="n">hyprsunset 0.4.0</td><td>Blue-light / color-temperature — genuinely useful on a laptop. First-party, not a plugin (no ABI tax). Not captured in screenshots; doubles as software gamma/dim.</td><td>No built-in sunrise/sunset — you drive it via a systemd timer or script. <b>Could hook into the Catppuccin switcher</b> (warm at night).</td></tr>
+  <tr><td class="n">hyprpicker 0.4.7</td><td>Freeze-screen color picker — launch, click, hex copied (<code>-a</code>). Pairs directly with your theming work.</td><td>Tiny, zero maintenance. Easy yes.</td></tr>
+</table></div>
+
+<div class="box good">
+  <div class="h">Validated, not gaps</div>
+  <p style="margin:.2em 0 0">hyprwm ships <b>no</b> first-party notification, clipboard, or annotation tool — the wiki points at
+  third parties. So your <b>swaync</b> (notifications) + <b>cliphist</b> (clipboard) + <b>hyprshot</b> (capture) are the
+  correct choices, not something you're missing. Add <b>satty</b>/<b>swappy</b> only if you want screenshot annotation.</p>
+</div>
+
+<!-- ─────────── PLUGINS ─────────── -->
+<h2 id="plugins"><span class="num">§6</span>The plugin landscape — what's worth the rebuild tax</h2>
+<p class="lead">The core trade-off: <b>Lua packages</b> (like your split-monitor) survive Hyprland updates; <b>hyprpm <code>.so</code>
+plugins</b> are ABI-locked and must be rebuilt via <code>hyprpm update</code> on <i>every</i> Hyprland upgrade — and a plugin
+that lags a release can <b>stall your whole upgrade</b>. On a stability/dotfiles path, cosmetic <code>.so</code> plugins are a bad trade.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Plugin</th><th>Does</th><th>Type</th><th>For you</th></tr>
+  <tr><td class="n">split-monitor-workspaces</td><td>per-monitor workspaces</td><td>Lua</td><td><span class="pill p-keep">keep</span> already yours, low-maint</td></tr>
+  <tr><td class="n">hyprexpo</td><td>workspace overview / expo gesture</td><td>.so</td><td><span class="pill p-open">maybe</span> the one defensible <code>.so</code> for dual-monitor — but your future Quickshell bar may add its own overview, so <b>defer</b></td></tr>
+  <tr><td class="n">hy3</td><td>i3/sway manual tiling + real tabs/splits</td><td>.so</td><td><span class="pill p-skip">skip</span> only if abandoning dwindle; big muscle-memory change</td></tr>
+  <tr><td class="n">hyprscrolling</td><td>PaperWM scrolling layout (official)</td><td>.so</td><td><span class="pill p-skip">skip</span> only if you want scrolling; note: this is what <b>Omarchy</b> uses</td></tr>
+  <tr><td class="n">hyprbars</td><td>window title bars + buttons</td><td>.so</td><td><span class="pill p-skip">skip</span> cosmetic, adds rebuild tax</td></tr>
+  <tr><td class="n">hyprtrails</td><td>cursor/window motion trails</td><td>.so</td><td><span class="pill p-skip">skip</span> pure eye-candy</td></tr>
+  <tr><td class="n">dynamic-cursors</td><td>cursor rotates/stretches (728★)</td><td>.so</td><td><span class="pill p-skip">skip</span> eye-candy with a rebuild tax</td></tr>
+  <tr><td class="n">borders-plus-plus / hyprfocus</td><td>extra borders / focus flash</td><td>.so</td><td><span class="pill p-skip">skip</span> marginal cosmetic</td></tr>
+  <tr><td class="n">hyprgrass</td><td>touchscreen gestures</td><td>.so</td><td><span class="pill p-skip">n/a</span> no touchscreen</td></tr>
+  <tr><td class="n">csgo-vulkan-fix</td><td>CS2 resolution fix</td><td>.so</td><td><span class="pill p-skip">n/a</span> game-specific</td></tr>
+</table></div>
+<p class="src">⚠ Abandoned — avoid: <code>dawsers/hyprscroller</code> (archived Apr 2025) and its <code>cpiber</code> fork (archived Feb 2026). The PaperWM layer moved to official <code>hyprscrolling</code>.</p>
+
+<div class="box warn">
+  <div class="h">Plugin philosophy for a stability path</div>
+  <p style="margin:.2em 0 0">Keep exactly what you have. Prefer <b>Lua-package</b> plugins over <code>.so</code>. Only take on a heavyweight
+  <code>.so</code> (hyprexpo/hy3/hyprscrolling) when it changes your actual <i>workflow</i>, never for looks — and rebuild them with
+  <code>hyprpm update</code> on every Hyprland bump. Resist cosmetic creep.</p>
+</div>
+
+<!-- ─────────── THE CLOCK ─────────── -->
+<h2 id="clock"><span class="num">§7</span>The real clock: hyprlang → Lua</h2>
+<p>The version number isn't the pressure — the config <i>language</i> is. hyprlang (<code>.conf</code>) was deprecated in 0.55
+and is expected to be <b>dropped around 0.57/0.58</b>; new features land in <b>Lua only</b>. You've already migrated, so you're
+ahead of the curve. The flip side:</p>
+<ul class="tight">
+  <li>The Lua <code>hl.*</code> API is <b>young and still changing</b> with no stability guarantee — 0.56 alone added a batch of helpers. Expect occasional breakage across major releases; keep an eye on release notes.</li>
+  <li>Because a Lua error aborts the whole file (see H2), a rollback path matters — which is the honest argument for keeping <code>hyprland.conf</code> around, but clearly <b>marked as dead/rollback</b>, not looking live.</li>
+  <li>Net: your migration decision was correct and early. The maintenance shifts from "chase deprecations" to "occasionally track Lua-API changes."</li>
+</ul>
+
+<!-- ─────────── FLAGGED ─────────── -->
+<h2 id="flag"><span class="num">§8</span>Flagged — separate from this planning</h2>
+<div class="box good">
+  <div class="h"><span class="pill p-keep">diagnosed</span> The EGL error is benign log noise — no action required</div>
+  <p style="margin:.2em 0 0">The log repeats
+  <code>aquamarine [EGL] eglQueryDevicesEXT … EGL_BAD_ALLOC … Failed to allocate device list</code> (6×/boot).
+  <b>Root cause, proven with a compiled EGL probe:</b> your laptop is hybrid Intel iGPU + NVIDIA dGPU, currently in
+  <b>supergfx <code>Integrated</code></b> (dGPU off, no <code>nvidia</code> kernel module, only Intel on the bus).
+  <code>nvidia-utils</code> registers the NVIDIA EGL vendor (<code>10_nvidia.json</code>); glvnd's <code>libEGL</code>
+  dispatches <code>eglQueryDevicesEXT</code> to <i>every</i> vendor, and the NVIDIA ICD — GPU powered off — fails to
+  allocate its device list and reports <code>BAD_ALLOC</code> <b>through the <code>EGL_KHR_debug</code> callback aquamarine
+  registers</b>. The aggregate call still succeeds with mesa's 2 devices; Hyprland renders on Intel <code>renderD128</code>.
+  <b>Zero functional impact.</b></p>
+  <p style="margin:.5em 0 0"><b>Options:</b> (1) <b>leave it</b> — cosmetic, recommended. (2) Silence it <i>only in
+  Integrated mode</i> via <code>__EGL_VENDOR_LIBRARY_FILENAMES=…/50_mesa.json</code> in the session env — but it
+  <b>must be conditional on <code>supergfxctl -g</code></b> (forcing mesa-only would hide the NVIDIA EGL device and break
+  dGPU prime-offload in Hybrid mode), so it's a small script, not a hard-coded line. Repro/fix verified; probe is throwaway.</p>
+</div>
+
+<!-- ─────────── NEXT ─────────── -->
+<h2 id="next"><span class="num">§9</span>Proposed next actions — pick, don't assume</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>#</th><th>Action</th><th>Risk</th><th>Gate</th></tr>
+  <tr><td class="n">1</td><td><b>Nothing on the plugin</b> — keep split-monitor-workspaces as-is.</td><td>none</td><td>decided ✓</td></tr>
+  <tr><td class="n">2</td><td>Add <b>hyprpicker</b> (color picker).</td><td>trivial, additive</td><td>easy yes — your call</td></tr>
+  <tr><td class="n">3</td><td>Add <b>hyprsunset</b> + a schedule; optionally hook the Catppuccin switcher.</td><td>additive; needs a timer</td><td>your call · VM or additive</td></tr>
+  <tr><td class="n">4</td><td><b>Resilience</b>: <code>pcall</code>-guard the plugin require (H2).</td><td>low, editing live Lua</td><td>needs implement go-ahead</td></tr>
+  <tr><td class="n">5</td><td><b>Docs + dead config</b>: refresh CLAUDE.md/README; decide fate of <code>hyprland.conf</code> (H1/H3).</td><td>docs only / your call</td><td>your call</td></tr>
+  <tr><td class="n">6</td><td><b>Diagnose</b> the EGL_BAD_ALLOC log error (§8).</td><td>investigation</td><td>separate task</td></tr>
+</table></div>
+
+<div class="foot">
+  <p><b>Sources</b> (2026-09-03): wiki.hypr.land · github.com/hyprwm/Hyprland (releases, milestone 12) ·
+  github.com/zjeffer/split-monitor-workspaces · github.com/shezdy/hyprsplit · github.com/outfoxxed/hy3 ·
+  github.com/hyprwm/hyprland-plugins · hypr.land/plugins · your live <code>hyprland.log</code> &amp; <code>pacman -Q</code>.</p>
+  <p>Companion docs: <code>omarchy-migration-plan.html</code> (source of truth) · <code>migration/decruft-dossier.md</code> §L ·
+  <code>migration/omarchy-feature-migration-map.html</code>. Everything above is a proposal; no live Hyprland config has been changed.</p>
+</div>
+
+</div>
+</body>
+</html>

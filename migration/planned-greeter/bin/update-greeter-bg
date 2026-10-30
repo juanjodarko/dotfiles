@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# update-greeter-bg <wallpaper-path> [WxH]
+# Render a blurred copy of the wallpaper into the greeter's world-readable dir,
+# approximating hyprlock's look. Runs as root (via pkexec) because it writes
+# under /usr/share. Intended: /usr/local/bin/update-greeter-bg
+#
+# Quality notes:
+#  - cover-scale to the target resolution (default 2560x1440) with lanczos + crop,
+#    so the greeter never up-scales a small image (that read as "pixelated").
+#  - blur sigma scales with the height, so the blur amount is consistent whatever
+#    the source resolution.
+#  - gradfun debands the smooth blurred gradients (8-bit PNG otherwise blocks).
+#
+# hyprlock reference: blur_passes=2, blur_size=4, brightness=0.8172, contrast=0.8916.
+set -euo pipefail
+
+WP="${1:?usage: update-greeter-bg <wallpaper-path> [WxH]}"
+RES="${2:-}"
+[ -r "$WP" ] || { echo "wallpaper not readable: $WP" >&2; exit 1; }
+
+OUT_DIR="/usr/share/backgrounds/greeter"
+OUT="$OUT_DIR/current-blur.png"
+mkdir -p "$OUT_DIR"
+
+# target resolution: caller-provided WxH, else 2560x1440 (down-scaled by the
+# greeter on smaller screens — downscaling stays crisp; upscaling is what pixelates)
+if [[ $RES =~ ^[0-9]+x[0-9]+$ ]]; then
+  W="${RES%x*}"; H="${RES#*x}"
+else
+  W=2560; H=1440
+fi
+# Blur strength scales with the height (constant look across resolutions).
+# Divisor tunes it: smaller = blurrier.  H/16 ≈ 67 at 1080p / 90 at 1440p (heavy,
+# frosted-glass); H/24 ≈ 45 (lighter). Override with $GREETER_BLUR_SIGMA.
+SIGMA="${GREETER_BLUR_SIGMA:-$(( H / 16 ))}"; (( SIGMA < 12 )) && SIGMA=12
+
+ffmpeg -y -i "$WP" -vf \
+  "scale=${W}:${H}:force_original_aspect_ratio=increase:flags=lanczos,crop=${W}:${H},gblur=sigma=${SIGMA},eq=brightness=-0.09:contrast=0.90:saturation=1.08,gradfun=strength=0.9:radius=16,format=rgb24" \
+  -frames:v 1 "$OUT" 2>/dev/null
+
+chmod 644 "$OUT"
+echo "wrote $OUT (${W}x${H}, sigma=${SIGMA})"

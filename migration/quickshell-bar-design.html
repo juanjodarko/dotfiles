@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quickshell Bar Design</title>
+<style>
+  :root{
+    --base:#1e1e2e; --mantle:#181825; --crust:#11111b;
+    --s0:#313244; --s1:#45475a; --s2:#585b70;
+    --text:#cdd6f4; --sub:#a6adc8; --sub2:#9399b2;
+    --mauve:#cba6f7; --blue:#89b4fa; --sapphire:#74c7ec; --teal:#94e2d5;
+    --green:#a6e3a1; --yellow:#f9e2af; --peach:#fab387; --red:#f38ba8; --maroon:#eba0ac;
+    --overlay:#6c7086;
+    --mono:"JetBrainsMono Nerd Font","JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--base);color:var(--text);font-family:var(--sans);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
+  a{color:var(--blue);text-decoration:none} a:hover{text-decoration:underline}
+  code,kbd{font-family:var(--mono);font-size:.86em}
+  code{background:var(--crust);color:var(--peach);padding:.1em .4em;border-radius:5px;border:1px solid var(--s0);white-space:nowrap}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 20px 90px}
+  header.top{padding:44px 0 24px;border-bottom:1px solid var(--s0)}
+  header.top .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--mauve);margin:0 0 12px}
+  header.top h1{font-size:2rem;line-height:1.12;margin:0 0 14px;font-weight:800;letter-spacing:-.02em}
+  header.top h1 .accent{color:var(--mauve)}
+  header.top p.lede{margin:0;color:var(--sub);max-width:78ch;font-size:1.02rem}
+  .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:var(--mono);font-size:.72rem;background:var(--mantle);border:1px solid var(--s0);color:var(--sub);padding:5px 10px;border-radius:999px}
+  .chip b{color:var(--text)}
+  .guard{margin:22px 0 6px;background:linear-gradient(180deg,rgba(243,139,168,.09),rgba(243,139,168,.03));border:1px solid rgba(243,139,168,.35);border-left:4px solid var(--red);border-radius:12px;padding:14px 18px}
+  .guard b{color:var(--maroon)} .guard p{margin:.35em 0 0;color:var(--sub);font-size:.92rem}
+  nav.jump{position:sticky;top:0;z-index:20;background:rgba(17,17,27,.86);backdrop-filter:blur(9px);border-bottom:1px solid var(--s0);margin:26px -20px 0;padding:11px 20px;display:flex;flex-wrap:wrap;gap:7px}
+  nav.jump a{font-family:var(--mono);font-size:.74rem;padding:5px 11px;border-radius:8px;background:var(--mantle);border:1px solid var(--s0);color:var(--sub)}
+  nav.jump a:hover{color:var(--text);border-color:var(--s2);text-decoration:none}
+  h2{font-size:1.4rem;margin:44px 0 6px;letter-spacing:-.01em;scroll-margin-top:58px}
+  h2 .num{font-family:var(--mono);color:var(--mauve);font-size:1rem;margin-right:.5em}
+  h3{font-size:1.02rem;margin:22px 0 4px}
+  p{color:var(--sub)} .lead{color:var(--text)}
+  table{width:100%;border-collapse:collapse;margin:0;font-size:.86rem}
+  th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--s0);vertical-align:top}
+  th{font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--sub2);font-weight:700}
+  td.n{font-family:var(--mono);color:var(--text);white-space:nowrap}
+  tr:hover td{background:rgba(203,166,247,.04)}
+  .tbl-wrap{overflow-x:auto;border:1px solid var(--s0);border-radius:12px;margin:14px 0}
+  .box{background:var(--mantle);border:1px solid var(--s0);border-left:3px solid var(--tone,var(--mauve));border-radius:10px;padding:13px 16px;margin:14px 0}
+  .box.good{--tone:var(--green)} .box.warn{--tone:var(--yellow)} .box.bad{--tone:var(--red)} .box.info{--tone:var(--blue)}
+  .box .h{font-weight:700;color:var(--text);margin-bottom:4px;display:flex;gap:8px;align-items:center}
+  .box b{color:var(--text)}
+  ul.tight{margin:.4em 0;padding-left:1.2em} ul.tight li{margin:.3em 0;color:var(--sub)} ul.tight li b,li strong{color:var(--text)}
+  .pill{display:inline-block;font-family:var(--mono);font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:.12rem .48rem;border-radius:20px;border:1px solid currentColor;white-space:nowrap}
+  .p-svc{color:var(--green)} .p-script{color:var(--peach)} .p-new{color:var(--blue)} .p-diy{color:var(--yellow)}
+  pre.code{font-family:var(--mono);font-size:.79rem;background:var(--crust);border:1px solid var(--s0);border-radius:10px;padding:13px 15px;color:var(--sub);overflow-x:auto;margin:12px 0;line-height:1.5}
+  pre.code .k{color:var(--mauve)} pre.code .s{color:var(--green)} pre.code .c{color:var(--overlay);font-style:italic} pre.code .t{color:var(--blue)} pre.code .f{color:var(--yellow)}
+  .phase{background:var(--mantle);border:1px solid var(--s0);border-radius:12px;padding:4px 16px 12px;margin:12px 0;border-left:3px solid var(--mauve)}
+  .phase .ph-h{font-weight:800;color:var(--text);margin:12px 0 2px;display:flex;gap:10px;align-items:baseline}
+  .phase .ph-h .tag{font-family:var(--mono);font-size:.7rem;background:var(--mauve);color:var(--crust);padding:2px 8px;border-radius:6px;font-weight:800}
+  .foot{margin-top:50px;padding-top:18px;border-top:1px solid var(--s0);color:var(--sub2);font-size:.82rem}
+  .tree{font-family:var(--mono);font-size:.8rem;background:var(--crust);border:1px solid var(--s0);border-radius:10px;padding:14px 16px;color:var(--sub);overflow-x:auto;white-space:pre;margin:12px 0}
+  .tree b{color:var(--text)} .tree .cm{color:var(--overlay)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Omarchy migration · the bar track · §K north star</p>
+  <h1>Standalone <span class="accent">Quickshell bar</span> — design</h1>
+  <p class="lede">A from-scratch top bar on Quickshell (QML) for Hyprland — <em>not</em> omarchy-shell — reaching parity with
+  your current waybar, driven by your central Catppuccin switcher, with the GPU-mode toggle as its first custom widget.
+  Thin QML over your existing scripts + Quickshell's built-in services. Research current to 2026-09-03.</p>
+  <div class="meta">
+    <span class="chip">Quickshell <b>0.3.1</b> · Arch <code>extra</code></span>
+    <span class="chip">Qt6 · command <code>qs</code> · hot-reload</span>
+    <span class="chip">dual-monitor eDP-1 + DP-1</span>
+    <span class="chip">split-monitor-workspaces</span>
+    <span class="chip">keeps swaync + Vicinae</span>
+  </div>
+</header>
+
+<div class="guard">
+  <b>⛔ Planning / design only.</b>
+  <p>No config written. The bar is <b>additive and reversible</b> — it's a separate <code>~/.config/quickshell/</code> that you
+  launch with <code>qs</code>; <b>waybar stays the daily driver until this reaches parity</b>. Build it on a branch, keep waybar
+  as the instant fallback (<code>killall qs; waybar &amp;</code>). VM optional; low risk since nothing replaces waybar until you say so.</p>
+</div>
+
+<nav class="jump">
+  <a href="#why">Why Quickshell</a>
+  <a href="#stack">Stack &amp; launch</a>
+  <a href="#arch">Architecture</a>
+  <a href="#theme">Live theming</a>
+  <a href="#plugins">Plugins &amp; multi-user</a>
+  <a href="#modules">Widget catalog</a>
+  <a href="#ws">Per-monitor workspaces</a>
+  <a href="#crib">Crib &amp; licenses</a>
+  <a href="#roadmap">Build phases</a>
+  <a href="#risks">Risks</a>
+</nav>
+
+<!-- WHY -->
+<h2 id="why"><span class="num">§1</span>Why Quickshell, and what we're building</h2>
+<p class="lead">The whole ricing scene consolidated onto Quickshell in 2025–26 — <code>end-4/dots-hyprland</code> migrated off AGS to it,
+the Fabric-based <code>Ax-Shell</code> is archived. It's a <b>QML toolkit for Wayland shells</b>: you declare windows, widgets and
+OS services as a QML tree; it hot-reloads on save. That's the right foundation for the §K goal — our own bar with
+<b>switcher-driven theming</b> and (later) <b>TUI integrations</b>, none of Omarchy's coupling.</p>
+<ul class="tight">
+  <li><b>Target:</b> feature-parity with your waybar (~20 modules), <b>+ the GPU-mode switcher</b> as the first custom widget.</li>
+  <li><b>Philosophy (same as your theme switcher):</b> thin QML frontends over <b>your existing scripts</b> + Quickshell's
+  <b>built-in service singletons</b>. Little new backend code.</li>
+  <li><b>Keep what works:</b> swaync (notifications), Vicinae (launcher), hyprlock/hypridle — the bar does <em>not</em> absorb them.</li>
+</ul>
+
+<!-- STACK -->
+<h2 id="stack"><span class="num">§2</span>Stack &amp; launch</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Thing</th><th>Value</th></tr>
+  <tr><td class="n">Version</td><td><b>Quickshell 0.3.1</b> — in Arch <code>extra</code>: <code>sudo pacman -S quickshell</code> (no AUR needed). Qt 6.6+, C++20.</td></tr>
+  <tr><td class="n">Do NOT use</td><td><code>quickshell-git</code> unless you want bleeding edge — it <b>breaks on every Qt ABI bump</b> and must be rebuilt. The repo package is the stable choice.</td></tr>
+  <tr><td class="n">Config</td><td><code>~/.config/quickshell/shell.qml</code> (a stow package: <code>quickshell/.config/quickshell/</code>). Named configs via <code>qs -c &lt;name&gt;</code>.</td></tr>
+  <tr><td class="n">Run</td><td>Command is <code>qs</code>. Dev loop: <code>killall waybar &amp;&amp; qs</code>; revert: <code>killall qs &amp;&amp; waybar &amp;</code>. Once parity's proven, swap the Hyprland <code>exec-once</code>.</td></tr>
+  <tr><td class="n">Hot-reload</td><td>Live-reloads on file save; a singleton registry persists state across reloads. Fast dev loop.</td></tr>
+</table></div>
+
+<!-- ARCHITECTURE -->
+<h2 id="arch"><span class="num">§3</span>Architecture — one bar per monitor</h2>
+<p>Entry is a <code>Scope</code> holding shared singletons/processes, with a <code>Variants</code> over <code>Quickshell.screens</code> that
+instantiates one <code>PanelWindow</code> (layer-shell bar) per monitor — auto-created/destroyed on hotplug. Each bar binds to its
+Hyprland monitor via <code>Hyprland.monitorFor(modelData)</code>.</p>
+<pre class="code"><span class="c">// shell.qml — the skeleton</span>
+<span class="k">import</span> Quickshell
+<span class="k">import</span> Quickshell.Hyprland
+<span class="k">import</span> QtQuick
+
+Scope {
+  <span class="c">// shared, NOT per-monitor: put Timers / Process readers / service refs here</span>
+  Variants {
+    model: Quickshell.screens
+    PanelWindow {
+      required property var modelData              <span class="c">// the ShellScreen</span>
+      screen: modelData
+      readonly property HyprlandMonitor monitor: Hyprland.monitorFor(modelData)
+      anchors { top: <span class="t">true</span>; left: <span class="t">true</span>; right: <span class="t">true</span> }   <span class="c">// full-width top bar</span>
+      implicitHeight: <span class="t">32</span>
+      color: Theme.base                            <span class="c">// live-themed (§4)</span>
+      RowLayout { anchors.fill: parent; anchors.margins: <span class="t">8</span>
+        Workspaces { barMonitor: monitor }         <span class="c">// left</span>
+        WindowTitle { visible: monitor &amp;&amp; monitor.focused }
+        Item { Layout.fillWidth: <span class="t">true</span> }             <span class="c">// spacer → center/right groups</span>
+        GpuMode {}  Volume {}  Battery {}  SysTray {}  Clock {}
+      }
+    }
+  }
+}</pre>
+<p>Suggested file layout (a stow package), cribbing the <b>services / modules / widgets</b> split and per-module fallbacks:</p>
+<div class="tree">quickshell/.config/quickshell/
+├─ <b>shell.qml</b>                 <span class="cm">Scope + Variants(screens) → Bar</span>
+├─ <b>Theme.qml</b>                 <span class="cm">singleton: live Catppuccin palette (§4)</span>
+├─ config/
+│   ├─ <b>Config.qml</b>            <span class="cm">singleton over shell.json (FileView+JsonAdapter)</span>
+│   └─ shell.json              <span class="cm">user settings: module order, toggles, per-monitor</span>
+├─ services/                   <span class="cm">thin singletons for things w/o a built-in</span>
+│   ├─ Gpu.qml   Updates.qml   Fingerprint.qml   Sysinfo.qml
+├─ modules/  └─ <b>Bar.qml</b>       <span class="cm">the PanelWindow + widget layout</span>
+└─ widgets/                    <span class="cm">leaf components (one file each)</span>
+    Workspaces  WindowTitle  Submap  Clock  Battery  Volume  Backlight
+    SysTray  Media  Wifi  Bluetooth  AudioRouter  Cpu  Mem  Temp
+    IdleInhibitor  Notify  Update  Fingerprint  Power  <b>GpuMode</b></div>
+
+<!-- THEMING -->
+<h2 id="theme"><span class="num">§4</span>Live theming — the keystone (§K north star)</h2>
+<p class="lead">The bar must repaint instantly when your Catppuccin switcher flips flavors. Quickshell gives us exactly the tool:
+a <code>Theme</code> singleton using <code>FileView { watchChanges: true }</code> + <code>JsonAdapter</code> that exposes typed <code>color</code>
+properties; every widget binds <code>color: Theme.mauve</code> and re-tints with no restart.</p>
+<pre class="code"><span class="c">// Theme.qml — singleton, live-reloading Catppuccin palette</span>
+<span class="k">pragma</span> Singleton
+<span class="k">import</span> Quickshell
+<span class="k">import</span> Quickshell.Io
+Singleton {
+  readonly property color base:     adapter.base
+  readonly property color text:     adapter.text
+  readonly property color mauve:    adapter.mauve
+  readonly property color lavender: adapter.lavender   <span class="c">// …one per Catppuccin role</span>
+  FileView {
+    path: <span class="s">Quickshell.env("HOME") + "/.config/themes/current.json"</span>
+    watchChanges: <span class="t">true</span>
+    onFileChanged: reload()
+    JsonAdapter { id: adapter
+      property color base: <span class="s">"#303446"</span>; property color text: <span class="s">"#c6d0f5"</span>
+      property color mauve: <span class="s">"#ca9ee6"</span>; property color lavender: <span class="s">"#babbf1"</span>
+    }
+  }
+}</pre>
+<div class="box warn">
+  <div class="h">⚠ One prerequisite: the switcher must emit a real <code>current.json</code> (not a symlink)</div>
+  <p style="margin:.2em 0 0">Your switcher flips a <b>symlink</b> <code>current.conf → catppuccin/&lt;flavor&gt;.conf</code>. Qt's file
+  watcher can miss a symlink relink (it sees a <i>removal</i> and drops the watch). Fix — add one step to the switcher:
+  ship <code>catppuccin/&lt;flavor&gt;.json</code> palettes and write <code>current.json</code> as a <b>real file via atomic replace</b>
+  (<code>cp</code> to a temp, then <code>mv</code> over it) on every switch. Atomic-rename reliably fires the watcher. This is the same
+  "add a per-app target to the switcher" pattern as kitty/yazi, but here a copied JSON, not a symlink.</p>
+  <p style="margin:.5em 0 0"><b>Fallback (no switcher change):</b> point <code>FileView</code> at <code>current.conf</code> and regex the
+  <code>$name = rgb(hex)</code> lines in <code>onLoaded</code> — works, but stringly-typed and exposed to the symlink flakiness.
+  The atomic-JSON route is cleaner and is the recommendation.</p>
+</div>
+<div class="box good">
+  <div class="h">Recommended shape: adopt Omarchy's <code>colors.toml</code> <b>semantic-role</b> palette</div>
+  <p style="margin:.2em 0 0">Omarchy 4 (MIT) themes everything from one central <code>colors.toml</code> with <b>~22 semantic keys</b>
+  (<code>accent</code>, <code>background</code>, <code>foreground</code>, <code>selection</code>, <code>muted</code>, <code>urgent</code> + named colors),
+  and its bar binds to <b>roles</b> (<code>bar.background</code>, <code>bar.accent</code>) — not to "mauve". Do the same: have the switcher emit a
+  <b>semantic</b> palette (Catppuccin values mapped into those roles), and bind bar widgets to roles. Two payoffs:</p>
+  <ul class="tight" style="margin:.4em 0 0">
+    <li><b>Portable across both worlds (the migration goal):</b> the <code>Theme</code> singleton reads a <i>colors.toml-shaped</i>
+    file — off Omarchy your switcher writes it from Catppuccin; on Omarchy you point it at
+    <code>~/.local/state/omarchy/current/theme/colors.toml</code>. <b>Same bar, correct theme in both.</b></li>
+    <li><b>Theme-agnostic:</b> stay Catppuccin now, but you could later drop in any of Omarchy's <b>22 MIT theme palettes</b>
+    (Catppuccin, Tokyo Night, Gruvbox, Nord, Everforest, Kanagawa, Rose Pine, Matte Black…) with zero bar changes.</li>
+  </ul>
+  <p style="margin:.5em 0 0">Reference impl to crib (MIT): <code>bjarneo/quickshell</code> is a standalone Quickshell bar that watches
+  Omarchy's live <code>colors.toml</code> and re-tints on <code>omarchy theme set</code> — exactly this mechanism, copyable.</p>
+</div>
+<p>Later (§K north star), a <code>shell-tokens.json</code> split (design tokens: spacing, radii, animation, bar height) can sit
+alongside the palette — mirroring Omarchy's <code>colors.toml</code> (palette) + <code>shell.toml</code> (surface/spacing roles) split — so the
+look is fully data-driven. Omarchy also renders per-app configs from the palette via <code>.tpl</code> templates
+(<code>{{ accent_strip }}</code>, <code>{{ accent_rgb }}</code>, <code>{{ mix background foreground 15% }}</code>) — a clean pattern to crib if you
+ever want the switcher to theme <em>more</em> apps from one palette.</p>
+
+<!-- PLUGINS -->
+<h2 id="plugins"><span class="num">§5</span>Empty bar → plugins, core &amp; multi-user</h2>
+<p class="lead">Design pillar: the bar renders <b>nothing but a slot host</b>. What shows is whatever <code>shell.json</code> lists,
+mounted from plugins. The simplest bar is <b>two things — workspaces + system-control</b> — and you grow it with
+<code>bar plugin add …</code>. Full spec: <span class="f">migration/planned-bar/README.md</span>.</p>
+<div class="tree">shell.json ─ modules:{ left:[<b>"core.workspaces"</b>], center:[], right:[<b>"core.syscontrol"</b>] }
+                            │
+                   <b>PluginRegistry</b> (host singleton)
+   scans ~/.config/quickshell/plugins/&lt;id&gt;/ + core/ → reads each manifest.json
+                            │  instantiate entry QML by kind, inject Theme/Config/Hyprland
+                            ▼
+      Bar mounts the bar-widget instances shell.json names, in order</div>
+<ul class="tight">
+  <li><b>Plugin = a git repo</b> with <code>manifest.json</code> (<code>{id, name, version, kind, entry, author}</code>; kind ∈
+  <code>bar-widget</code>/<code>panel</code>/<code>service</code>) + QML, installed to <code>~/.config/quickshell/plugins/&lt;id&gt;/</code>.</li>
+  <li><b>Host singletons injected</b> into every plugin — <code>Theme</code> (§4 palette), <code>Config</code>, <code>Hyprland</code>. This
+  mirrors Omarchy's injected <code>Color</code>/<code>Style</code>/<code>shell</code>, so a <b>compat shim can host <i>forked</i> Omarchy
+  widgets</b> (dossier §K) — our plugin system and the Omarchy-fork goal are one machine.</li>
+  <li><b>Only <code>core.workspaces</code> + <code>core.syscontrol</code> are built-in.</b> Clock, battery, audio, tray, gpu-mode, cpu,
+  media… are all plugins (our own first-party repos or third-party).</li>
+</ul>
+
+<h3>The plugin CLI — <code>bar</code> (Omarchy-style, headless backend)</h3>
+<pre class="code"><span class="f">bar plugin add</span> &lt;git-url&gt;     <span class="c"># clone → plugins/&lt;id&gt;/, validate manifest, enable in shell.json</span>
+<span class="f">bar plugin list</span>            <span class="c"># installed + enabled/disabled</span>
+<span class="f">bar plugin enable</span>  &lt;id&gt;      <span class="c"># add to shell.json module list  (hot-reloads, no restart)</span>
+<span class="f">bar plugin disable</span> &lt;id&gt;      <span class="c"># remove from shell.json (keeps files)</span>
+<span class="f">bar plugin remove</span>  &lt;id&gt;      <span class="c"># rm dir + drop from shell.json</span>
+<span class="f">bar plugin update</span>  [&lt;id&gt;]     <span class="c"># git pull one/all</span></pre>
+<p>A small script (<code>bin/.local/bin/bar</code>), same "one backend, thin frontend" shape as <code>theme-set</code>/<code>gpu-mode-set</code>.
+Because the manifest vocabulary matches Omarchy's, <code>bar plugin add &lt;omarchy-plugin-url&gt;</code> can host a forked Omarchy widget
+once the shim maps its host imports. ⚠ Git plugins run <b>unsandboxed</b> QML — validate the manifest &amp; review third-party QML before enabling.</p>
+
+<div class="box good">
+  <div class="h">✅ <code>core.syscontrol</code> — the multi-user differentiator (why not Omarchy)</div>
+  <p style="margin:.2em 0 0">Click → Lock · Logout · <b>Switch user</b> · Suspend · Hibernate · Reboot · Shutdown (extends
+  <code>power-menu.sh</code>). systemd-logind already runs concurrent sessions, and SDDM implements the freedesktop
+  <code>org.freedesktop.DisplayManager</code> API — so <b>switch-user opens a fresh login on a new VT while your session stays
+  alive</b>, and existing users are reachable with <code>loginctl activate</code>. Omarchy doesn't expose this at all.</p>
+  <pre class="code" style="margin:.5em 0 0"><span class="c"># new login (keeps current session):</span>
+busctl call org.freedesktop.DisplayManager /org/freedesktop/DisplayManager/Seat0 \
+  org.freedesktop.DisplayManager.Seat SwitchToGreeter
+<span class="c"># switch to an already-logged-in user:</span>
+loginctl list-sessions ; loginctl activate &lt;session&gt;</pre>
+  <p style="margin:.4em 0 0">⚠ Verify the SDDM seat path + that <code>SwitchToGreeter</code> is wired in your build; fallback = <code>hyprlock</code> + <code>chvt</code> to the greeter VT. A <code>session-control.sh</code> backend holds the logic.</p>
+</div>
+
+<!-- MODULE MAP -->
+<h2 id="modules"><span class="num">§6</span>Widget catalog — your waybar → Quickshell plugins</h2>
+<p class="lead">This is the <b>catalog</b> of available widgets (each becomes a <code>bar-widget</code> plugin you opt into via
+<code>shell.json</code>) — <em>not</em> what shows at once. Default bar = just workspaces + syscontrol.
+Legend: <span class="pill p-svc">service</span> Quickshell built-in singleton · <span class="pill p-script">script</span> wrap an
+existing repo script via <code>Process</code> · <span class="pill p-diy">DIY</span> read a file/no built-in · <span class="pill p-new">new</span> new widget.
+Roughly half are free built-ins; the rest reuse scripts you already have.</p>
+<div class="tbl-wrap"><table>
+  <tr><th>Waybar module</th><th>Quickshell approach</th><th>How</th></tr>
+  <tr><td class="n">hyprland/workspaces</td><td><span class="pill p-svc">service</span> <code>Hyprland.workspaces</code>, filtered per monitor (§6)</td><td>built-in, split-monitor-aware</td></tr>
+  <tr><td class="n">hyprland/window + custom/ws</td><td><span class="pill p-svc">service</span> <code>Hyprland.activeToplevel.title</code> + app icon</td><td>built-in</td></tr>
+  <tr><td class="n">hyprland/submap</td><td><span class="pill p-svc">service</span> <code>Hyprland.rawEvent</code> "submap"</td><td>built-in (event stream)</td></tr>
+  <tr><td class="n">tray</td><td><span class="pill p-svc">service</span> <code>SystemTray</code> (Quickshell is an SNI host) + <code>QsMenuAnchor</code></td><td>built-in, native menus</td></tr>
+  <tr><td class="n">battery</td><td><span class="pill p-svc">service</span> <code>UPower.displayDevice</code> (percentage/state/rate)</td><td>built-in</td></tr>
+  <tr><td class="n">pulseaudio (volume)</td><td><span class="pill p-svc">service</span> <code>Pipewire.defaultAudioSink</code> + <code>PwObjectTracker</code></td><td>built-in (read/set/mute)</td></tr>
+  <tr><td class="n">custom/media</td><td><span class="pill p-svc">service</span> <code>Mpris.players</code></td><td>built-in (replaces media-player.py)</td></tr>
+  <tr><td class="n">custom/wifi</td><td><span class="pill p-svc">service</span> <code>Networking</code> (0.3) — or <code>nmcli</code> fallback</td><td>built-in / script fallback</td></tr>
+  <tr><td class="n">bluetooth</td><td><span class="pill p-svc">service</span> <code>Bluetooth</code> (0.3)</td><td>built-in</td></tr>
+  <tr><td class="n">idle_inhibitor</td><td><span class="pill p-svc">service</span> Wayland idle-inhibit (0.3)</td><td>built-in</td></tr>
+  <tr><td class="n">clock</td><td><span class="pill p-svc">service</span> <code>SystemClock</code> (precision: Minutes)</td><td>built-in</td></tr>
+  <tr><td class="n"><b>GPU mode (new)</b></td><td><span class="pill p-new">new</span> <code>Process</code> → <code>gpu-mode-check.sh</code> / <code>gpu-mode-set</code> + poll</td><td>your sketch (§planned-gpu-switcher)</td></tr>
+  <tr><td class="n">custom/cpuinfo (temp)</td><td><span class="pill p-script">script</span> <code>cpu-temp.sh</code> via <code>Process</code></td><td>reuse</td></tr>
+  <tr><td class="n">custom/cpu</td><td><span class="pill p-script">script</span> <code>cpu-usage.sh</code></td><td>reuse</td></tr>
+  <tr><td class="n">memory</td><td><span class="pill p-diy">DIY</span> read <code>/proc/meminfo</code> via <code>FileView</code></td><td>tiny</td></tr>
+  <tr><td class="n">custom/backlight</td><td><span class="pill p-script">script</span> <code>brightness-control.sh</code> / <code>brightnessctl</code> (not built-in)</td><td>reuse</td></tr>
+  <tr><td class="n">custom/audio-router</td><td><span class="pill p-script">script</span> <code>audio-device-cycle.sh</code> (or Pipewire nodes)</td><td>reuse</td></tr>
+  <tr><td class="n">custom/update</td><td><span class="pill p-script">script</span> <code>checkUpdates</code></td><td>reuse</td></tr>
+  <tr><td class="n">custom/fingerprint</td><td><span class="pill p-script">script</span> <code>fprintd-list</code> check</td><td>reuse</td></tr>
+  <tr><td class="n">custom/notification</td><td><span class="pill p-script">script</span> <code>swaync-client -t</code> (keep swaync — see below)</td><td>reuse</td></tr>
+  <tr><td class="n">custom/power</td><td><span class="pill p-script">script</span> <code>power-menu.sh</code></td><td>reuse</td></tr>
+</table></div>
+<div class="box bad">
+  <div class="h">⚠ Two hard constraints from the framework</div>
+  <ul class="tight" style="margin:.2em 0 0">
+    <li><b>Do NOT enable Quickshell's <code>NotificationServer</code></b> — it's a full <code>org.freedesktop.Notifications</code>
+    daemon and would fight <b>swaync</b>. You're keeping swaync, so the notification widget just <i>toggles</i> it via
+    <code>swaync-client</code>. Same for tray: run only one SNI host (Quickshell's).</li>
+    <li><b>Single process:</b> the whole bar + the SNI host is one <code>qs</code> process — one unhandled QML error takes it
+    down. Keep widgets isolated, lean on hot-reload + per-widget <code>DefaultTheme</code>/fallback so a reload is cheap.</li>
+  </ul>
+</div>
+
+<!-- WORKSPACES -->
+<h2 id="ws"><span class="num">§7</span>Per-monitor workspaces — <code>core.workspaces</code> (split-monitor-workspaces)</h2>
+<p>The Hyprland service reads real IPC, and split-monitor-workspaces creates real per-monitor workspaces each carrying a
+<code>monitor</code>. So filter by <code>monitor.name</code>. <b>Gotcha:</b> the plugin offsets workspace <code>id</code>s per monitor, so
+<b>filter by <code>monitor.name</code>, key the Repeater on <code>id</code>, but display <code>name</code></b> — never assume id == label.</p>
+<pre class="code"><span class="c">// Workspaces.qml — bound to this bar's monitor</span>
+<span class="k">property</span> HyprlandMonitor barMonitor
+<span class="k">readonly property var</span> wss: Hyprland.workspaces.values
+    .filter(w =&gt; w.monitor &amp;&amp; w.monitor.name === barMonitor.name)
+    .sort((a,b) =&gt; a.id - b.id)
+Repeater { model: wss
+  delegate: Text {
+    required property var modelData
+    text: modelData.name                        <span class="c">// label, not id</span>
+    color: modelData.focused ? Theme.mauve : Theme.overlay
+    MouseArea { anchors.fill: parent
+      onClicked: Hyprland.dispatch(<span class="s">"split-workspace "</span> + modelData.name) }
+  }
+}</pre>
+
+<!-- CRIB -->
+<h2 id="crib"><span class="num">§8</span>What to crib — and the license rules</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Project</th><th>License</th><th>Borrow</th></tr>
+  <tr><td class="n">caelestia-dots/shell</td><td>GPL-3.0 · <b>reimplement, don't copy</b></td><td>The canonical <code>FileView(watchChanges)+JsonAdapter</code> reactive config singleton; the <code>shell.json</code> (settings) / <code>shell-tokens.json</code> (design tokens) split; per-monitor overrides.</td></tr>
+  <tr><td class="n">bjarneo/quickshell</td><td><b>MIT · safe to copy</b></td><td>Reading a live palette file and <b>restyling the whole bar on theme flip</b> — almost exactly our Catppuccin need. Closest reference for §4.</td></tr>
+  <tr><td class="n">ekremx25/quickshell</td><td><b>MIT · safe to copy</b></td><td>In-app <b>Settings dashboard</b> (drag-drop, atomic JSON writes) + <code>ModuleRegistry</code> (data) / <code>ModuleCatalog</code> (view) split. Ships static <b>Catppuccin</b>. Later north-star.</td></tr>
+  <tr><td class="n">end-4 illogical-impulse</td><td>GPL-3.0 · reference</td><td>Most battle-tested; <code>config.json</code>+JsonAdapter+Settings widget combo. Learn from, don't lift.</td></tr>
+  <tr><td class="n">doannc2212</td><td><b>no license · reference only</b></td><td>Per-module <code>DefaultTheme.qml</code> fallback so every widget renders standalone.</td></tr>
+</table></div>
+<p class="lead" style="font-size:.88rem">Rule: lift code only from <b>MIT</b> (bjarneo, ekremx25). GPL/AGPL and unlicensed projects → study the pattern, write our own.
+Our bar is ours; keep it clean of copyleft-encumbered files.</p>
+
+<!-- ROADMAP -->
+<h2 id="roadmap"><span class="num">§9</span>Build phases (incremental, waybar stays until parity)</h2>
+<div class="phase">
+  <div class="ph-h"><span class="tag">P0</span>Palette + empty hello-bar</div>
+  <p style="margin:.2em 0"><code>pacman -S quickshell</code>. Ship the 4 <b>palette JSONs</b> (done — <span class="f">planned-bar/palettes/</span>) + the
+  <b>switcher <code>current.json</code></b> atomic emit (§4 prereq). Minimal <code>shell.qml</code>: an empty <code>PanelWindow</code> on one monitor;
+  confirm hot-reload + exclusive zone.</p>
+</div>
+<div class="phase">
+  <div class="ph-h"><span class="tag">P1</span>The machine: Theme + registry + CLI + core</div>
+  <p style="margin:.2em 0"><code>Theme.qml</code> live-reading <code>current.json</code> (flip a flavor → repaint); the <b>PluginRegistry</b> +
+  the <code>bar</code> <b>CLI</b>; and the two core widgets — <b><code>core.workspaces</code></b> (per-monitor, §7) and
+  <b><code>core.syscontrol</code></b> (multi-user, §5). This is the <b>simplest usable bar</b> and proves the plugin machine,
+  live theming, and the two hardest integrations at once.</p>
+</div>
+<div class="phase">
+  <div class="ph-h"><span class="tag">P2</span>First-party widget plugins (built-in services)</div>
+  <p style="margin:.2em 0">As <code>bar-widget</code> plugins: clock, battery (UPower), volume (Pipewire), tray (SystemTray),
+  media (Mpris), network, bluetooth, idle-inhibitor, window-title, submap. Mostly free — one small plugin each, added via
+  <code>bar plugin enable</code>.</p>
+</div>
+<div class="phase">
+  <div class="ph-h"><span class="tag">P3</span>Script-backed plugins + <b>GPU-mode ships</b></div>
+  <p style="margin:.2em 0">Plugins wrapping existing scripts via <code>Process</code>: temp, cpu, backlight, audio-router, update,
+  fingerprint, notify(swaync). Land the <b>GPU-mode switcher</b> as a plugin on the <code>gpu-mode-set</code> backend — <i>the switcher finally ships here.</i></p>
+</div>
+<div class="phase">
+  <div class="ph-h"><span class="tag">P4</span>Per-monitor polish + parity cutover</div>
+  <p style="margin:.2em 0">Two bars via <code>Variants</code>, per-output widget sets, the powerline/separator aesthetic, popups
+  (calendar, audio mixer). Reach the parity you want → swap the Hyprland <code>exec-once</code> from waybar to <code>qs</code>; keep waybar one release as fallback.</p>
+</div>
+<div class="phase">
+  <div class="ph-h"><span class="tag">Later</span>North star (§K)</div>
+  <p style="margin:.2em 0"><code>shell-tokens</code> data-driven config + an in-app <b>Settings dashboard</b> (ekremx25 pattern);
+  <b>TUI integrations</b> (drop-down terminal panel for btop/yazi/lazygit via <code>Process</code>); the <b>Omarchy-plugin shim</b> so
+  <code>bar plugin add &lt;omarchy-url&gt;</code> hosts forked widgets (dossier §K).</p>
+</div>
+
+<!-- RISKS -->
+<h2 id="risks"><span class="num">§10</span>Risks &amp; gotchas (all known, all manageable)</h2>
+<div class="tbl-wrap"><table>
+  <tr><th>Risk</th><th>Mitigation</th></tr>
+  <tr><td>Single-process crash takes the whole bar down</td><td>Isolate widgets; per-widget fallbacks; hot-reload dev loop; keep waybar as instant fallback until parity.</td></tr>
+  <tr><td>Quickshell breaks on Qt ABI bumps</td><td>Use the repo <code>quickshell</code> package (rebuilt with Qt), <b>not</b> <code>quickshell-git</code>.</td></tr>
+  <tr><td>Symlink theme flip missed by the file watcher</td><td>Switcher writes <code>current.json</code> as a <b>real file, atomic <code>mv</code></b> (§4) — dodges it entirely.</td></tr>
+  <tr><td>split-monitor <code>id</code> ≠ workspace label</td><td>Filter by <code>monitor.name</code>, key on <code>id</code>, display <code>name</code> (§6).</td></tr>
+  <tr><td>swaync vs Quickshell notification daemon conflict</td><td>Don't enable <code>NotificationServer</code>; widget only toggles swaync.</td></tr>
+  <tr><td>Tray / SNI API names drift across QS versions</td><td>Verify <code>SystemTrayItem</code>/<code>QsMenuAnchor</code> members against the <i>installed</i> version's docs (v0.3.x).</td></tr>
+  <tr><td>Brightness has no built-in</td><td>Shell out: <code>brightnessctl</code> (eDP-1), <code>ddcutil</code> for the external (DP-1) if you want DDC control.</td></tr>
+</table></div>
+
+<div class="foot">
+  <p><b>Sources</b> (2026-09-03): quickshell.org/docs (v0.3.x type pages) · git.outfoxxed.me/quickshell (master headers: <code>monitorFor</code>, <code>activeToplevel</code>) · outfoxxed.me/blog/quickshell-0-3 · Arch <code>extra</code> quickshell 0.3.1 · caelestia-dots/shell · bjarneo/quickshell (MIT) · ekremx25/quickshell (MIT) · end-4/dots-hyprland · tonybtw.com/tutorial/quickshell · your live waybar config + <code>bin/.local/bin</code> scripts.</p>
+  <p>Companion: <code>omarchy-migration-plan.html</code> · dossier §K (fork/north-star) &amp; §M (GPU switcher) · <code>migration/planned-gpu-switcher/</code> (the GPU widget's backend). Everything here is a design; nothing is deployed.</p>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# /etc/greetd/config.toml  — greetd running ReGreet inside the cage kiosk compositor.
+# STAGED SPEC — not installed. VM-first (this is the login path).
+
+[terminal]
+# The VT greetd runs on (1 = the default greeter VT).
+vt = 1
+
+[default_session]
+# cage = a minimal single-output Wayland kiosk compositor; runs ReGreet fullscreen.
+#   -s : allow VT switching (needed so `SwitchToGreeter`/user-switch lands here).
+command = "cage -s -- regreet"
+# The unprivileged user greetd/ReGreet run as (created by the greetd package).
+user = "greeter"

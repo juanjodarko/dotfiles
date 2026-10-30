@@ -1,0 +1,14 @@
+// waybar — GPU switcher module (snippet to merge into ~/.config/waybar/config).
+// 1) add "custom/gpu" to a modules-right / modules-left array
+// 2) add the block below
+// STAGED SKETCH — not deployed.
+{
+  "custom/gpu": {
+    "exec": "$HOME/.config/waybar/scripts/gpu-mode-status.sh",
+    "return-type": "json",
+    "interval": "once",          // no polling — refreshed by signal (see below)
+    "signal": 8,                 // gpu-mode-monitor.sh runs `pkill -RTMIN+8 waybar` on mode change
+    "on-click": "$HOME/.config/waybar/scripts/gpu-mode-menu.sh",
+    "tooltip": true
+  }
+}

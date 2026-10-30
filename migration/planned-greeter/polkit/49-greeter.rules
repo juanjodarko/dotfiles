@@ -1,0 +1,13 @@
+// /etc/polkit-1/rules.d/49-greeter.rules
+// Passwordless pkexec for the two greeter-update helpers, for the `wheel` group only.
+// Mirrors the pattern the theme switcher already uses for update-sddm-theme. STAGED SPEC.
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.policykit.exec" &&
+        subject.isInGroup("wheel")) {
+        var prog = action.lookup("program");
+        if (prog == "/usr/local/bin/update-greeter-bg" ||
+            prog == "/usr/local/bin/update-greeter-theme") {
+            return polkit.Result.YES;
+        }
+    }
+});
