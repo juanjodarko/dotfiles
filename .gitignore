@@ -20,3 +20,7 @@ themes/.config/themes/current.conf
 themes/.config/themes/current.json
 themes/.config/themes/current_flavor.txt
 migration/omarchy-hey-ref/
+
+# Script-generated backups (backup_config.sh, generate_waybar_workspaces.sh)
+hyprland/.config/hypr/backups/
+waybar/.config/waybar/config.jsonc.bak
