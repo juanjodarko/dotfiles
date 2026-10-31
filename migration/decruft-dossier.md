@@ -656,3 +656,25 @@ rm -rf .git/modules/<path>
 6. F (vendored plugin .git) — last, most care
    (leave G-launchers alone: both rofi & wofi are live)
 ```
+
+---
+
+## Cleanup outcome — 2026-10-31 (branch `cleanup`, per-item approved)
+
+Backup gate passed 2026-10-30 (restic snapshot `425fd5d3` on the Synology), tag `pre-omarchy-2026`.
+
+- **E** — DONE: hypr backup snapshot, `hyprpaper.conf.example`, `waybar/config.jsonc.bak` deleted; script-generated
+  backup paths now `.gitignore`d.
+- **D** — DONE: dangling `pomobar` submodule stanza + orphan `.git/modules/polybar` removed (matched GitHub).
+- **A** — **KEPT, premise corrected**: the repo is shared with the user's **Mac**; aerospace/yabai/skhd/mac_zsh/
+  mac_personal/`./mac` are live there. Never treat Mac configs as cruft.
+- **B** — DONE: `awesome` submodule, `archived/`, `./arch` removed. `./install` + `./clean-env` were deleted then
+  **restored** — `./mac` runs `$DOTFILES/install`.
+- **C** — DONE: `utilities/` (empty), `bash/` removed; `vim/.vimrc` kept (live-linked); `wezterm` dropped from
+  `./mac` STOW_FOLDERS (package gone, Mac doesn't use it).
+- **G** — Terminal = **kitty** (ghostty package removed; `omarchy/ghostty` + theme-set ghostty support kept).
+  22 LegionOS-era `bin/` scripts removed (incl. `settings`, the kernel/update/maintenance tools); 20 remain.
+  Launchers unchanged (rofi + wofi + Vicinae).
+- **F** — NO CHANGE: all plugin clones are already `.gitignore`d (nothing tracked). `split-monitor-workspaces` is
+  live (Lua module, hyprland.lua:210). Unused tmux clones (continuum, resurrect, floax) kept on disk by choice.
+  Known quirk left as-is: tmux.conf runs TPM from legacy `~/.tmux/plugins/tpm`.
