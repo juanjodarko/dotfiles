@@ -7,9 +7,6 @@
 [submodule "mac_personal"]
 	path = mac_personal
 	url = git@github.com:juanjodarko/mac_personal.git
-[submodule "awesome"]
-	path = awesome
-	url = git@github.com:juanjodarko/awesome.git
 [submodule "quickshell/.config/quickshell"]
 	path = quickshell/.config/quickshell
 	url = git@github.com:juanjodarko/dockshell.git
