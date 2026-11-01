@@ -678,3 +678,16 @@ Backup gate passed 2026-10-30 (restic snapshot `425fd5d3` on the Synology), tag 
 - **F** — NO CHANGE: all plugin clones are already `.gitignore`d (nothing tracked). `split-monitor-workspaces` is
   live (Lua module, hyprland.lua:210). Unused tmux clones (continuum, resurrect, floax) kept on disk by choice.
   Known quirk left as-is: tmux.conf runs TPM from legacy `~/.tmux/plugins/tpm`.
+
+---
+
+## O. Reproducible install — VM strategy (DECIDED 2026-10-31)
+
+The written Week 2 ("VM on stock Omarchy 4 + test `omarchy/install.sh`") is **superseded**. The stack drifted to the
+user's own (DockShell, swaync, Vicinae, greetd/ReGreet, GPU setup), so the goal is now **the user's own ISO**, reached in
+two steps:
+1. **Plain Arch VM → own install script.** Minimal Arch in a QEMU/KVM VM (mirroring the laptop base: UEFI, ext4, GRUB,
+   `linux`, NetworkManager, no LUKS), then rebuild the desktop from the repo (`install.sh` + `migration/manifests/`).
+   Proves reproducibility and shakes out the script first.
+2. **Own ISO via archiso** — package what step 1 proved; `omacom-io/omarchy-iso` (archiso) is the template.
+VM artifacts live in `~/vms/` (`/` has little free space). The verified Omarchy 4.0.6 ISO is kept there as a reference.
