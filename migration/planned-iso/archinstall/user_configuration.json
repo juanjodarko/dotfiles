@@ -1,0 +1,125 @@
+{
+  "archinstall-language": "English",
+  "audio_config": {
+    "audio": "pipewire"
+  },
+  "bootloader_config": {
+    "bootloader": "Grub",
+    "uki": false,
+    "removable": false
+  },
+  "disk_config": {
+    "config_type": "default_layout",
+    "device_modifications": [
+      {
+        "device": "/dev/vda",
+        "wipe": true,
+        "partitions": [
+          {
+            "btrfs": [],
+            "dev_path": null,
+            "flags": [
+              "boot",
+              "esp"
+            ],
+            "fs_type": "fat32",
+            "size": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "B",
+              "value": 1073741824
+            },
+            "mount_options": [],
+            "mountpoint": "/boot",
+            "obj_id": "24150e42-5401-42c4-921e-16fb381f14f7",
+            "start": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "B",
+              "value": 1048576
+            },
+            "status": "create",
+            "type": "primary"
+          },
+          {
+            "btrfs": [],
+            "dev_path": null,
+            "flags": [],
+            "fs_type": "ext4",
+            "size": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "B",
+              "value": 63348670464
+            },
+            "mount_options": [],
+            "mountpoint": "/",
+            "obj_id": "e47eb100-695e-42a8-9f20-6c4357465c88",
+            "start": {
+              "sector_size": {
+                "unit": "B",
+                "value": 512
+              },
+              "unit": "B",
+              "value": 1074790400
+            },
+            "status": "create",
+            "type": "primary"
+          }
+        ]
+      }
+    ]
+  },
+  "hostname": "arch-dotfiles-vm",
+  "kernels": [
+    "linux"
+  ],
+  "locale_config": {
+    "kb_layout": "us",
+    "sys_enc": "UTF-8",
+    "sys_lang": "en_US"
+  },
+  "mirror_config": {
+    "mirror_regions": {},
+    "custom_servers": [
+      {
+        "url": "https://geo.mirror.pkgbuild.com/$repo/os/$arch"
+      }
+    ],
+    "optional_repositories": [],
+    "custom_repositories": []
+  },
+  "network_config": {
+    "type": "nm"
+  },
+  "ntp": true,
+  "packages": [
+    "git",
+    "openssh"
+  ],
+  "services": [
+    "sshd"
+  ],
+  "pacman_config": {
+    "color": true,
+    "parallel_downloads": 5
+  },
+  "profile_config": {
+    "gfx_driver": null,
+    "greeter": null,
+    "profile": {
+      "main": "Minimal"
+    }
+  },
+  "swap": {
+    "enabled": true,
+    "algorithm": "zstd"
+  },
+  "timezone": "America/Mexico_City"
+}

@@ -24,3 +24,4 @@ migration/omarchy-hey-ref/
 # Script-generated backups (backup_config.sh, generate_waybar_workspaces.sh)
 hyprland/.config/hypr/backups/
 waybar/.config/waybar/config.jsonc.bak
+migration/planned-iso/archinstall/creds.json

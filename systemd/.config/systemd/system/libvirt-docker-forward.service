@@ -1,0 +1,17 @@
+[Unit]
+Description=Let libvirt VM traffic (virbr0) past Docker's FORWARD drop policy
+# Docker sets the ip filter FORWARD policy to drop; DOCKER-USER runs first, so
+# accepting virbr0 there restores NAT for libvirt's default network.
+After=docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c 'iptables -C DOCKER-USER -i virbr0 -j ACCEPT 2>/dev/null || iptables -I DOCKER-USER -i virbr0 -j ACCEPT'
+ExecStart=/bin/sh -c 'iptables -C DOCKER-USER -o virbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || iptables -I DOCKER-USER -o virbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT'
+ExecStop=-/usr/bin/iptables -D DOCKER-USER -i virbr0 -j ACCEPT
+ExecStop=-/usr/bin/iptables -D DOCKER-USER -o virbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+[Install]
+WantedBy=docker.service

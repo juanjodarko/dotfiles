@@ -1,0 +1,5 @@
+{
+  "users": [
+    { "username": "juanjo", "sudo": true, "enc_password": "<openssl passwd -6 output>" }
+  ]
+}
