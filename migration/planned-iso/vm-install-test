@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+#
+# vm-install-test — fresh VM → clone this repo's CURRENT LOCAL branch → install.sh
+# --non-interactive → check the known findings (migration/install-test-findings.md).
+#
+# The repo and its submodules are copied in as git bundles, so unpushed commits are
+# tested and the VM needs no GitHub credentials (finding #1 is not exercised here).
+#
+# Usage: vm-install-test [--no-rebuild]
+#
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
+VM="${VM:-arch-dotfiles}"
+CACHE="$HOME/vms/bundles"
+LOGS="$HOME/vms/logs"
+SUBMODULES=(personal git mac_personal quickshell/.config/quickshell)
+export LIBVIRT_DEFAULT_URI=qemu:///system
+
+log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
+die() { printf '\033[1;31mxx \033[0m %s\n' "$*" >&2; exit 1; }
+
+[ "${1:-}" = "--no-rebuild" ] || "$HERE/vm-rebuild" --yes
+
+ip="$(virsh domifaddr "$VM" | awk '/ipv4/ {split($4,a,"/"); print a[1]; exit}')"
+[ -n "$ip" ] || die "no IP for $VM"
+SSH=(ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$HOME/.ssh/known_hosts.vms" -o LogLevel=ERROR "juanjo@$ip")
+SCP=(scp -q -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$HOME/.ssh/known_hosts.vms" -o LogLevel=ERROR)
+
+# ------------------------------------------------------------- bundles ----
+mkdir -p "$CACHE" "$LOGS"
+branch="$(git -C "$REPO" rev-parse --abbrev-ref HEAD)"
+git -C "$REPO" bundle create -q "$CACHE/dotfiles.bundle" "$branch"
+for p in "${SUBMODULES[@]}"; do
+  n="${p//\//_}"; sha="$(git -C "$REPO/$p" rev-parse HEAD)"
+  # submodule bundles are cached by commit (personal is ~3 GB)
+  if [ "$(cat "$CACHE/$n.sha" 2>/dev/null)" != "$sha" ]; then
+    git -C "$REPO/$p" bundle create -q "$CACHE/$n.bundle" --all && echo "$sha" > "$CACHE/$n.sha"
+  fi
+done
+log "Copying bundles to the VM (branch $branch @ $(git -C "$REPO" rev-parse --short HEAD))"
+"${SSH[@]}" 'mkdir -p ~/bundles'
+"${SCP[@]}" "$CACHE"/*.bundle "juanjo@$ip:bundles/"
+
+# --------------------------------------------------------------- run ------
+"${SSH[@]}" bash -s -- "$branch" "${SUBMODULES[@]}" <<'EOS'
+set -e
+branch="$1"; shift
+rm -rf ~/dotfiles
+git clone -q -b "$branch" ~/bundles/dotfiles.bundle ~/dotfiles
+cd ~/dotfiles
+for p in "$@"; do git config "submodule.$p.url" ~/bundles/"${p//\//_}".bundle; done
+git -c protocol.file.allow=always submodule update --init -q
+EOS
+log "Running install.sh --non-interactive (log streams to $LOGS)"
+stamp="$(date +%Y%m%d-%H%M%S)"
+set +e
+"${SSH[@]}" 'cd ~/dotfiles && timeout 45m ./install.sh --non-interactive </dev/null' > "$LOGS/install-$stamp.log" 2>&1
+rc=$?
+set -e
+log "install.sh exited $rc — log: $LOGS/install-$stamp.log"
+
+# ------------------------------------------------------------- checks -----
+"${SSH[@]}" bash -s -- "$rc" <<'EOS'
+rc="$1"; fail=0
+ok()  { printf '  \033[32mPASS\033[0m %s\n' "$1"; }
+bad() { printf '  \033[31mFAIL\033[0m %s\n' "$1"; fail=1; }
+echo "Findings checks:"
+[ "$rc" = 0 ] && ok "install.sh exit 0" || bad "install.sh exit $rc"
+[ "$(getent passwd "$USER" | cut -d: -f7)" = /usr/bin/zsh ] && ok "#4 login shell is zsh" || bad "#4 login shell is $(getent passwd "$USER" | cut -d: -f7)"
+for d in ~/.config ~/.local/share ~/.local/bin; do
+  [ -d "$d" ] && [ ! -L "$d" ] && ok "#5 $d is a real dir" || bad "#5 $d is a symlink (folded)"
+done
+n=$(git -C ~/dotfiles/personal status --porcelain | wc -l)
+[ "$n" = 0 ] && ok "#5 personal submodule clean" || bad "#5 personal has $n untracked/changed paths"
+[ -L ~/.config/themes ] && [ -e ~/.config/themes/current_flavor.txt ] && ok "#8 ~/.config/themes links to the theme tree" || bad "#8 ~/.config/themes is $(stat -c %F ~/.config/themes 2>/dev/null)"
+if out=$(Hyprland --verify-config 2>&1); then ok "#7 Hyprland config verifies"; else bad "#7 Hyprland --verify-config: $(echo "$out" | grep -m1 -iE 'error|no file|fail')"; fi
+exit $fail
+EOS

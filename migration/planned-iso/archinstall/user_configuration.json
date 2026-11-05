@@ -6,7 +6,7 @@
   "bootloader_config": {
     "bootloader": "Grub",
     "uki": false,
-    "removable": false
+    "removable": true
   },
   "disk_config": {
     "config_type": "default_layout",

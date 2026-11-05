@@ -126,8 +126,14 @@ virsh change-media "$VM" sdb --eject --config >/dev/null
 virt_xml "$VM" --edit --boot hd >/dev/null
 virsh start "$VM" >/dev/null
 
+forgot=""
 for _ in $(seq 60); do
   ip="$(virsh domifaddr "$VM" 2>/dev/null | awk '/ipv4/ {split($4,a,"/"); print a[1]; exit}')"
+  # Every rebuild has a fresh host key; drop the previous one for this IP.
+  if [ -n "$ip" ] && [ "$forgot" != "$ip" ]; then
+    ssh-keygen -q -R "$ip" -f "$HOME/.ssh/known_hosts.vms" >/dev/null 2>&1 || true
+    forgot="$ip"
+  fi
   if [ -n "$ip" ] && ssh -o BatchMode=yes -o ConnectTimeout=3 -o StrictHostKeyChecking=accept-new \
        -o UserKnownHostsFile="$HOME/.ssh/known_hosts.vms" "juanjo@$ip" true 2>/dev/null; then
     log "Ready: ssh -o UserKnownHostsFile=~/.ssh/known_hosts.vms juanjo@$ip"
