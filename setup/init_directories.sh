@@ -35,7 +35,6 @@ DIRECTORIES=(
     "$HOME/.local/bin"
     "$HOME/.local/share"
     "$HOME/.local/state"
-    "$HOME/.config/themes"
 )
 
 echo "📁 Initializing required directories..."

@@ -105,7 +105,17 @@ fi
 if [ "$NEEDS_STOW" = true ] || [ ! -L "$HOME_CONFIG_THEMES" ]; then
     echo ""
     echo "Creating symlink ~/.config/themes..."
-    ln -sf "$THEMES_CONFIG_DIR" "$HOME_CONFIG_THEMES"
+    # ln onto an existing directory would nest the link inside it
+    # (~/.config/themes/themes); clear an empty or stale-nested dir first.
+    if [ -d "$HOME_CONFIG_THEMES" ] && [ ! -L "$HOME_CONFIG_THEMES" ]; then
+        [ -L "$HOME_CONFIG_THEMES/themes" ] && rm "$HOME_CONFIG_THEMES/themes"
+        rmdir "$HOME_CONFIG_THEMES" 2>/dev/null || {
+            echo "✗ $HOME_CONFIG_THEMES is a non-empty directory; move it aside and re-run"
+            exit 1
+        }
+    fi
+    mkdir -p "$(dirname "$HOME_CONFIG_THEMES")"
+    ln -sfn "$THEMES_CONFIG_DIR" "$HOME_CONFIG_THEMES"
     echo "✓ Symlink created: ~/.config/themes -> $THEMES_CONFIG_DIR"
 fi
 

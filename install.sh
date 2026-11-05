@@ -203,11 +203,25 @@ migrate_deploy_module() {
     fi
 }
 
+# Directories several modules stow into must exist as real dirs first.
+# Otherwise, on a fresh home, stow "folds" them into a single module's symlink
+# (e.g. ~/.local/share -> dotfiles/personal/.local/share) and every app's data
+# ends up inside the repo.
+ensure_shared_dirs() {
+    local d
+    for d in "$HOME/.config" "$HOME/.config/systemd/user" "$HOME/.local/bin" \
+             "$HOME/.local/share" "$HOME/.local/share/applications" "$HOME/.local/state"; do
+        [ -L "$d" ] && print_warning "$d is a symlink (folded by an earlier stow) — fix by hand"
+        mkdir -p "$d"
+    done
+}
+
 migrate_deploy_dotfiles() {
     print_step "Deploying dotfiles with safe migration..."
     echo ""
 
     cd "$DOTFILES_DIR"
+    ensure_shared_dirs
 
     local deployed=0
     local skipped=0
@@ -480,6 +494,7 @@ deploy_dotfiles() {
     print_step "Deploying dotfiles with stow..."
 
     cd "$DOTFILES_DIR"
+    ensure_shared_dirs
 
     for module in "${MODULES[@]}"; do
         if [ -d "$module" ]; then
@@ -509,11 +524,15 @@ deploy_dotfiles() {
 post_install() {
     print_step "Running post-installation tasks..."
 
-    # Change default shell to zsh
+    # Change default shell to zsh (via sudo: plain chsh prompts for a password,
+    # which aborts a --non-interactive run)
     if [ "$SHELL" != "$(which zsh)" ]; then
         if ask_yn "Change default shell to zsh?" "y"; then
-            chsh -s "$(which zsh)"
-            print_success "Changed shell to zsh (restart terminal to apply)"
+            if sudo chsh -s "$(which zsh)" "$USER"; then
+                print_success "Changed shell to zsh (restart terminal to apply)"
+            else
+                print_warning "Could not change shell; run: chsh -s $(which zsh)"
+            fi
         fi
     fi
 
