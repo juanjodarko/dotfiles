@@ -40,7 +40,7 @@ die() { printf '\033[1;31mxx \033[0m %s\n' "$*" >&2; exit 1; }
 command -v xorriso >/dev/null || die "xorriso is required (pacman -S libisoburn)"
 virsh dominfo "$VM" >/dev/null 2>&1 || die "VM '$VM' does not exist"
 # With socket-activated libvirt daemons, network autostart doesn't run at boot.
-virsh net-info default 2>/dev/null | grep -q '^Active:.*yes' || virsh net-start default >/dev/null
+[ "$(virsh net-info default 2>/dev/null | awk '/^Active:/ {print $2}')" = yes ] || virsh net-start default >/dev/null
 
 if [ "${1:-}" != "--yes" ]; then
   read -rp "This WIPES the disk of VM '$VM' and reinstalls it. Continue? [y/N] " a
