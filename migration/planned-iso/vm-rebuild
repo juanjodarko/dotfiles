@@ -105,9 +105,9 @@ log "Seed built: $SEED"
 
 # ------------------------------------------------------------- install ----
 virsh destroy "$VM" >/dev/null 2>&1 || true
-virsh change-media "$VM" sda "$ISO" --insert --config >/dev/null
+virsh change-media "$VM" sda "$ISO" --update --config >/dev/null
 if virsh domblklist "$VM" | awk '{print $1}' | grep -qx sdb; then
-  virsh change-media "$VM" sdb "$SEED" --insert --config >/dev/null
+  virsh change-media "$VM" sdb "$SEED" --update --config >/dev/null
 else
   virsh attach-disk "$VM" "$SEED" sdb --type cdrom --mode readonly --targetbus sata --config >/dev/null
 fi
