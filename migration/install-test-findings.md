@@ -17,7 +17,9 @@ submodules supplied as bundles → `./install.sh --non-interactive`. Run 1 died 
 | 9 | Medium | System layer not covered: greetd/ReGreet configs, polkit rule, supergfxd/TLP confs, Docker↔libvirt forward unit — all hand-deployed on the laptop | no install step touches `/etc` for these | A root-level step (or archiso airootfs) for `/etc` configs |
 | 10 | Low | mise reinstalled every run (`~/.local/bin` not on PATH); `Tmux: unknown option` in version check | run 2 log | PATH fix; `tmux -V` |
 
-Not yet tested: a graphical Hyprland + DockShell session in the VM (now unblocked).
+**Graphical session — PASS (2026-11-12).** VM-only greetd autologin → `start-hyprland`: Hyprland 0.57.2 with
+`Renderer: virgl (Mesa Intel HD Graphics 630)`, no config errors; DockShell bar (workspaces, indicators, clock, tray),
+swaync, Vicinae (`vicinae-server`), hypridle, hyprpolkitagent and a wallpaper all up.
 
 ## Status
 
@@ -31,4 +33,8 @@ Not yet tested: a graphical Hyprland + DockShell session in the VM (now unblocke
   PASS — 163 layer packages installed, waybar/rofi absent, DockShell/kitty/swaync/bin linked, Hyprland config verifies.
 - Fixed on the way: a TPM clone blip aborted `init_plugins.sh` before the Hyprland plugin (clones now retry, non-fatal);
   `vm-rebuild` starts libvirt's network itself and tolerates a half-finished previous run.
-- Open: #1 #2 #9 #10.
+- Open: #1 #2 #9 #10, plus:
+  - #11 Low — fresh machine shows Vicinae's first-run onboarding and Docker Desktop's subscription dialog at first
+    login (Docker Desktop's user service is active on the laptop too, so this matches today's behavior).
+  - #12 Low — on the laptop `systemctl --user is-enabled docker-desktop.service` fails with "Too many levels of
+    symbolic links" (likely a loop between stowed `~/.config/systemd/user` links).
