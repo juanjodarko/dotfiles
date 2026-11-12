@@ -33,6 +33,17 @@ print_error() {
 echo "🔌 Initializing plugin systems..."
 echo ""
 
+# Clone with retries; never aborts the script (set -e), so one network blip
+# can't skip the plugin sections after it.
+git_clone() {
+    local i
+    for i in 1 2 3; do
+        git clone -q "$@" && return 0
+        sleep $((i * 3))
+    done
+    return 1
+}
+
 # ============================================================================
 # Tmux Plugin Manager (TPM)
 # ============================================================================
@@ -45,9 +56,12 @@ if [ -d "$TPM_DIR" ]; then
     print_skip "TPM already installed at $TPM_DIR"
 else
     print_step "Installing TPM..."
-    git clone https://github.com/tmux-plugins/tpm "$TPM_DIR"
-    print_success "TPM installed successfully"
-    echo "   Run 'tmux' and press Prefix + I to install plugins"
+    if git_clone https://github.com/tmux-plugins/tpm "$TPM_DIR"; then
+        print_success "TPM installed successfully"
+        echo "   Run 'tmux' and press Prefix + I to install plugins"
+    else
+        print_error "Failed to clone TPM (re-run setup later)"
+    fi
 fi
 
 echo ""
@@ -135,7 +149,7 @@ else
         fi
     else
         mkdir -p "$(dirname "$HYPR_PLUGIN_DIR")"
-        if git clone -q -b "$want_branch" "$HYPR_PLUGIN_URL" "$HYPR_PLUGIN_DIR"; then
+        if git_clone -b "$want_branch" "$HYPR_PLUGIN_URL" "$HYPR_PLUGIN_DIR"; then
             print_success "split-monitor-workspaces cloned ($want_branch)"
         else
             print_error "Failed to clone split-monitor-workspaces"
