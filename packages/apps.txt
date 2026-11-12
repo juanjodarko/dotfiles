@@ -1,0 +1,31 @@
+# apps — personal GUI apps
+1password  # aur
+1password-cli  # aur
+google-chrome  # aur
+discord
+slack-desktop  # aur
+telegram-desktop
+spotify  # aur
+tidal-hifi-bin  # aur
+obsidian
+ticktick  # aur
+onlyoffice-bin  # aur
+okular
+calibre
+mpv
+vlc
+vlc-plugin-ffmpeg
+obs-studio
+steam
+dxvk-bin  # aur
+endeavour
+sweethome3d
+simple-scan
+cups
+cups-browsed
+hplip
+nss-mdns
+rescuetime2  # aur
+thunar
+gucharmap
+cliamp  # aur

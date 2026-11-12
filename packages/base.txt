@@ -1,0 +1,47 @@
+# base — shell + CLI toolchain, any Arch machine (also the Mac's mental model)
+# (base, linux, linux-firmware, grub, cpio come from the archinstall base install — planned-iso/archinstall)
+# '# aur' after a name = AUR (installed with yay)
+base-devel
+git
+openssh
+stow
+zsh
+zsh-completions
+zsh-autosuggestions-git  # aur
+zsh-syntax-highlighting-git  # aur
+starship
+neovim
+vim
+tree-sitter-cli
+luarocks
+nodejs
+npm
+python
+python-pip
+tmux
+eza
+bat
+bat-extras
+fd
+fzf
+ripgrep
+jq
+zoxide
+direnv
+git-delta
+lazygit
+github-cli
+glab
+mise
+btop
+htop
+inxi
+wget
+7zip
+imagemagick
+socat
+sshpass
+restic
+reflector
+pacman-contrib
+yay-bin  # aur  (prebuilt; bootstrapped by install.sh)

@@ -1,0 +1,42 @@
+# not carried forward — installed on the laptop today, NOT reinstalled on a new machine.
+# (Nothing is removed from the laptop by this list.)
+# X11 era (Hyprland/Wayland only now; xorg-xwayland is kept in desktop.txt)
+arandr
+xclip
+xf86-video-vesa
+xorg-server
+xorg-server-common
+xorg-docs
+xorg-bdftopcf xorg-font-util xorg-fonts-100dpi xorg-fonts-75dpi xorg-fonts-encodings xorg-mkfontscale
+xorg-iceauth xorg-sessreg xorg-setxkbmap xorg-smproxy xorg-x11perf xorg-xauth xorg-xbacklight xorg-xcmsdb
+xorg-xcursorgen xorg-xdpyinfo xorg-xdriinfo xorg-xev xorg-xgamma xorg-xhost xorg-xinput xorg-xkbcomp
+xorg-xkbevd xorg-xkbutils xorg-xkill xorg-xlsatoms xorg-xlsclients xorg-xmodmap xorg-xpr xorg-xprop
+xorg-xrandr xorg-xrdb xorg-xrefresh xorg-xset xorg-xsetroot xorg-xvinfo xorg-xwd xorg-xwininfo xorg-xwud
+# superseded tools
+anyrun-git        # → Vicinae
+hyprshot          # → capture-* (gpu-screen-recorder + grim)
+wf-recorder       # → gpu-screen-recorder
+imv               # → swayimg
+kmix              # KDE mixer → pavucontrol / DockShell
+gigolo            # Xfce remote-fs frontend
+qt5-quickcontrols2
+neofetch          # aur, unmaintained
+zscroll-git       # aur, waybar-era
+ghostty           # kitty is the terminal
+sddm              # → greetd/ReGreet (kept installed on the laptop as rollback)
+catppuccin-sddm-theme-frappe catppuccin-sddm-theme-latte catppuccin-sddm-theme-macchiato catppuccin-sddm-theme-mocha
+mpd               # ncmpcpp is gone
+mpc
+# toys / one-offs
+cmatrix
+mdp
+unixbench
+getnf
+termsyn-font
+ttf-font-awesome-5   # woff2-font-awesome is kept
+# replaced by DockShell + Vicinae (decided 2026-11-11). The waybar/ config folder is still
+# stowed: SUPER+F8, audio-router.service and system-settings.desktop run scripts from it.
+waybar
+rofi
+rofi-calc
+rofi-emoji

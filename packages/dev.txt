@@ -1,0 +1,32 @@
+# dev — development + infrastructure
+docker
+docker-desktop  # aur
+docker-machine
+kubectl
+postgresql
+postgresql-libs
+valkey
+dbeaver
+gitlab-runner
+nvm
+rbenv
+ruby-build
+mono
+cmake
+opencv
+python-pyusb
+python-websockets
+tk
+ghidra
+radare2
+android-tools
+heimdall
+odin4-cli  # aur
+libvirt
+virt-manager
+qemu-desktop
+dnsmasq
+nfs-utils
+fuse2
+vulkan-tools
+vulkan-validation-layers

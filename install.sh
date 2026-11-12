@@ -35,6 +35,7 @@ MINIMAL_INSTALL=false
 NO_BACKUP=false
 INTERACTIVE=true
 MIGRATE_MODE=false
+LAYERS=""
 
 #==============================================================================
 # Helper Functions
@@ -277,49 +278,74 @@ detect_os() {
 # Dependency Installation
 #==============================================================================
 
+# Package layers live in packages/<layer>.txt (one name per line; "# aur" marks
+# AUR packages). Default: base desktop apps dev, plus hardware-<hostname> when
+# such a file exists. Override with --layers base,desktop,...
+default_layers() {
+    local host layers="base desktop apps dev"
+    host="$(hostnamectl --static 2>/dev/null || hostname)"
+    host="${host,,}"
+    [ -f "$DOTFILES_DIR/packages/hardware-$host.txt" ] && layers="$layers hardware-$host"
+    echo "$layers"
+}
+
+# $1 = layer, $2 = official|aur
+layer_packages() {
+    local file="$DOTFILES_DIR/packages/$1.txt"
+    [ -f "$file" ] || { print_warning "No package layer: $file"; return; }
+    if [ "$2" = aur ]; then
+        grep -vE '^[[:space:]]*(#|$)' "$file" | grep -E '#[[:space:]]*aur' | awk '{print $1}'
+    else
+        grep -vE '^[[:space:]]*(#|$)' "$file" | grep -vE '#[[:space:]]*aur' | awk '{print $1}'
+    fi
+}
+
+enable_multilib() {
+    grep -q '^\[multilib\]' /etc/pacman.conf && return
+    print_step "Enabling the [multilib] repository (steam, lib32-*)..."
+    sudo sed -i '/^#\[multilib\]$/,/^#Include/ s/^#//' /etc/pacman.conf
+}
+
+ensure_yay() {
+    command -v yay &> /dev/null && return 0
+    print_step "Bootstrapping yay (AUR helper)..."
+    local tmp; tmp="$(mktemp -d)"
+    if git clone -q https://aur.archlinux.org/yay-bin.git "$tmp/yay-bin" &&
+       (cd "$tmp/yay-bin" && makepkg -si --noconfirm); then
+        print_success "yay installed"
+    else
+        print_error "Could not install yay; AUR packages will be skipped"
+    fi
+    rm -rf "$tmp"
+    command -v yay &> /dev/null
+}
+
 install_arch_deps() {
-    print_step "Installing Arch Linux dependencies..."
+    local layers=${LAYERS:-$(default_layers)}
+    [ "$MINIMAL_INSTALL" = true ] && layers="base"
+    layers="${layers//,/ }"
+    print_step "Installing Arch Linux packages (layers: $layers)..."
 
-    local packages=(
-        # Core
-        "stow" "git" "zsh" "curl" "wget" "base-devel"
+    local official=() aur=() layer
+    for layer in $layers; do
+        mapfile -t -O "${#official[@]}" official < <(layer_packages "$layer" official)
+        mapfile -t -O "${#aur[@]}" aur < <(layer_packages "$layer" aur)
+    done
 
-        # Neovim
-        "neovim" "ripgrep" "fd" "nodejs" "npm" "python" "python-pip"
-
-        # Hyprland (if not minimal)
-        "hyprland" "hyprpaper" "hypridle" "hyprlock" "waybar" "swaync"
-        "rofi-wayland" "wl-clipboard" "grim" "slurp" "swayimg"
-        "brightnessctl" "playerctl" "networkmanager" "bluez" "blueman"
-        "pavucontrol" "qt6ct"
-
-        # Shell Tools
-        "starship" "zoxide" "fzf" "eza" "bat" "jq" "direnv"
-
-        # Tmux
-        "tmux"
-
-        # Git Tools
-        "git-delta" "lazygit" "github-cli"
-
-        # Toot (Mastodon)
-        "toot" "python-pillow" "python-term-image" "libnotify"
-
-        # ZSH Plugins
-        "zsh-autosuggestions" "zsh-syntax-highlighting"
-
-        # Fonts
-        "ttf-jetbrains-mono-nerd" "ttf-cascadia-code-nerd"
-    )
-
-    if [ "$MINIMAL_INSTALL" = true ]; then
-        packages=("stow" "git" "zsh" "neovim" "ripgrep" "fd" "nodejs" "npm" "starship")
+    if ! ask_yn "Install ${#official[@]} official + ${#aur[@]} AUR packages?" "y"; then
+        return
     fi
 
-    if ask_yn "Install packages with pacman?" "y"; then
-        sudo pacman -Syu --needed --noconfirm "${packages[@]}" || {
-            print_error "Failed to install some packages"
-            print_warning "You may need to install missing packages manually"
+    printf '%s\n' "${official[@]}" | grep -qE '^(lib32-|steam$)' && enable_multilib
+    sudo pacman -Syu --needed --noconfirm "${official[@]}" || {
+        print_error "Failed to install some official packages"
+        print_warning "You may need to install missing packages manually"
+    }
+
+    if [ ${#aur[@]} -gt 0 ] && ensure_yay; then
+        yay -S --needed --noconfirm --answerdiff None --answerclean None "${aur[@]}" || {
+            print_error "Failed to install some AUR packages"
+            print_warning "Re-run: yay -S --needed ${aur[*]}"
         }
     fi
 }
@@ -435,24 +461,39 @@ backup_configs() {
 # Stow Deployment
 #==============================================================================
 
+# Module sets mirror what each machine actually stows (checked on the laptop
+# 2026-11-11). themes/ is linked by setup/init_themes.sh, not stow.
+# waybar/ is still stowed for its scripts (SUPER+F8, audio-router, settings menu).
+MODULES_CORE=("zsh" "nvim" "git" "vim" "tmux" "mise")
+MODULES_DESKTOP=("hyprland" "quickshell" "swaync" "kitty" "wofi" "waybar" "swayimg" "wireplumber" "wallpaperd" "systemd" "bin")
+MODULES_PERSONAL=("toot" "personal")
+# macOS: the same set ./mac stows
+MODULES_MACOS=("bin" "nvim" "mac_personal" "tmux" "mac_zsh" "aerospace" "starship")
+
 select_modules() {
+    if [ "$OS" = macos ]; then
+        MODULES=("${MODULES_MACOS[@]}")
+        print_success "macOS modules: ${MODULES[*]}"
+        return
+    fi
+
     if [ "$MINIMAL_INSTALL" = true ]; then
-        MODULES=("zsh" "nvim" "git" "starship")
+        MODULES=("${MODULES_CORE[@]}")
         print_success "Minimal install: ${MODULES[*]}"
         return
     fi
 
     if [ "$INTERACTIVE" = false ]; then
         # Default full install
-        MODULES=("zsh" "nvim" "git" "starship" "hyprland" "waybar" "rofi" "swaync" "tmux" "toot" "mise" "personal")
+        MODULES=("${MODULES_CORE[@]}" "${MODULES_DESKTOP[@]}" "${MODULES_PERSONAL[@]}")
         return
     fi
 
     echo ""
     echo -e "${CYAN}Select modules to install:${NC}"
-    echo "  1. Minimal (zsh, nvim, git, starship)"
-    echo "  2. Desktop (+ hyprland, waybar, rofi, swaync)"
-    echo "  3. Full (+ tmux, toot, mise, personal)"
+    echo "  1. Minimal (${MODULES_CORE[*]})"
+    echo "  2. Desktop (+ ${MODULES_DESKTOP[*]})"
+    echo "  3. Full (+ ${MODULES_PERSONAL[*]})"
     echo "  4. Custom (select individually)"
     echo ""
 
@@ -460,30 +501,21 @@ select_modules() {
     choice=${choice:-3}
 
     case $choice in
-        1)
-            MODULES=("zsh" "nvim" "git" "starship")
-            ;;
-        2)
-            MODULES=("zsh" "nvim" "git" "starship" "hyprland" "waybar" "rofi" "swaync")
-            ;;
-        3)
-            MODULES=("zsh" "nvim" "git" "starship" "hyprland" "waybar" "rofi" "swaync" "tmux" "toot" "mise" "personal")
-            ;;
-        4)
-            select_custom_modules
-            ;;
+        1) MODULES=("${MODULES_CORE[@]}") ;;
+        2) MODULES=("${MODULES_CORE[@]}" "${MODULES_DESKTOP[@]}") ;;
+        3) MODULES=("${MODULES_CORE[@]}" "${MODULES_DESKTOP[@]}" "${MODULES_PERSONAL[@]}") ;;
+        4) select_custom_modules ;;
         *)
             print_error "Invalid choice, using full install"
-            MODULES=("zsh" "nvim" "git" "starship" "hyprland" "waybar" "rofi" "swaync" "tmux" "toot" "mise" "personal")
+            MODULES=("${MODULES_CORE[@]}" "${MODULES_DESKTOP[@]}" "${MODULES_PERSONAL[@]}")
             ;;
     esac
 }
 
 select_custom_modules() {
     MODULES=()
-    local available=("zsh" "nvim" "git" "starship" "hyprland" "waybar" "rofi" "swaync" "dunst" "tmux" "toot" "mise" "bash" "vim" "personal")
-
-    for module in "${available[@]}"; do
+    local module
+    for module in "${MODULES_CORE[@]}" "${MODULES_DESKTOP[@]}" "${MODULES_PERSONAL[@]}"; do
         if ask_yn "Install $module?" "y"; then
             MODULES+=("$module")
         fi
@@ -518,6 +550,35 @@ deploy_dotfiles() {
 }
 
 #==============================================================================
+# NAS Mounts
+#==============================================================================
+
+# Calibre library on the Synology NFS share, mounted on first access so boot
+# never waits on the NAS (e.g. away from home). Only one Calibre instance may
+# open the library at a time: SQLite over the network has no safe sharing.
+NAS_HOST="192.168.0.238"
+NAS_BOOKS_EXPORT="/volume3/books"
+NAS_BOOKS_MOUNT="/mnt/books"
+
+setup_nas_books() {
+    [ "$OS" = "arch" ] || return 0
+
+    if grep -qs "[[:space:]]$NAS_BOOKS_MOUNT[[:space:]]" /etc/fstab; then
+        print_success "NAS books mount already in /etc/fstab"
+        return 0
+    fi
+
+    if ask_yn "Add NAS books automount ($NAS_HOST:$NAS_BOOKS_EXPORT -> $NAS_BOOKS_MOUNT)?" "y"; then
+        sudo mkdir -p "$NAS_BOOKS_MOUNT"
+        printf '%s:%s  %s  nfs4  nfsvers=4.1,_netdev,noauto,x-systemd.automount,x-systemd.idle-timeout=10min,x-systemd.mount-timeout=30s  0 0\n' \
+            "$NAS_HOST" "$NAS_BOOKS_EXPORT" "$NAS_BOOKS_MOUNT" | sudo tee -a /etc/fstab > /dev/null
+        sudo systemctl daemon-reload
+        sudo systemctl start "$(systemd-escape --path "$NAS_BOOKS_MOUNT").automount" || true
+        print_success "NAS books automount added (point Calibre at $NAS_BOOKS_MOUNT)"
+    fi
+}
+
+#==============================================================================
 # Post-Installation
 #==============================================================================
 
@@ -535,6 +596,8 @@ post_install() {
             fi
         fi
     fi
+
+    setup_nas_books
 
     # Install mise tools
     if command -v mise &> /dev/null; then
@@ -660,6 +723,10 @@ main() {
             --non-interactive)
                 INTERACTIVE=false
                 shift
+                ;;
+            --layers)
+                LAYERS="$2"
+                shift 2
                 ;;
             --help)
                 show_help

@@ -1,0 +1,26 @@
+# hardware — this laptop only (Intel iGPU + GTX 1060 Optimus, Razer/Logitech peripherals)
+linux-headers
+efibootmgr
+sof-firmware
+alsa-firmware
+alsa-utils
+vulkan-intel
+lib32-vulkan-intel
+nvidia-580xx-dkms  # aur
+nvidia-580xx-utils  # aur
+lib32-nvidia-580xx-utils  # aur
+nvidia-580xx-settings  # aur
+nvidia-prime
+libva-nvidia-driver
+supergfxctl  # aur
+acpi
+acpi_call
+power-profiles-daemon
+powertop
+fprintd
+openrazer-daemon
+openrazer-meta-git  # aur
+polychromatic  # aur
+razer-nari-pipewire-profile  # aur
+logiops  # aur
+solaar

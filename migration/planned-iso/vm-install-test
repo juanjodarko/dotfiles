@@ -56,7 +56,7 @@ EOS
 log "Running install.sh --non-interactive (log streams to $LOGS)"
 stamp="$(date +%Y%m%d-%H%M%S)"
 set +e
-"${SSH[@]}" 'cd ~/dotfiles && timeout 45m ./install.sh --non-interactive </dev/null' > "$LOGS/install-$stamp.log" 2>&1
+"${SSH[@]}" 'cd ~/dotfiles && timeout 120m ./install.sh --non-interactive </dev/null' > "$LOGS/install-$stamp.log" 2>&1
 rc=$?
 set -e
 log "install.sh exited $rc — log: $LOGS/install-$stamp.log"
@@ -76,5 +76,14 @@ n=$(git -C ~/dotfiles/personal status --porcelain | wc -l)
 [ "$n" = 0 ] && ok "#5 personal submodule clean" || bad "#5 personal has $n untracked/changed paths"
 [ -L ~/.config/themes ] && [ -e ~/.config/themes/current_flavor.txt ] && ok "#8 ~/.config/themes links to the theme tree" || bad "#8 ~/.config/themes is $(stat -c %F ~/.config/themes 2>/dev/null)"
 if out=$(Hyprland --verify-config 2>&1); then ok "#7 Hyprland config verifies"; else bad "#7 Hyprland --verify-config: $(echo "$out" | grep -m1 -iE 'error|no file|fail')"; fi
+# #6 every package from the default layers is installed
+want=$(cd ~/dotfiles/packages && for l in base desktop apps dev; do grep -vE '^[[:space:]]*(#|$)' $l.txt | awk '{print $1}'; done | sort -u)
+missing=$(comm -23 <(echo "$want") <(pacman -Qq | sort))
+[ -z "$missing" ] && ok "#6 all $(echo "$want" | wc -l) layer packages installed" || bad "#6 missing $(echo "$missing" | wc -l): $(echo $missing)"
+for p in waybar rofi; do pacman -Q $p &>/dev/null && bad "#6 $p installed (should be dropped)" || ok "#6 $p not installed"; done
+# #3 the current desktop modules are linked
+for d in ~/.config/quickshell ~/.config/kitty/kitty.conf ~/.config/swaync ~/.local/bin/theme-set ~/.local/bin/capture-screenshot; do
+  [ -e "$d" ] && readlink -f "$d" | grep -q dotfiles && ok "#3 $(basename $d) linked" || bad "#3 $d not linked"
+done
 exit $fail
 EOS

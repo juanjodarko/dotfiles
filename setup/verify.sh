@@ -144,8 +144,9 @@ if command -v Hyprland &> /dev/null || command -v hyprland &> /dev/null; then
     echo ""
 
     check_cmd Hyprland "Hyprland" || check_cmd hyprland "Hyprland"
-    check_cmd waybar "Waybar"
-    check_cmd rofi "Rofi"
+    check_cmd quickshell "Quickshell (DockShell)"
+    check_cmd vicinae "Vicinae"
+    check_cmd kitty "Kitty"
     check_cmd wofi "Wofi"
     check_cmd swaync "SwayNC"
     check_cmd hyprlock "Hyprlock"
@@ -167,11 +168,11 @@ check_file "$HOME/.config/nvim/init.lua" "Neovim config"
 check_file "$HOME/.config/tmux/tmux.conf" "Tmux config"
 check_file "$HOME/.config/starship.toml" "Starship config"
 check_file "$HOME/.gitconfig" "Git config"
-check_file "$HOME/.config/ghostty/config" "Ghostty config"
+check_file "$HOME/.config/kitty/kitty.conf" "Kitty config"
 
 if [ -d "$HOME/.config/hypr" ]; then
-    check_file "$HOME/.config/hypr/hyprland.conf" "Hyprland config"
-    check_file "$HOME/.config/waybar/config.jsonc" "Waybar config"
+    check_file "$HOME/.config/hypr/hyprland.lua" "Hyprland config"
+    check_file "$HOME/.config/quickshell/shell.qml" "DockShell config"
 fi
 
 echo ""
