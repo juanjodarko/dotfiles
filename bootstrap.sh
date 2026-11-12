@@ -50,7 +50,7 @@ else
   git clone -q -b "$BRANCH" "$REPO" "$DIR"
 fi
 log "Fetching submodules"
-git -C "$DIR" submodule update --init --recursive
+git -C "$DIR" submodule update --init --recursive --recommend-shallow
 
 log "Running install.sh"
 cd "$DIR"

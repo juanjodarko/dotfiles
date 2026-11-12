@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#
+# wallpapers-sync [pull|push|status] — sync ~/wallpapers with the HomeNAS copy.
+#
+# The wallpapers (3+ GB) live on the NAS, not in git. Transfers only files missing
+# on the other side, via tar over SSH (Synology refuses rsync-over-SSH unless its
+# rsync service is enabled). Never deletes anything on either side.
+#
+#   pull    NAS → ~/wallpapers  (new machine; default)
+#   push    ~/wallpapers → NAS  (after adding wallpapers locally)
+#   status  counts on both sides
+#
+# Env: WALLPAPERS_HOST (ssh host, default homenas — see ~/.ssh/config),
+#      WALLPAPERS_REMOTE (path on the NAS, default wallpapers = ~/wallpapers there),
+#      WALLPAPERS_DIR (default ~/wallpapers).
+#
+set -euo pipefail
+
+HOST="${WALLPAPERS_HOST:-homenas}"
+REMOTE="${WALLPAPERS_REMOTE:-wallpapers}"
+LOCAL="${WALLPAPERS_DIR:-$HOME/wallpapers}"
+SSH=(ssh -o BatchMode=yes -o LogLevel=ERROR "$HOST")
+
+list_remote() { "${SSH[@]}" "cd $REMOTE 2>/dev/null && find . -type f | LC_ALL=C sort"; }
+list_local()  { (cd "$LOCAL" 2>/dev/null && find . -type f | LC_ALL=C sort); }
+
+mode="${1:-pull}"
+"${SSH[@]}" true || { echo "wallpapers-sync: cannot reach '$HOST' over SSH" >&2; exit 1; }
+mkdir -p "$LOCAL"
+
+case "$mode" in
+  pull)
+    missing="$(LC_ALL=C comm -23 <(list_remote) <(list_local))"
+    [ -n "$missing" ] || { echo "~/wallpapers is up to date"; exit 0; }
+    echo "Pulling $(wc -l <<<"$missing") wallpaper(s) from $HOST..."
+    "${SSH[@]}" "cd $REMOTE && tar cf - -T -" <<<"$missing" | tar xf - -C "$LOCAL"
+    ;;
+  push)
+    missing="$(LC_ALL=C comm -13 <(list_remote) <(list_local))"
+    [ -n "$missing" ] || { echo "NAS is up to date"; exit 0; }
+    echo "Pushing $(wc -l <<<"$missing") wallpaper(s) to $HOST..."
+    (cd "$LOCAL" && tar cf - -T - <<<"$missing") | "${SSH[@]}" "mkdir -p $REMOTE && tar xf - -C $REMOTE"
+    ;;
+  status)
+    echo "local:  $(list_local | wc -l) files in $LOCAL"
+    echo "remote: $(list_remote | wc -l) files in $HOST:$REMOTE"
+    ;;
+  *) echo "usage: wallpapers-sync [pull|push|status]" >&2; exit 2 ;;
+esac
+echo "Done."

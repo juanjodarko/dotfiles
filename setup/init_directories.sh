@@ -56,13 +56,25 @@ done
 
 echo ""
 
-# Create sample wallpaper if wallpapers directory was just created
 WALLPAPER_DIR="$HOME/wallpapers"
-if [ $created -gt 0 ] && [ -d "$WALLPAPER_DIR" ] && [ -z "$(ls -A "$WALLPAPER_DIR")" ]; then
-    print_step "Wallpapers directory is empty"
-    echo "   You can add wallpapers to $WALLPAPER_DIR"
-    echo "   Hyprland will use these for backgrounds"
-    echo ""
+
+# wallpaperd reads ~/.config/wallpaperd/wallpapers (per-machine link, gitignored)
+if [ -d "$HOME/.config/wallpaperd" ] && [ ! -e "$HOME/.config/wallpaperd/wallpapers" ]; then
+    ln -s "$WALLPAPER_DIR" "$HOME/.config/wallpaperd/wallpapers"
+    print_success "Linked ~/.config/wallpaperd/wallpapers -> $WALLPAPER_DIR"
+fi
+
+# Wallpapers live on HomeNAS, not in git: pull them when the NAS is reachable
+if [ -z "$(ls -A "$WALLPAPER_DIR" 2>/dev/null)" ]; then
+    if command -v wallpapers-sync &> /dev/null && wallpapers-sync status &> /dev/null; then
+        print_step "Pulling wallpapers from HomeNAS..."
+        wallpapers-sync pull || print_skip "wallpapers-sync failed; run it later"
+    else
+        print_step "Wallpapers directory is empty"
+        echo "   On the home network run: wallpapers-sync pull"
+        echo "   (needs an SSH login to HomeNAS: Host homenas in ~/.ssh/config)"
+        echo ""
+    fi
 fi
 
 # Summary

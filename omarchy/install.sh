@@ -34,6 +34,7 @@ declare -A GENERATED=(
 
 # Wallpaper sources, in priority order. Missing directories are skipped.
 WALLPAPER_SOURCES=(
+  "$HOME/wallpapers"   # synced from HomeNAS by wallpapers-sync (no longer in git)
   "$DOTFILES/personal/wallpapers"
   "$DOTFILES/personal/Wallpapers"
   "$HOME/Wallpapers"
