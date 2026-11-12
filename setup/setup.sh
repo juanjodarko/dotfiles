@@ -210,6 +210,13 @@ main() {
     # Step 3: Initialize themes
     print_header "Step 3/6: Theme System"
     run_script "init_themes.sh" "Initializing theme system" "true"
+
+    # System files (/etc, /usr/local): greeter, units, hardware layer. After themes:
+    # the greeter CSS is rendered from ~/.config/themes/current.json.
+    if command -v pacman &> /dev/null; then
+        echo ""
+        run_script "init_system.sh" "Deploying system files (/etc)" "true"
+    fi
     echo ""
 
     # Step 4: Install plugins

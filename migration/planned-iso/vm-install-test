@@ -85,5 +85,11 @@ for p in waybar rofi; do pacman -Q $p &>/dev/null && bad "#6 $p installed (shoul
 for d in ~/.config/quickshell ~/.config/kitty/kitty.conf ~/.config/swaync ~/.local/bin/theme-set ~/.local/bin/capture-screenshot; do
   [ -e "$d" ] && readlink -f "$d" | grep -q dotfiles && ok "#3 $(basename $d) linked" || bad "#3 $d not linked"
 done
+# #9 system layer
+[[ "$(readlink -f /etc/systemd/system/display-manager.service)" == */greetd.service ]] && ok "#9 greetd is the display manager" || bad "#9 display manager: $(readlink -f /etc/systemd/system/display-manager.service)"
+sudo grep -q GENERATED /etc/greetd/regreet.css 2>/dev/null && ok "#9 greeter CSS generated" || bad "#9 /etc/greetd/regreet.css missing"
+sudo test -f /etc/polkit-1/rules.d/49-greeter.rules && ok "#9 greeter polkit rule" || bad "#9 polkit rule missing"
+systemctl is-enabled -q libvirt-docker-forward.service && ok "#9 libvirt-docker-forward enabled" || bad "#9 libvirt-docker-forward not enabled"
+grep -q '^GRUB_CMDLINE_LINUX_DEFAULT="quiet splash' /etc/default/grub && ok "#9 GRUB quiet-boot cmdline" || bad "#9 GRUB cmdline not set"
 exit $fail
 EOS

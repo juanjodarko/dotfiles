@@ -1,3 +1,6 @@
+> **Moved (2026-11-12):** the deployable files now live in `system/common/` and are installed by
+> `setup/init_system.sh`. This folder keeps the design notes and the reference `regreet.css`.
+
 # greetd + ReGreet login screen — spec (STAGED, VM-first, not installed)
 
 **Status: design/spec only.** This replaces SDDM with a lighter, palette-templated login screen. It touches the **login

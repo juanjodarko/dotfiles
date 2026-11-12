@@ -1,0 +1,3 @@
+# Samsung devices
+SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", MODE="0666"
+SUBSYSTEM=="usb", ATTR{idVendor}=="04e8", ENV{ID_MM_DEVICE_IGNORE}="1"
