@@ -20,7 +20,19 @@ ssh "${O[@]}" "juanjo@$ip" 'sudo -n true' 2>/dev/null \
   || { echo "the VM needs passwordless sudo — run vm-rebuild --yes first" >&2; exit 1; }
 ssh "${O[@]}" "juanjo@$ip" 'rm -rf ~/isosrc && mkdir -p ~/isosrc && (pacman -Q archiso >/dev/null 2>&1 || sudo pacman -S --needed --noconfirm archiso >/dev/null)'
 tar -C "$REPO" --exclude=iso/out -cf - iso bootstrap.sh | ssh "${O[@]}" "juanjo@$ip" 'tar -C ~/isosrc -xf -'
-ssh "${O[@]}" "juanjo@$ip" 'OUT=$HOME/iso-out ~/isosrc/iso/build 2>&1 | tail -15'
+# Run detached in the VM with its own log: a dropped SSH connection must not
+# kill a 10-minute build. Then poll for the exit-status file.
+ssh "${O[@]}" "juanjo@$ip" 'rm -rf ~/iso-out ~/iso-build.log ~/iso-build.rc
+  setsid bash -c "OUT=\$HOME/iso-out ~/isosrc/iso/build > ~/iso-build.log 2>&1; echo \$? > ~/iso-build.rc" </dev/null >/dev/null 2>&1 &'
+echo "==> Building in the VM (log: ~/iso-build.log there)…"
+for _ in $(seq 240); do   # up to 60 min
+  sleep 15
+  rc="$(ssh "${O[@]}" "juanjo@$ip" 'cat ~/iso-build.rc 2>/dev/null' 2>/dev/null || true)"
+  [ -n "$rc" ] && break
+done
+ssh "${O[@]}" "juanjo@$ip" 'tail -15 ~/iso-build.log'
+[ "${rc:-}" = 0 ] || { echo "ISO build failed (rc=${rc:-timeout}) — see ~/iso-build.log in the VM" >&2; exit 1; }
 iso="$(ssh "${O[@]}" "juanjo@$ip" 'ls -t ~/iso-out/dotfiles-arch-*.iso | head -1')"
-scp -q "${O[@]}" "juanjo@$ip:$iso" "$DEST"
+# copy then rename: libvirt takes ownership of an ISO attached to a VM
+scp -q "${O[@]}" "juanjo@$ip:$iso" "$DEST.tmp" && mv -f "$DEST.tmp" "$DEST"
 ls -lh "$DEST"
