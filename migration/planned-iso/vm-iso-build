@@ -16,6 +16,8 @@ ip="$(virsh domifaddr "$VM" | awk '/ipv4/ {split($4,a,"/"); print a[1]; exit}')"
 [ -n "$ip" ] || { echo "no IP for $VM (is it running?)" >&2; exit 1; }
 O=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$HOME/.ssh/known_hosts.vms" -o LogLevel=ERROR)
 
+ssh "${O[@]}" "juanjo@$ip" 'sudo -n true' 2>/dev/null \
+  || { echo "the VM needs passwordless sudo — run vm-rebuild --yes first" >&2; exit 1; }
 ssh "${O[@]}" "juanjo@$ip" 'rm -rf ~/isosrc && mkdir -p ~/isosrc && (pacman -Q archiso >/dev/null 2>&1 || sudo pacman -S --needed --noconfirm archiso >/dev/null)'
 tar -C "$REPO" --exclude=iso/out -cf - iso bootstrap.sh | ssh "${O[@]}" "juanjo@$ip" 'tar -C ~/isosrc -xf -'
 ssh "${O[@]}" "juanjo@$ip" 'OUT=$HOME/iso-out ~/isosrc/iso/build 2>&1 | tail -15'
