@@ -91,7 +91,8 @@ fi
 # DockShell (Quickshell) re-tints via its current.json FileView watch — no restart.
 pkill -SIGUSR2 ghostty 2>/dev/null            # ghostty re-reads config
 pkill -SIGUSR1 kitty   2>/dev/null            # kitty re-reads config
-command -v swaync-client >/dev/null 2>&1 && swaync-client -rs 2>/dev/null &
+# Only with a running daemon: swaync-client otherwise blocks on D-Bus forever (headless install).
+pgrep -x swaync >/dev/null 2>&1 && timeout 5 swaync-client -rs >/dev/null 2>&1 &
 
 if [ -n "${TMUX:-}" ] || pgrep -x tmux >/dev/null 2>&1; then
   tmux source-file "$TMUX_CONFIG" 2>/dev/null || true
@@ -105,7 +106,7 @@ done
 pgrep -x Hyprland >/dev/null 2>&1 && hyprctl reload >/dev/null 2>&1 &
 
 # Vicinae launcher (if installed): keep its UI theme in sync with the flavor.
-command -v vicinae >/dev/null 2>&1 && vicinae theme set "catppuccin-${flavor}" >/dev/null 2>&1 &
+command -v vicinae >/dev/null 2>&1 && timeout 5 vicinae theme set "catppuccin-${flavor}" >/dev/null 2>&1 &
 
 # Login screen (greetd/ReGreet): re-render its CSS from the new palette.
 # Passwordless via system/common/etc/polkit-1/rules.d/49-greeter.rules.
