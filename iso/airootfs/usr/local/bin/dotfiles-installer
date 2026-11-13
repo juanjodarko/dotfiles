@@ -122,9 +122,10 @@ fi
 install -Dm755 "$SHARE/bootstrap.sh" /mnt/usr/local/share/dotfiles/bootstrap.sh
 install -Dm644 "$SHARE/firstboot.sh" /mnt/etc/profile.d/dotfiles-firstboot.sh   # fallback if this step fails
 
-# install.sh needs sudo without a password prompt while it runs unattended
-echo "$user ALL=(ALL) NOPASSWD: ALL" > /mnt/etc/sudoers.d/00-dotfiles-install
-chmod 440 /mnt/etc/sudoers.d/00-dotfiles-install
+# install.sh needs sudo without a password prompt while it runs unattended. "zz-" so it
+# sorts after archinstall's own 00_<user> rule: sudo applies the LAST matching rule.
+echo "$user ALL=(ALL) NOPASSWD: ALL" > /mnt/etc/sudoers.d/zz-dotfiles-install
+chmod 440 /mnt/etc/sudoers.d/zz-dotfiles-install
 
 [ -f "$WORK/dotfiles_branch" ] && DOTFILES_BRANCH=$(tr -d '[:space:]' < "$WORK/dotfiles_branch")
 src="$DOTFILES_REPO"
@@ -148,7 +149,7 @@ else
   say "Desktop install FAILED (rc=$desktop_rc) — after reboot, log in on a TTY and run: cd ~/dotfiles && ./install.sh"
 fi
 
-rm -f /mnt/etc/sudoers.d/00-dotfiles-install
+rm -f /mnt/etc/sudoers.d/zz-dotfiles-install
 [ -f "$WORK/sudoers" ] && install -m440 "$WORK/sudoers" /mnt/etc/sudoers.d/90-cidata
 cp "$LOG" /mnt/var/log/ 2>/dev/null || true
 umount -R /mnt

@@ -33,7 +33,7 @@ grep -q 'dotfiles installer' /var/log/dotfiles-install.log 2>/dev/null && ok "in
 for p in hyprland quickshell kitty vicinae-bin greetd yay-bin; do pacman -Q $p >/dev/null 2>&1 && ok "package $p installed" || bad "package $p missing"; done
 [[ "$(readlink -f /etc/systemd/system/display-manager.service)" == */greetd.service ]] && ok "greetd is the display manager" || bad "greetd not the display manager"
 readlink -f ~/.config/hypr | grep -q dotfiles && ok "hyprland config linked" || bad "hyprland config not linked"
-[ ! -e /etc/sudoers.d/00-dotfiles-install ] && ok "temporary install sudoers removed" || bad "00-dotfiles-install left behind"
+[ ! -e /etc/sudoers.d/zz-dotfiles-install ] && ok "temporary install sudoers removed" || bad "zz-dotfiles-install left behind"
 # phase 2 pending: private submodules not fetched yet → dotfiles-finish would run at first desktop login
 [ -x ~/.local/bin/dotfiles-finish ] && ok "dotfiles-finish linked" || bad "dotfiles-finish not linked"
 [ ! -e ~/dotfiles/quickshell/.config/quickshell/shell.qml ] && ok "private submodules not fetched (phase 2 pending)" || bad "private submodule unexpectedly present"
