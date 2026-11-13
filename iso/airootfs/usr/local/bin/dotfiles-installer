@@ -129,8 +129,9 @@ chmod 440 /mnt/etc/sudoers.d/00-dotfiles-install
 [ -f "$WORK/dotfiles_branch" ] && DOTFILES_BRANCH=$(tr -d '[:space:]' < "$WORK/dotfiles_branch")
 src="$DOTFILES_REPO"
 if [ -f "$WORK/dotfiles.bundle" ]; then   # test builds: unpushed commits
-  install -m644 "$WORK/dotfiles.bundle" /mnt/tmp/dotfiles.bundle
-  src=/tmp/dotfiles.bundle
+  # /var/tmp, not /tmp: arch-chroot mounts an empty tmpfs over /tmp
+  install -m644 "$WORK/dotfiles.bundle" /mnt/var/tmp/dotfiles.bundle
+  src=/var/tmp/dotfiles.bundle
 fi
 say "Installing the desktop from dotfiles ($DOTFILES_BRANCH) — this takes a while…"
 arch-chroot /mnt runuser -u "$user" -- bash -lc "
@@ -139,9 +140,13 @@ arch-chroot /mnt runuser -u "$user" -- bash -lc "
   git -C ~/dotfiles remote set-url origin '$DOTFILES_REPO'
   cd ~/dotfiles && ./install.sh --non-interactive </dev/null
 " 2>&1 | tee -a "$LOG"
-rm -f /mnt/tmp/dotfiles.bundle
-[ "${PIPESTATUS[0]}" -eq 0 ] && say "Desktop installed." \
-  || say "Desktop install reported errors — finish it after reboot with: cd ~/dotfiles && ./install.sh"
+desktop_rc=${PIPESTATUS[0]}   # capture before any other command resets PIPESTATUS
+rm -f /mnt/var/tmp/dotfiles.bundle
+if [ "$desktop_rc" -eq 0 ]; then
+  say "Desktop installed."
+else
+  say "Desktop install FAILED (rc=$desktop_rc) — after reboot, log in on a TTY and run: cd ~/dotfiles && ./install.sh"
+fi
 
 rm -f /mnt/etc/sudoers.d/00-dotfiles-install
 [ -f "$WORK/sudoers" ] && install -m440 "$WORK/sudoers" /mnt/etc/sudoers.d/90-cidata
