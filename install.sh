@@ -283,7 +283,7 @@ detect_os() {
 # such a file exists. Override with --layers base,desktop,...
 default_layers() {
     local host layers="base desktop apps dev"
-    host="$(hostnamectl --static 2>/dev/null || hostname)"
+    host="$(cat /etc/hostname 2>/dev/null || hostnamectl --static 2>/dev/null || hostname)"
     host="${host,,}"
     [ -f "$DOTFILES_DIR/packages/hardware-$host.txt" ] && layers="$layers hardware-$host"
     echo "$layers"

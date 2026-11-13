@@ -25,7 +25,7 @@ DOTFILES_DIR="${DOTFILES_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 SYSTEM_DIR="$DOTFILES_DIR/system"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
-host="$(hostnamectl --static 2>/dev/null || hostname)"
+host="$(cat /etc/hostname 2>/dev/null || hostnamectl --static 2>/dev/null || hostname)"
 host="${host,,}"
 LAYERS=("common")
 [ -d "$SYSTEM_DIR/hardware-$host" ] && LAYERS+=("hardware-$host")

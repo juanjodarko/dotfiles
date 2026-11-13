@@ -11,6 +11,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VM="${VM:-arch-dotfiles}"
 export ISO="${ISO:-$HOME/vms/dotfiles-arch.iso}" ISO_KIND=dotfiles
+export INSTALL_TIMEOUT="${INSTALL_TIMEOUT:-7200}"   # archinstall + the whole desktop (install.sh in the chroot)
 export LIBVIRT_DEFAULT_URI=qemu:///system
 
 [ -f "$ISO" ] || { echo "no ISO at $ISO (run vm-iso-build)" >&2; exit 1; }
@@ -27,6 +28,15 @@ grep -q 'dotfiles installer' /var/log/dotfiles-install.log 2>/dev/null && ok "in
 [ "$(hostnamectl --static)" = arch-dotfiles-vm ] && ok "hostname from cidata config" || bad "hostname is $(hostnamectl --static)"
 [ -x /usr/local/share/dotfiles/bootstrap.sh ] && ok "bootstrap.sh installed" || bad "bootstrap.sh missing"
 [ -f /etc/profile.d/dotfiles-firstboot.sh ] && ok "first-login hook installed" || bad "first-login hook missing"
+# phase 1: the desktop was installed during the ISO install (public repo, no GitHub login)
+[ -d ~/dotfiles/.git ] && ok "public dotfiles cloned" || bad "~/dotfiles missing"
+for p in hyprland quickshell kitty vicinae-bin greetd yay-bin; do pacman -Q $p >/dev/null 2>&1 && ok "package $p installed" || bad "package $p missing"; done
+[[ "$(readlink -f /etc/systemd/system/display-manager.service)" == */greetd.service ]] && ok "greetd is the display manager" || bad "greetd not the display manager"
+readlink -f ~/.config/hypr | grep -q dotfiles && ok "hyprland config linked" || bad "hyprland config not linked"
+[ ! -e /etc/sudoers.d/00-dotfiles-install ] && ok "temporary install sudoers removed" || bad "00-dotfiles-install left behind"
+# phase 2 pending: private submodules not fetched yet → dotfiles-finish would run at first desktop login
+[ -x ~/.local/bin/dotfiles-finish ] && ok "dotfiles-finish linked" || bad "dotfiles-finish not linked"
+[ ! -e ~/dotfiles/quickshell/.config/quickshell/shell.qml ] && ok "private submodules not fetched (phase 2 pending)" || bad "private submodule unexpectedly present"
 systemctl is-enabled -q sshd && ok "sshd enabled (authorized_keys provided)" || bad "sshd not enabled"
 sudo -n true 2>/dev/null && ok "cidata sudoers applied" || bad "no passwordless sudo"
 [ "$(getent passwd juanjo | cut -d: -f7)" ] && ok "user juanjo exists" || bad "user missing"

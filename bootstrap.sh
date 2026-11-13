@@ -8,7 +8,7 @@
 # 2. GitHub device login (gh auth login: type a one-time code in any browser) and
 #    gh as git's credential helper — the private submodules (personal, dockshell)
 #    then clone over HTTPS with no SSH key
-# 3. rewrites git@github.com: URLs to https:// (global git config) so the SSH
+# 3. rewrites git@github.com: URLs to https:// (~/.config/git/config) so the SSH
 #    URLs in .gitmodules keep working
 # 4. clones the repo + submodules into ~/dotfiles and runs install.sh
 #
@@ -33,12 +33,19 @@ sudo pacman -S --needed --noconfirm git github-cli
 if gh auth status >/dev/null 2>&1; then
   log "Already logged in to GitHub"
 else
-  log "GitHub login: open https://github.com/login/device and enter the code shown below"
+  log "GitHub login: on any device, open https://github.com/login/device and enter the code shown below"
+  # No graphical session (fresh install, TTY): don't try to launch a browser —
+  # GH_BROWSER=echo just prints the URL, and gh keeps polling for the code.
+  [ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] || export GH_BROWSER=echo
   # stdin from the terminal even when this script is piped from curl
   gh auth login --hostname github.com --git-protocol https --web </dev/tty
 fi
-gh auth setup-git
-git config --global url."https://github.com/".insteadOf "git@github.com:"
+# Credential helper + https rewrite go to ~/.config/git/config, NOT ~/.gitconfig:
+# the `git` module stows ~/.gitconfig, and a real file there would block it.
+xdg_git="$HOME/.config/git/config"; mkdir -p "$(dirname "$xdg_git")"
+git config --file "$xdg_git" --replace-all credential.https://github.com.helper ''
+git config --file "$xdg_git" --add credential.https://github.com.helper '!/usr/bin/gh auth git-credential'
+git config --file "$xdg_git" url.https://github.com/.insteadOf git@github.com:
 
 if [ -d "$DIR/.git" ]; then
   log "$DIR already exists — updating"

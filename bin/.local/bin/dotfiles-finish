@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#
+# dotfiles-finish — second half of a fresh install, run once in the desktop.
+#
+# The ISO installs everything from the PUBLIC dotfiles repo. The private
+# submodules (DockShell, personal, git, mac_personal) need a GitHub login, which
+# is easy here: gh opens the browser. Then the private modules are stowed,
+# setup.sh re-runs inside the real session (user services etc.), and DockShell
+# starts.
+#
+#   dotfiles-finish --if-pending   # Hyprland autostart: no-op unless DockShell is missing
+#   dotfiles-finish                # run it by hand
+#
+set -euo pipefail
+
+DOTFILES="${DOTFILES:-$HOME/dotfiles}"
+pending() { [ -d "$DOTFILES/.git" ] && [ ! -e "$DOTFILES/quickshell/.config/quickshell/shell.qml" ]; }
+
+if [ "${1:-}" = --if-pending ]; then
+  pending || exit 0
+  # open a visible terminal for the login + progress
+  exec kitty --title "Finish dotfiles setup" env DOTFILES_FINISH_TERM=1 "$0"
+fi
+
+run() {
+  echo "==> Finishing your dotfiles setup"
+  echo
+  if ! gh auth status >/dev/null 2>&1; then
+    echo "Logging in to GitHub (a browser window opens; approve it there)…"
+    gh auth login --hostname github.com --git-protocol https --web
+  fi
+  # Credential helper + https rewrite go to ~/.config/git/config, NOT ~/.gitconfig:
+  # the `git` module stows ~/.gitconfig, and a real file there would block it.
+  xdg_git="$HOME/.config/git/config"; mkdir -p "$(dirname "$xdg_git")"
+  git config --file "$xdg_git" --replace-all credential.https://github.com.helper ''
+  git config --file "$xdg_git" --add credential.https://github.com.helper '!/usr/bin/gh auth git-credential'
+  git config --file "$xdg_git" url.https://github.com/.insteadOf git@github.com:
+
+  echo "==> Fetching the private submodules"
+  git -C "$DOTFILES" submodule update --init --recursive --recommend-shallow
+
+  echo "==> Linking them"
+  cd "$DOTFILES"
+  stow -R personal quickshell git
+
+  echo "==> Re-running setup inside the session"
+  ./setup/setup.sh </dev/tty || echo "setup.sh reported warnings (see above)"
+
+  echo "==> Starting DockShell"
+  command -v dockshell-restart >/dev/null && dockshell-restart \
+    || (setsid quickshell -p "$HOME/.config/quickshell" >/dev/null 2>&1 &)
+  echo
+  echo "All done."
+}
+
+if run; then
+  [ -n "${DOTFILES_FINISH_TERM:-}" ] && read -rp "Press Enter to close…" _
+else
+  echo
+  echo "Something failed. Fix it and run: dotfiles-finish"
+  [ -n "${DOTFILES_FINISH_TERM:-}" ] && read -rp "Press Enter to close…" _
+  exit 1
+fi

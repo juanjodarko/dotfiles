@@ -110,6 +110,10 @@ if [ "${ISO_KIND:-arch}" = dotfiles ]; then
   cp "$CREDS" "$work/plain/creds.json"
   printf '%s\n' "$key" > "$work/plain/authorized_keys"
   echo 'juanjo ALL=(ALL) NOPASSWD: ALL' > "$work/plain/sudoers"
+  # test the LOCAL branch (unpushed commits) instead of what's on GitHub
+  repo="$(git -C "$HERE" rev-parse --show-toplevel)"; br="$(git -C "$repo" rev-parse --abbrev-ref HEAD)"
+  git -C "$repo" bundle create -q "$work/plain/dotfiles.bundle" "$br"
+  echo "$br" > "$work/plain/dotfiles_branch"
   xorriso -as mkisofs -quiet -o "$SEED" -V cidata -J -r "$work/plain"
 else
   xorriso -as mkisofs -quiet -o "$SEED" -V cidata -J -r "$work/user-data" "$work/meta-data"

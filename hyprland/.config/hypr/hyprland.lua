@@ -423,6 +423,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprctl setcursor catppuccin-mocha-dark-cursors 24")
     hl.exec_cmd(HOME .. "/.config/wallpaperd/bin/wallpaperd generate")  -- pick + apply wallpaper at login
     hl.exec_cmd(HOME .. "/.config/hypr/monitor_change_handler.sh &")
+    hl.exec_cmd(HOME .. "/.local/bin/dotfiles-finish --if-pending") -- fresh install: fetch private submodules once (no-op otherwise)
     -- DockShell bar (replaces waybar). PATH is augmented with the user's tool
     -- dirs (appended, so system tools keep priority for DockShell's own scripts)
     -- so hosted plugins can find CLIs installed via mise / ~/.local/bin — e.g.

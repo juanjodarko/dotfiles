@@ -7,17 +7,22 @@
 # creds.json skips the wizard. Optional on that drive:
 #   authorized_keys  → ~user/.ssh/authorized_keys and sshd enabled
 #   sudoers          → /etc/sudoers.d/90-cidata (test VMs: passwordless sudo)
+#   dotfiles.bundle  → clone dotfiles from this git bundle instead of GitHub
+#   dotfiles_branch  → branch to check out (tests of unpushed work)
 # The machine powers off after an autoinstall.
 #
 # Otherwise a short wizard (disk, hostname, user, password, timezone) writes the
 # same two files with make-config, then the same archinstall run follows.
 #
-# Either way the installed system gets a first-login hook that offers to run
-# bootstrap.sh (GitHub login → clone dotfiles → install.sh).
+# Then the public dotfiles repo is cloned and install.sh runs inside the new
+# system, so the first boot lands on the desktop. The private submodules come
+# after the first desktop login (dotfiles-finish).
 #
 set -uo pipefail
 
 SHARE=/usr/local/share/dotfiles-iso
+DOTFILES_REPO="https://github.com/juanjodarko/dotfiles.git"
+DOTFILES_BRANCH="${DOTFILES_BRANCH:-omarchy-quattro}"   # until merged to main
 WORK=/root/install
 LOG=/var/log/dotfiles-install.log
 mkdir -p "$WORK"
@@ -36,7 +41,7 @@ for label in cidata CIDATA; do
   [ -e "$dev" ] || continue
   mkdir -p /run/cidata && mount -o ro "$dev" /run/cidata || break
   if [ -f /run/cidata/user_configuration.json ] && [ -f /run/cidata/creds.json ]; then
-    for f in user_configuration.json creds.json authorized_keys sudoers; do
+    for f in user_configuration.json creds.json authorized_keys sudoers dotfiles.bundle dotfiles_branch; do
       [ -f "/run/cidata/$f" ] && install -m600 "/run/cidata/$f" "$WORK/$f"
     done
     mode=auto
@@ -98,22 +103,51 @@ say "Installing Arch to $disk (archinstall, unattended)…"
 archinstall --config "$WORK/user_configuration.json" --creds "$WORK/creds.json" --silent 2>&1 | tee -a "$LOG"
 [ "${PIPESTATUS[0]}" -eq 0 ] || fail "archinstall failed — see $LOG and /var/log/archinstall/"
 
-# --------------------------------------------------------- first boot -----
+# ------------------------------------------- desktop (inside the chroot) ---
+# Same as Omarchy: install the whole desktop now, so the first boot lands on
+# the login screen. Only the PUBLIC dotfiles repo is used — the private
+# submodules (DockShell, personal, git, mac_personal) are fetched after the
+# first desktop login by `dotfiles-finish`, where a browser is available.
 root_part=$(lsblk -lnpo NAME,FSTYPE "$disk" | awk '$2 == "ext4" {print $1; exit}')
-[ -n "$root_part" ] || fail "can't find the installed root partition on $disk"
+boot_part=$(lsblk -lnpo NAME,FSTYPE "$disk" | awk '$2 == "vfat" {print $1; exit}')
+[ -n "$root_part" ] && [ -n "$boot_part" ] || fail "can't find the installed partitions on $disk"
 mountpoint -q /mnt || mount "$root_part" /mnt || fail "can't mount $root_part"
+mountpoint -q /mnt/boot || mount "$boot_part" /mnt/boot || fail "can't mount $boot_part"
 
-install -Dm755 "$SHARE/bootstrap.sh"  /mnt/usr/local/share/dotfiles/bootstrap.sh
-install -Dm644 "$SHARE/firstboot.sh"  /mnt/etc/profile.d/dotfiles-firstboot.sh
 uid=$(arch-chroot /mnt id -u "$user"); gid=$(arch-chroot /mnt id -g "$user")
 if [ -f "$WORK/authorized_keys" ]; then
   install -d -m700 -o "$uid" -g "$gid" "/mnt/home/$user/.ssh"
   install -m600 -o "$uid" -g "$gid" "$WORK/authorized_keys" "/mnt/home/$user/.ssh/authorized_keys"
 fi
+install -Dm755 "$SHARE/bootstrap.sh" /mnt/usr/local/share/dotfiles/bootstrap.sh
+install -Dm644 "$SHARE/firstboot.sh" /mnt/etc/profile.d/dotfiles-firstboot.sh   # fallback if this step fails
+
+# install.sh needs sudo without a password prompt while it runs unattended
+echo "$user ALL=(ALL) NOPASSWD: ALL" > /mnt/etc/sudoers.d/00-dotfiles-install
+chmod 440 /mnt/etc/sudoers.d/00-dotfiles-install
+
+[ -f "$WORK/dotfiles_branch" ] && DOTFILES_BRANCH=$(tr -d '[:space:]' < "$WORK/dotfiles_branch")
+src="$DOTFILES_REPO"
+if [ -f "$WORK/dotfiles.bundle" ]; then   # test builds: unpushed commits
+  install -m644 "$WORK/dotfiles.bundle" /mnt/tmp/dotfiles.bundle
+  src=/tmp/dotfiles.bundle
+fi
+say "Installing the desktop from dotfiles ($DOTFILES_BRANCH) — this takes a while…"
+arch-chroot /mnt runuser -u "$user" -- bash -lc "
+  set -e
+  git clone -q -b '$DOTFILES_BRANCH' '$src' ~/dotfiles
+  git -C ~/dotfiles remote set-url origin '$DOTFILES_REPO'
+  cd ~/dotfiles && ./install.sh --non-interactive </dev/null
+" 2>&1 | tee -a "$LOG"
+rm -f /mnt/tmp/dotfiles.bundle
+[ "${PIPESTATUS[0]}" -eq 0 ] && say "Desktop installed." \
+  || say "Desktop install reported errors — finish it after reboot with: cd ~/dotfiles && ./install.sh"
+
+rm -f /mnt/etc/sudoers.d/00-dotfiles-install
 [ -f "$WORK/sudoers" ] && install -m440 "$WORK/sudoers" /mnt/etc/sudoers.d/90-cidata
 cp "$LOG" /mnt/var/log/ 2>/dev/null || true
 umount -R /mnt
-say "Installed. On first login, $user is offered the dotfiles setup."
+say "Done. After the first desktop login, \"Finish setup\" connects GitHub for the private parts."
 
 if [ "$mode" = auto ]; then
   systemctl poweroff
