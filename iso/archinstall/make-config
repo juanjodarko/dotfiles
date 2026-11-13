@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#
+# make-config — compose an archinstall user_configuration.json from base.json
+# plus a whole-disk layout (1 GiB ESP + ext4 root, GPT) for the given disk.
+#
+#   make-config --disk /dev/nvme0n1 --hostname foo [--size BYTES] [--timezone TZ] [--ssh] > user_configuration.json
+#
+# --size is required when the disk isn't visible to this machine (e.g. building a
+# VM's config on the host); otherwise it is read with lsblk.
+# --ssh enables sshd in the installed system (VMs / key-provisioned installs only).
+#
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE="${BASE:-$HERE/base.json}"
+disk="" host="" size="" tz="" ssh=false
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --disk)     disk="$2"; shift 2 ;;
+    --hostname) host="$2"; shift 2 ;;
+    --size)     size="$2"; shift 2 ;;
+    --timezone) tz="$2"; shift 2 ;;
+    --ssh)      ssh=true; shift ;;
+    *) echo "make-config: unknown option $1" >&2; exit 2 ;;
+  esac
+done
+[ -n "$disk" ] && [ -n "$host" ] || { echo "usage: make-config --disk DEV --hostname NAME [--size BYTES] [--timezone TZ] [--ssh]" >&2; exit 2; }
+[ -n "$size" ] || size="$(lsblk -bdno SIZE "$disk")"
+
+MiB=$((1024 * 1024))
+boot=$((1024 * MiB))
+root_start=$((MiB + boot))
+root=$((size - root_start - MiB))   # leave 1 MiB for the backup GPT
+[ "$root" -gt $((20 * 1024 * MiB)) ] || { echo "make-config: $disk is too small ($size bytes)" >&2; exit 1; }
+
+jq --arg disk "$disk" --arg host "$host" --arg tz "$tz" --argjson ssh "$ssh" \
+   --argjson mib "$MiB" --argjson boot "$boot" --argjson rstart "$root_start" --argjson root "$root" \
+   --arg id1 "$(cat /proc/sys/kernel/random/uuid)" --arg id2 "$(cat /proc/sys/kernel/random/uuid)" '
+  def sz($v): {sector_size: {unit: "B", value: 512}, unit: "B", value: $v};
+  . + {
+    hostname: $host,
+    disk_config: {config_type: "default_layout", device_modifications: [{device: $disk, wipe: true, partitions: [
+      {btrfs: [], dev_path: null, flags: ["boot", "esp"], fs_type: "fat32", mount_options: [], mountpoint: "/boot",
+       obj_id: $id1, size: sz($boot), start: sz($mib), status: "create", type: "primary"},
+      {btrfs: [], dev_path: null, flags: [], fs_type: "ext4", mount_options: [], mountpoint: "/",
+       obj_id: $id2, size: sz($root), start: sz($rstart), status: "create", type: "primary"}
+    ]}]}
+  }
+  | if $tz != "" then .timezone = $tz else . end
+  | .services = ((.services // []) + (if $ssh then ["sshd"] else [] end) | unique)
+' "$BASE"

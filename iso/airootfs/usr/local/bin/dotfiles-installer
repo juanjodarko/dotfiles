@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+#
+# dotfiles-installer — the live ISO's installer (runs on tty1 at boot).
+#
+# Autoinstall: a drive labeled cidata (the cloud-init NoCloud label — libvirt,
+# Proxmox and Packer can attach one) carrying user_configuration.json +
+# creds.json skips the wizard. Optional on that drive:
+#   authorized_keys  → ~user/.ssh/authorized_keys and sshd enabled
+#   sudoers          → /etc/sudoers.d/90-cidata (test VMs: passwordless sudo)
+# The machine powers off after an autoinstall.
+#
+# Otherwise a short wizard (disk, hostname, user, password, timezone) writes the
+# same two files with make-config, then the same archinstall run follows.
+#
+# Either way the installed system gets a first-login hook that offers to run
+# bootstrap.sh (GitHub login → clone dotfiles → install.sh).
+#
+set -uo pipefail
+
+SHARE=/usr/local/share/dotfiles-iso
+WORK=/root/install
+LOG=/var/log/dotfiles-install.log
+mkdir -p "$WORK"
+
+say()  { printf '\033[1;34m==>\033[0m %s\n' "$*" | tee -a "$LOG"; }
+fail() { printf '\033[1;31mxx \033[0m %s\n' "$*" | tee -a "$LOG" >&2; exit 1; }
+
+say "dotfiles installer — log: $LOG"
+systemctl start pacman-init.service   # the keyring must be ready before archinstall
+
+# ------------------------------------------------------------- cidata -----
+mode=interactive
+udevadm settle 2>/dev/null || true
+for label in cidata CIDATA; do
+  dev=/dev/disk/by-label/$label
+  [ -e "$dev" ] || continue
+  mkdir -p /run/cidata && mount -o ro "$dev" /run/cidata || break
+  if [ -f /run/cidata/user_configuration.json ] && [ -f /run/cidata/creds.json ]; then
+    for f in user_configuration.json creds.json authorized_keys sudoers; do
+      [ -f "/run/cidata/$f" ] && install -m600 "/run/cidata/$f" "$WORK/$f"
+    done
+    mode=auto
+    say "Autoinstall config found on $label"
+  fi
+  umount /run/cidata
+  break
+done
+
+# ------------------------------------------------------------ network -----
+online() { curl -fsI --max-time 5 https://geo.mirror.pkgbuild.com >/dev/null 2>&1; }
+for _ in $(seq 24); do online && break; sleep 5; done
+if ! online; then
+  [ "$mode" = auto ] && fail "no network after 2 minutes"
+  echo
+  echo "No internet connection. For Wi-Fi run:  iwctl station wlan0 connect <SSID>"
+  echo "Then start the installer again with:    dotfiles-installer"
+  exit 1
+fi
+
+# ------------------------------------------------------------- wizard -----
+if [ "$mode" = interactive ]; then
+  mapfile -t disks < <(lsblk -dnpo NAME,SIZE,MODEL -e 7,11 | grep -vE '^/dev/(loop|sr|zram)')
+  [ ${#disks[@]} -gt 0 ] || fail "no installable disk found"
+  disk=$(gum choose --header "Install to which disk? (it will be ERASED)" "${disks[@]}" | awk '{print $1}')
+  [ -n "$disk" ] || exit 1
+  host=$(gum input --header "Hostname" --value "archlinux")
+  user=$(gum input --header "Username" --value "juanjo")
+  while true; do
+    pw1=$(gum input --password --header "Password for $user")
+    pw2=$(gum input --password --header "Repeat the password")
+    [ -n "$pw1" ] && [ "$pw1" = "$pw2" ] && break
+    gum style --foreground 1 "Passwords are empty or don't match — try again."
+  done
+  while true; do
+    tz=$(gum input --header "Timezone" --value "America/Mexico_City")
+    [ -f "/usr/share/zoneinfo/$tz" ] && break
+    gum style --foreground 1 "Unknown timezone: $tz"
+  done
+  gum confirm --default=false "Erase ALL data on $disk and install Arch as $user@$host?" || { echo "Cancelled."; exit 1; }
+
+  "$SHARE/make-config" --disk "$disk" --hostname "$host" --timezone "$tz" > "$WORK/user_configuration.json" \
+    || fail "could not build the install config"
+  jq -n --arg u "$user" --arg h "$(openssl passwd -6 -stdin <<<"$pw1")" \
+    '{users: [{username: $u, sudo: true, enc_password: $h}]}' > "$WORK/creds.json"
+  chmod 600 "$WORK/creds.json"
+  unset pw1 pw2
+fi
+
+# ------------------------------------------------------------ install -----
+user=$(jq -r '.users[0].username' "$WORK/creds.json")
+disk=$(jq -r '.disk_config.device_modifications[0].device' "$WORK/user_configuration.json")
+if [ -f "$WORK/authorized_keys" ]; then   # key-provisioned install: also enable sshd
+  jq '.services = ((.services // []) + ["sshd"] | unique)' "$WORK/user_configuration.json" > "$WORK/cfg.tmp" \
+    && mv "$WORK/cfg.tmp" "$WORK/user_configuration.json"
+fi
+
+say "Installing Arch to $disk (archinstall, unattended)…"
+archinstall --config "$WORK/user_configuration.json" --creds "$WORK/creds.json" --silent 2>&1 | tee -a "$LOG"
+[ "${PIPESTATUS[0]}" -eq 0 ] || fail "archinstall failed — see $LOG and /var/log/archinstall/"
+
+# --------------------------------------------------------- first boot -----
+root_part=$(lsblk -lnpo NAME,FSTYPE "$disk" | awk '$2 == "ext4" {print $1; exit}')
+[ -n "$root_part" ] || fail "can't find the installed root partition on $disk"
+mountpoint -q /mnt || mount "$root_part" /mnt || fail "can't mount $root_part"
+
+install -Dm755 "$SHARE/bootstrap.sh"  /mnt/usr/local/share/dotfiles/bootstrap.sh
+install -Dm644 "$SHARE/firstboot.sh"  /mnt/etc/profile.d/dotfiles-firstboot.sh
+uid=$(arch-chroot /mnt id -u "$user"); gid=$(arch-chroot /mnt id -g "$user")
+if [ -f "$WORK/authorized_keys" ]; then
+  install -d -m700 -o "$uid" -g "$gid" "/mnt/home/$user/.ssh"
+  install -m600 -o "$uid" -g "$gid" "$WORK/authorized_keys" "/mnt/home/$user/.ssh/authorized_keys"
+fi
+[ -f "$WORK/sudoers" ] && install -m440 "$WORK/sudoers" /mnt/etc/sudoers.d/90-cidata
+cp "$LOG" /mnt/var/log/ 2>/dev/null || true
+umount -R /mnt
+say "Installed. On first login, $user is offered the dotfiles setup."
+
+if [ "$mode" = auto ]; then
+  systemctl poweroff
+elif gum confirm "Reboot into the new system now? (remove the install media)"; then
+  systemctl reboot
+fi

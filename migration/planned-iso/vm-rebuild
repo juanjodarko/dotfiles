@@ -12,6 +12,7 @@
 #   - passwordless sudo for juanjo (so install.sh can be driven over SSH)
 #
 # Usage: vm-rebuild [--yes]
+#   ISO_KIND=dotfiles ISO=~/vms/dotfiles-arch.iso vm-rebuild --yes   # test our own ISO
 #   creds.json must exist first:
 #     cd archinstall && umask 077 && printf '{"users":[{"username":"juanjo","sudo":true,"enc_password":"%s"}]}\n' "$(openssl passwd -6)" > creds.json
 #
@@ -21,7 +22,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VM="${VM:-arch-dotfiles}"
 ISO="${ISO:-$HOME/vms/archlinux-2026.10.01-x86_64.iso}"
 SEED="${SEED:-$HOME/vms/$VM-cidata.iso}"
-CFG="$HERE/archinstall/user_configuration.json"
+MAKE_CONFIG="$HERE/../../iso/archinstall/make-config"
 CREDS="$HERE/archinstall/creds.json"
 PUBKEY="${PUBKEY:-$(ls "$HOME"/.ssh/id_ed25519.pub "$HOME"/.ssh/id_rsa.pub 2>/dev/null | head -1)}"
 INSTALL_TIMEOUT="${INSTALL_TIMEOUT:-2700}"   # seconds to wait for the unattended install
@@ -33,7 +34,7 @@ virt_xml() { /usr/bin/python3 /usr/bin/virt-xml "$@"; }
 log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 die() { printf '\033[1;31mxx \033[0m %s\n' "$*" >&2; exit 1; }
 
-[ -f "$CFG" ]    || die "missing $CFG"
+[ -x "$MAKE_CONFIG" ] || die "missing $MAKE_CONFIG"
 [ -f "$CREDS" ]  || die "missing $CREDS — create it (see the header of this script)"
 [ -f "$ISO" ]    || die "missing Arch ISO: $ISO"
 [ -n "$PUBKEY" ] && [ -f "$PUBKEY" ] || die "no SSH public key found (set PUBKEY=)"
@@ -50,6 +51,9 @@ fi
 # ---------------------------------------------------------------- seed ----
 work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT
 key="$(cat "$PUBKEY")"
+CFG="$work/user_configuration.json"
+disk_bytes="$(virsh domblkinfo "$VM" vda | awk '/^Capacity:/ {print $2}')"
+"$MAKE_CONFIG" --disk /dev/vda --hostname "$VM-vm" --size "$disk_bytes" --ssh > "$CFG"
 
 cat > "$work/autoinstall.sh" <<'EOS'
 #!/usr/bin/env bash
@@ -99,7 +103,17 @@ runcmd:
 EOF
 printf 'instance-id: %s-%s\nlocal-hostname: archiso\n' "$VM" "$(date +%s)" > "$work/meta-data"
 rm -f "$SEED"
-xorriso -as mkisofs -quiet -o "$SEED" -V cidata -J -r "$work/user-data" "$work/meta-data"
+if [ "${ISO_KIND:-arch}" = dotfiles ]; then
+  # Our ISO's installer reads plain files from the cidata drive (Omarchy-style).
+  mkdir -p "$work/plain"
+  cp "$CFG" "$work/plain/user_configuration.json"
+  cp "$CREDS" "$work/plain/creds.json"
+  printf '%s\n' "$key" > "$work/plain/authorized_keys"
+  echo 'juanjo ALL=(ALL) NOPASSWD: ALL' > "$work/plain/sudoers"
+  xorriso -as mkisofs -quiet -o "$SEED" -V cidata -J -r "$work/plain"
+else
+  xorriso -as mkisofs -quiet -o "$SEED" -V cidata -J -r "$work/user-data" "$work/meta-data"
+fi
 chmod 644 "$SEED"
 log "Seed built: $SEED"
 
@@ -113,7 +127,11 @@ else
 fi
 virt_xml "$VM" --edit --boot cdrom,hd >/dev/null
 virsh start "$VM" >/dev/null
-log "Installing unattended (ISO + cidata). Live ISO accepts: ssh root@<vm-ip> 'tail -f /var/log/vm-autoinstall.log'"
+if [ "${ISO_KIND:-arch}" = dotfiles ]; then
+  log "Installing unattended (dotfiles ISO + cidata); its log ends up in /var/log/dotfiles-install.log"
+else
+  log "Installing unattended (ISO + cidata). Live ISO accepts: ssh root@<vm-ip> 'tail -f /var/log/vm-autoinstall.log'"
+fi
 
 waited=0
 until [ "$(virsh domstate "$VM")" = "shut off" ]; do

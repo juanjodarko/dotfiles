@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+#
+# vm-iso-test — install the VM from OUR ISO (~/vms/dotfiles-arch.iso) via its
+# cidata autoinstall, then check the installed system.
+#
+#   vm-iso-test                # uses ~/vms/dotfiles-arch.iso
+#   ISO=/path/x.iso vm-iso-test
+#
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VM="${VM:-arch-dotfiles}"
+export ISO="${ISO:-$HOME/vms/dotfiles-arch.iso}" ISO_KIND=dotfiles
+export LIBVIRT_DEFAULT_URI=qemu:///system
+
+[ -f "$ISO" ] || { echo "no ISO at $ISO (run vm-iso-build)" >&2; exit 1; }
+"$HERE/vm-rebuild" --yes
+
+ip="$(virsh domifaddr "$VM" | awk '/ipv4/ {split($4,a,"/"); print a[1]; exit}')"
+ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$HOME/.ssh/known_hosts.vms" \
+    -o LogLevel=ERROR "juanjo@$ip" bash -s <<'EOS'
+fail=0
+ok()  { printf '  \033[32mPASS\033[0m %s\n' "$1"; }
+bad() { printf '  \033[31mFAIL\033[0m %s\n' "$1"; fail=1; }
+echo "ISO install checks:"
+grep -q 'dotfiles installer' /var/log/dotfiles-install.log 2>/dev/null && ok "installed by dotfiles-installer (log copied)" || bad "no /var/log/dotfiles-install.log"
+[ "$(hostnamectl --static)" = arch-dotfiles-vm ] && ok "hostname from cidata config" || bad "hostname is $(hostnamectl --static)"
+[ -x /usr/local/share/dotfiles/bootstrap.sh ] && ok "bootstrap.sh installed" || bad "bootstrap.sh missing"
+[ -f /etc/profile.d/dotfiles-firstboot.sh ] && ok "first-login hook installed" || bad "first-login hook missing"
+systemctl is-enabled -q sshd && ok "sshd enabled (authorized_keys provided)" || bad "sshd not enabled"
+sudo -n true 2>/dev/null && ok "cidata sudoers applied" || bad "no passwordless sudo"
+[ "$(getent passwd juanjo | cut -d: -f7)" ] && ok "user juanjo exists" || bad "user missing"
+sudo test -f /boot/EFI/BOOT/BOOTX64.EFI && ok "GRUB at the removable path" || bad "no /boot/EFI/BOOT/BOOTX64.EFI"
+# the hook only fires for interactive TTY logins; a non-interactive SSH session must not trigger it
+out=$(bash -lc true 2>&1); [ -z "$out" ] && ok "first-login hook silent in non-interactive shells" || bad "hook printed: $out"
+exit $fail
+EOS

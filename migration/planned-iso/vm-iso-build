@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#
+# vm-iso-build — build the dotfiles ISO inside the test VM (mkarchiso needs root;
+# the VM has passwordless sudo, the laptop stays untouched) and copy it back to
+# ~/vms/dotfiles-arch.iso.
+#
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
+VM="${VM:-arch-dotfiles}"
+DEST="${DEST:-$HOME/vms/dotfiles-arch.iso}"
+export LIBVIRT_DEFAULT_URI=qemu:///system
+
+ip="$(virsh domifaddr "$VM" | awk '/ipv4/ {split($4,a,"/"); print a[1]; exit}')"
+[ -n "$ip" ] || { echo "no IP for $VM (is it running?)" >&2; exit 1; }
+O=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile="$HOME/.ssh/known_hosts.vms" -o LogLevel=ERROR)
+
+ssh "${O[@]}" "juanjo@$ip" 'rm -rf ~/isosrc && mkdir -p ~/isosrc && (pacman -Q archiso >/dev/null 2>&1 || sudo pacman -S --needed --noconfirm archiso >/dev/null)'
+tar -C "$REPO" --exclude=iso/out -cf - iso bootstrap.sh | ssh "${O[@]}" "juanjo@$ip" 'tar -C ~/isosrc -xf -'
+ssh "${O[@]}" "juanjo@$ip" 'OUT=$HOME/iso-out ~/isosrc/iso/build 2>&1 | tail -15'
+iso="$(ssh "${O[@]}" "juanjo@$ip" 'ls -t ~/iso-out/dotfiles-arch-*.iso | head -1')"
+scp -q "${O[@]}" "juanjo@$ip:$iso" "$DEST"
+ls -lh "$DEST"

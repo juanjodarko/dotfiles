@@ -1,0 +1,4 @@
+# Added to archiso releng packages.x86_64
+gum
+jq
+openssl

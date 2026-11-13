@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+#
+# iso/build — build the dotfiles Arch ISO on an Arch machine with `archiso`.
+#
+# Starts from archiso's own releng profile (the official ISO), then overlays
+# iso/airootfs, adds iso/packages.extra, and ships the installer's inputs
+# (archinstall base config, make-config, bootstrap.sh, first-boot hook).
+# Needs root for mkarchiso (via sudo).
+#
+#   iso/build                 → iso/out/dotfiles-arch-<date>-x86_64.iso
+#   OUT=/path WORK=/path iso/build
+#
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(cd "$HERE/.." && pwd)"
+RELENG=/usr/share/archiso/configs/releng
+WORK="${WORK:-/var/tmp/dotfiles-iso}"
+OUT="${OUT:-$HERE/out}"
+PROFILE="$WORK/profile"
+
+[ -d "$RELENG" ] || { echo "archiso is not installed (sudo pacman -S archiso)" >&2; exit 1; }
+
+sudo rm -rf "$WORK"
+mkdir -p "$WORK" "$OUT"
+cp -r "$RELENG" "$PROFILE"
+
+# overlay + installer inputs
+cp -rT "$HERE/airootfs" "$PROFILE/airootfs"
+share="$PROFILE/airootfs/usr/local/share/dotfiles-iso"
+mkdir -p "$share"
+cp "$HERE/archinstall/base.json" "$HERE/archinstall/make-config" "$REPO/bootstrap.sh" "$share/"
+
+# packages
+grep -vE '^\s*(#|$)' "$HERE/packages.extra" >> "$PROFILE/packages.x86_64"
+sort -u -o "$PROFILE/packages.x86_64" "$PROFILE/packages.x86_64"
+
+# identity + permissions for our executables
+sed -i \
+  -e 's|^iso_name=.*|iso_name="dotfiles-arch"|' \
+  -e 's|^iso_label=.*|iso_label="DOTFILES_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"|' \
+  -e 's|^iso_publisher=.*|iso_publisher="juanjodarko/dotfiles"|' \
+  -e 's|^iso_application=.*|iso_application="Arch Linux + dotfiles installer"|' \
+  "$PROFILE/profiledef.sh"
+cat >> "$PROFILE/profiledef.sh" <<'EOF'
+file_permissions+=(
+  ["/usr/local/bin/dotfiles-installer"]="0:0:755"
+  ["/usr/local/share/dotfiles-iso/make-config"]="0:0:755"
+  ["/usr/local/share/dotfiles-iso/bootstrap.sh"]="0:0:755"
+)
+EOF
+
+echo "==> Building ISO (mkarchiso)…"
+sudo mkarchiso -v -r -w "$WORK/work" -o "$OUT" "$PROFILE"
+ls -lh "$OUT"/dotfiles-arch-*.iso
