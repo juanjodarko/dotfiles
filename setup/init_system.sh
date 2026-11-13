@@ -95,8 +95,12 @@ fi
 # -------------------------------------------------------------- greeter ----
 if command -v greetd &> /dev/null; then
     palette="$HOME/.config/themes/current.json"
-    if [ -r "$palette" ] && { [ "$changed_greeter" = true ] || ! sudo test -f /etc/greetd/regreet.css; }; then
-        sudo /usr/local/bin/update-greeter-theme "$palette" && print_success "Greeter themed from $palette"
+    if [ "$changed_greeter" = true ] || ! sudo test -f /etc/greetd/regreet.css; then
+        if [ -r "$palette" ]; then
+            sudo /usr/local/bin/update-greeter-theme "$palette" && print_success "Greeter themed from $palette"
+        else
+            print_error "No $palette — greeter left unthemed (run theme-set <flavor>, then re-run setup)"
+        fi
     fi
     wallpaper="$(readlink -f "$HOME/.cache/current_wallpaper" 2>/dev/null || true)"
     if [ -f "$wallpaper" ] && command -v ffmpeg &> /dev/null && [ ! -f /usr/share/backgrounds/greeter/current-blur.png ]; then

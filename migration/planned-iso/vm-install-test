@@ -85,6 +85,8 @@ for p in waybar rofi; do pacman -Q $p &>/dev/null && bad "#6 $p installed (shoul
 for d in ~/.config/quickshell ~/.config/kitty/kitty.conf ~/.config/swaync ~/.local/bin/theme-set ~/.local/bin/capture-screenshot; do
   [ -e "$d" ] && readlink -f "$d" | grep -q dotfiles && ok "#3 $(basename $d) linked" || bad "#3 $d not linked"
 done
+[ -f ~/.config/themes/current.json ] && [ -e ~/.config/themes/current.kitty ] && ok "#8 theme files generated (current.json, current.kitty)" || bad "#8 theme files not generated"
+[ -z "$(ls -A ~/dotfiles/personal/wallpapers 2>/dev/null)" ] && ok "#2 personal carries no wallpapers" || bad "#2 personal still has wallpapers"
 # #9 system layer
 [[ "$(readlink -f /etc/systemd/system/display-manager.service)" == */greetd.service ]] && ok "#9 greetd is the display manager" || bad "#9 display manager: $(readlink -f /etc/systemd/system/display-manager.service)"
 sudo grep -q GENERATED /etc/greetd/regreet.css 2>/dev/null && ok "#9 greeter CSS generated" || bad "#9 /etc/greetd/regreet.css missing"
