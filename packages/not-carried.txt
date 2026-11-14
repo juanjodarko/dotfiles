@@ -40,3 +40,7 @@ waybar
 rofi
 rofi-calc
 rofi-emoji
+# version managers replaced by mise (2026-11-14): mise reads .node-version / .ruby-version
+nvm
+rbenv
+ruby-build

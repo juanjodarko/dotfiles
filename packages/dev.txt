@@ -8,9 +8,7 @@ postgresql-libs
 valkey
 dbeaver
 gitlab-runner
-nvm
-rbenv
-ruby-build
+libyaml   # Ruby builds by mise (nvm/rbenv/ruby-build retired: mise manages node + ruby)
 mono
 cmake
 opencv
