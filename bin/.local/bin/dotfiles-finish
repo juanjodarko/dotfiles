@@ -4,7 +4,8 @@
 #
 # The ISO installs everything from the PUBLIC dotfiles repo. The private
 # submodules (DockShell, personal, git, mac_personal) need a GitHub login, which
-# is easy here: gh opens the browser. Then the private modules are stowed,
+# is easy here: a GitHub token is read from 1Password via the desktop app (falls
+# back to gh's browser login). Then the private modules are stowed,
 # setup.sh re-runs inside the real session (user services etc.), and DockShell
 # starts.
 #
@@ -22,12 +23,35 @@ if [ "${1:-}" = --if-pending ]; then
   exec kitty --title "Finish dotfiles setup" env DOTFILES_FINISH_TERM=1 "$0"
 fi
 
+# GitHub token from 1Password (personal setup): the desktop app unlocks it, the
+# CLI reads it through the app integration, gh takes it — no browser needed.
+# The token is a fine-grained PAT with read access to the private submodules.
+GH_TOKEN_REF="${DOTFILES_GH_TOKEN_REF:-op://Personal/GitHub dotfiles token/credential}"
+
+github_login_from_1password() {
+  command -v op >/dev/null && command -v 1password >/dev/null || return 1
+  pgrep -x 1password >/dev/null || (setsid 1password >/dev/null 2>&1 &)
+  echo "Sign in to 1Password in its window (scanning the QR code with your phone works),"
+  echo "then in 1Password → Settings → Developer, turn on \"Integrate with 1Password CLI\"."
+  echo "Waiting for the GitHub token ($GH_TOKEN_REF)…"
+  local token="" _
+  for _ in $(seq 120); do   # up to ~10 min
+    token="$(op read "$GH_TOKEN_REF" 2>/dev/null)" && [ -n "$token" ] && break
+    sleep 5
+  done
+  [ -n "$token" ] || { echo "Could not read the token from 1Password."; return 1; }
+  printf '%s\n' "$token" | gh auth login --hostname github.com --git-protocol https --with-token
+  gh auth status >/dev/null 2>&1 && echo "GitHub: logged in with the 1Password token."
+}
+
 run() {
   echo "==> Finishing your dotfiles setup"
   echo
   if ! gh auth status >/dev/null 2>&1; then
-    echo "Logging in to GitHub (a browser window opens; approve it there)…"
-    gh auth login --hostname github.com --git-protocol https --web
+    github_login_from_1password || {
+      echo "Falling back to the browser login (approve it in the browser window)…"
+      gh auth login --hostname github.com --git-protocol https --web
+    }
   fi
   # Credential helper + https rewrite go to ~/.config/git/config, NOT ~/.gitconfig:
   # the `git` module stows ~/.gitconfig, and a real file there would block it.
