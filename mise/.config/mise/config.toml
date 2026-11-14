@@ -12,7 +12,6 @@ python = "3.14.6"
 # Performance and behavior settings
 experimental = true           # Enable experimental features
 legacy_version_file = true    # Support .node-version, .ruby-version, etc.
-always_keep_download = false  # Clean up downloads after installation
 always_keep_install = true    # Keep installed versions
 
 # Verbose output for debugging (set to false once stable)
