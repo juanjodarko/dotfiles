@@ -37,8 +37,16 @@ github_login_from_1password() {
   echo "then in 1Password → Settings → Developer, turn on \"Integrate with 1Password CLI\"."
   echo "Waiting for the GitHub token (1Password item \"$GH_TOKEN_ITEM\")…"
   local token="" _
+  # 1) wait until the app exposes an unlocked account to the CLI. </dev/null: without
+  #    the integration, op would otherwise stop and ask to add an account by hand.
   for _ in $(seq 120); do   # up to ~10 min
-    token="$(op item get "$GH_TOKEN_ITEM" --vault "$GH_TOKEN_VAULT" --fields "label=$GH_TOKEN_FIELD" --reveal 2>/dev/null)" && [ -n "$token" ] && break
+    op account list --format json </dev/null 2>/dev/null | grep -q '"url"' && break
+    sleep 5
+  done
+  # 2) read the token; the app shows an authorization prompt the first time
+  for _ in $(seq 12); do
+    token="$(timeout 60 op item get "$GH_TOKEN_ITEM" --vault "$GH_TOKEN_VAULT" --fields "label=$GH_TOKEN_FIELD" --reveal </dev/null 2>/dev/null)" \
+      && [ -n "$token" ] && break
     sleep 5
   done
   [ -n "$token" ] || { echo "Could not read the token from 1Password."; return 1; }

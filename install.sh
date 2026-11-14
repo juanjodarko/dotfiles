@@ -211,7 +211,8 @@ migrate_deploy_module() {
 ensure_shared_dirs() {
     local d
     for d in "$HOME/.config" "$HOME/.config/systemd/user" "$HOME/.local/bin" \
-             "$HOME/.local/share" "$HOME/.local/share/applications" "$HOME/.local/state"; do
+             "$HOME/.local/share" "$HOME/.local/share/applications" "$HOME/.local/state" \
+             "$HOME/.config/toot"; do   # toot writes config.json (Mastodon token!) next to its stowed settings
         [ -L "$d" ] && print_warning "$d is a symlink (folded by an earlier stow) — fix by hand"
         mkdir -p "$d"
     done

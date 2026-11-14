@@ -25,3 +25,5 @@ migration/omarchy-hey-ref/
 hyprland/.config/hypr/backups/
 waybar/.config/waybar/config.jsonc.bak
 migration/planned-iso/archinstall/creds.json
+# toot writes its Mastodon access token here when ~/.config/toot is folded by stow
+toot/.config/toot/config.json
