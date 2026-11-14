@@ -7,6 +7,13 @@
 node = "26.3.0"
 python = "3.14.6"
 # Ruby versions managed separately per project
+# CLIs that used to be npm -g inside one node install (lost on node upgrades)
+"npm:@anthropic-ai/claude-code" = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"
+pnpm = "latest"
+# Previously hand-copied into /usr/local/bin
+helm = "latest"
+hcloud = "latest"
 
 [settings]
 # Performance and behavior settings
