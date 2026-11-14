@@ -38,7 +38,13 @@ swaync, Vicinae (`vicinae-server`), hypridle, hyprpolkitagent and a wallpaper al
   it is not exercised by the harness). #2: wallpapers on HomeNAS (`wallpapers-sync`), `personal` shallow. Fresh-VM
   harness: all 23 checks PASS. Also fixed: fresh machines never generated `current.json`/`current.kitty`
   (init_themes now runs theme-set), and `theme-set` hung forever headless on `swaync-client` (now guarded + timeout).
+- **2026-11-13/14 — own ISO, end to end.** `dotfiles-arch` ISO: archinstall + the whole desktop in the chroot
+  (~23 min), first boot = ReGreet → Hyprland; `vm-iso-test` 21/21 PASS. Phase 2 (`dotfiles-finish`) verified by hand:
+  GitHub token from 1Password (Private / "GitHub Personal Access Token" / token), 4 private submodules, links, DockShell
+  up. Browser login abandoned as the primary path: Chrome crashed in the VM.
 - Open: #10, plus:
+  - #13 Low — AUR `cliamp` fails to build (exit status 4) on a fresh install.
+  - #14 Fixed — fresh machines folded `~/.config/toot`, so toot wrote its Mastodon token into the repo.
   - #11 Low — fresh machine shows Vicinae's first-run onboarding and Docker Desktop's subscription dialog at first
     login (Docker Desktop's user service is active on the laptop too, so this matches today's behavior).
   - #12 Low — on the laptop `systemctl --user is-enabled docker-desktop.service` fails with "Too many levels of
