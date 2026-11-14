@@ -34,6 +34,7 @@ for p in hyprland quickshell kitty vicinae-bin greetd yay-bin; do pacman -Q $p >
 [[ "$(readlink -f /etc/systemd/system/display-manager.service)" == */greetd.service ]] && ok "greetd is the display manager" || bad "greetd not the display manager"
 readlink -f ~/.config/hypr | grep -q dotfiles && ok "hyprland config linked" || bad "hyprland config not linked"
 [ ! -e /etc/sudoers.d/zz-dotfiles-install ] && ok "temporary install sudoers removed" || bad "zz-dotfiles-install left behind"
+grep -q "^palette = 'catppuccin_" ~/.config/starship.toml 2>/dev/null && ok "starship.toml seeded + themed" || bad "no themed ~/.config/starship.toml"
 # phase 2 pending: private submodules not fetched yet → dotfiles-finish would run at first desktop login
 [ -x ~/.local/bin/dotfiles-finish ] && ok "dotfiles-finish linked" || bad "dotfiles-finish not linked"
 [ ! -e ~/dotfiles/quickshell/.config/quickshell/shell.qml ] && ok "private submodules not fetched (phase 2 pending)" || bad "private submodule unexpectedly present"
