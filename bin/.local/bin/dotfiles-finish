@@ -25,7 +25,8 @@ fi
 
 # GitHub token from 1Password (personal setup): the desktop app unlocks it, the
 # CLI reads it through the app integration, gh takes it — no browser needed.
-# Looked up by item name across all vaults (override: DOTFILES_GH_TOKEN_ITEM/_FIELD).
+# Item in the Private vault (override: DOTFILES_GH_TOKEN_VAULT/_ITEM/_FIELD).
+GH_TOKEN_VAULT="${DOTFILES_GH_TOKEN_VAULT:-Private}"
 GH_TOKEN_ITEM="${DOTFILES_GH_TOKEN_ITEM:-GitHub Personal Access Token}"
 GH_TOKEN_FIELD="${DOTFILES_GH_TOKEN_FIELD:-token}"
 
@@ -37,7 +38,7 @@ github_login_from_1password() {
   echo "Waiting for the GitHub token (1Password item \"$GH_TOKEN_ITEM\")…"
   local token="" _
   for _ in $(seq 120); do   # up to ~10 min
-    token="$(op item get "$GH_TOKEN_ITEM" --fields "label=$GH_TOKEN_FIELD" --reveal 2>/dev/null)" && [ -n "$token" ] && break
+    token="$(op item get "$GH_TOKEN_ITEM" --vault "$GH_TOKEN_VAULT" --fields "label=$GH_TOKEN_FIELD" --reveal 2>/dev/null)" && [ -n "$token" ] && break
     sleep 5
   done
   [ -n "$token" ] || { echo "Could not read the token from 1Password."; return 1; }
