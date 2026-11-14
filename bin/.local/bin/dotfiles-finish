@@ -25,18 +25,19 @@ fi
 
 # GitHub token from 1Password (personal setup): the desktop app unlocks it, the
 # CLI reads it through the app integration, gh takes it — no browser needed.
-# The token is a fine-grained PAT with read access to the private submodules.
-GH_TOKEN_REF="${DOTFILES_GH_TOKEN_REF:-op://Personal/GitHub dotfiles token/credential}"
+# Looked up by item name across all vaults (override: DOTFILES_GH_TOKEN_ITEM/_FIELD).
+GH_TOKEN_ITEM="${DOTFILES_GH_TOKEN_ITEM:-GitHub Personal Access Token}"
+GH_TOKEN_FIELD="${DOTFILES_GH_TOKEN_FIELD:-token}"
 
 github_login_from_1password() {
   command -v op >/dev/null && command -v 1password >/dev/null || return 1
   pgrep -x 1password >/dev/null || (setsid 1password >/dev/null 2>&1 &)
   echo "Sign in to 1Password in its window (scanning the QR code with your phone works),"
   echo "then in 1Password → Settings → Developer, turn on \"Integrate with 1Password CLI\"."
-  echo "Waiting for the GitHub token ($GH_TOKEN_REF)…"
+  echo "Waiting for the GitHub token (1Password item \"$GH_TOKEN_ITEM\")…"
   local token="" _
   for _ in $(seq 120); do   # up to ~10 min
-    token="$(op read "$GH_TOKEN_REF" 2>/dev/null)" && [ -n "$token" ] && break
+    token="$(op item get "$GH_TOKEN_ITEM" --fields "label=$GH_TOKEN_FIELD" --reveal 2>/dev/null)" && [ -n "$token" ] && break
     sleep 5
   done
   [ -n "$token" ] || { echo "Could not read the token from 1Password."; return 1; }
