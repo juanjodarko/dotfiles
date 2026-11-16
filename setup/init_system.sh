@@ -117,6 +117,21 @@ else
     print_skip "greetd not installed, skipping login screen"
 fi
 
+# ------------------------------------------------- hide broken sessions ----
+# hyprland ships hyprland-uwsm.desktop; without uwsm that session exits at once
+# and ReGreet drops you back at the login screen. Hide it (pacman NoExtract keeps
+# it from coming back on hyprland updates) unless uwsm is installed.
+UWSM_SESSION=usr/share/wayland-sessions/hyprland-uwsm.desktop
+if ! command -v uwsm &> /dev/null; then
+    if ! grep -qE "^NoExtract.*$UWSM_SESSION" /etc/pacman.conf; then
+        sudo sed -i "/^\[options\]/a NoExtract   = $UWSM_SESSION" /etc/pacman.conf
+        print_success "pacman: NoExtract $UWSM_SESSION"
+    fi
+    if [ -e "/$UWSM_SESSION" ]; then
+        sudo rm -f "/$UWSM_SESSION" && print_success "Removed the uwsm session (uwsm isn't installed)"
+    fi
+fi
+
 # ----------------------------------------------------------------- GRUB ----
 GRUB_CMDLINE='quiet splash loglevel=3 vt.global_cursor_default=0'
 if [ -f /etc/default/grub ] && command -v grub-mkconfig &> /dev/null; then
