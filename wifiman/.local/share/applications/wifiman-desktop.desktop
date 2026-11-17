@@ -1,0 +1,12 @@
+[Desktop Entry]
+# Override of /usr/share/applications/wifiman-desktop.desktop (dotfiles `wifiman` module):
+# run under XWayland — the GTK/WebKit UI crashes on native Wayland (Protocol error 71).
+Categories=
+Comment=Wifiman Desktop
+Exec=env GDK_BACKEND=x11 wifiman-desktop
+StartupWMClass=wifiman-desktop
+Icon=wifiman-desktop
+Name=WiFiman (Teleport)
+Terminal=false
+Type=Application
+MimeType=x-scheme-handler/wifiman-desktop-dl

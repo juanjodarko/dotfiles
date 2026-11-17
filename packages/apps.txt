@@ -29,3 +29,4 @@ rescuetime2  # aur
 thunar
 gucharmap
 cliamp  # aur
+wifiman-desktop  # aur  — UniFi Teleport client (Ubiquiti .deb repackaged)

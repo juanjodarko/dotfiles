@@ -149,6 +149,12 @@ else
   say "Desktop install FAILED (rc=$desktop_rc) — after reboot, log in on a TTY and run: cd ~/dotfiles && ./install.sh"
 fi
 
+# systemd-resolved stub, if the system layer handed DNS to resolved (init_system
+# can't relink it inside arch-chroot, which bind-mounts the live resolv.conf)
+if [ -f /mnt/etc/NetworkManager/conf.d/dns-systemd-resolved.conf ]; then
+  ln -sf ../run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
+fi
+
 rm -f /mnt/etc/sudoers.d/zz-dotfiles-install
 [ -f "$WORK/sudoers" ] && install -m440 "$WORK/sudoers" /mnt/etc/sudoers.d/90-cidata
 cp "$LOG" /mnt/var/log/ 2>/dev/null || true

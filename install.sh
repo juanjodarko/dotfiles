@@ -466,7 +466,7 @@ backup_configs() {
 # 2026-11-11). themes/ is linked by setup/init_themes.sh, not stow.
 # waybar/ is still stowed for its scripts (SUPER+F8, audio-router, settings menu).
 MODULES_CORE=("zsh" "nvim" "git" "vim" "tmux" "mise")
-MODULES_DESKTOP=("hyprland" "quickshell" "swaync" "kitty" "wofi" "waybar" "swayimg" "wireplumber" "wallpaperd" "systemd" "bin")
+MODULES_DESKTOP=("hyprland" "quickshell" "swaync" "kitty" "wofi" "waybar" "swayimg" "wireplumber" "wallpaperd" "systemd" "bin" "wifiman")
 MODULES_PERSONAL=("toot" "personal")
 # macOS: the same set ./mac stows
 MODULES_MACOS=("bin" "nvim" "mac_personal" "tmux" "mac_zsh" "aerospace" "starship")

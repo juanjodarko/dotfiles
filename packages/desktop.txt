@@ -36,6 +36,8 @@ bluez
 bluez-utils
 bluetui
 networkmanager
+wireguard-tools       # UniFi Teleport (WiFiman) tunnels
+systemd-resolvconf    # resolvconf → systemd-resolved (split DNS for VPNs)
 nwg-displays
 qalculate-gtk
 qt5ct

@@ -117,6 +117,30 @@ else
     print_skip "greetd not installed, skipping login screen"
 fi
 
+# ------------------------------------------------------------------ DNS ----
+# NetworkManager hands DNS to systemd-resolved (conf.d file from system/common):
+# resolved must run and /etc/resolv.conf must point at its stub.
+if [ -f /etc/NetworkManager/conf.d/dns-systemd-resolved.conf ]; then
+    if ! systemctl is-enabled -q systemd-resolved 2>/dev/null; then
+        sudo systemctl enable systemd-resolved && print_success "Enabled systemd-resolved"
+    fi
+    if sudo systemd-detect-virt -q --chroot; then
+        # arch-chroot bind-mounts the host's resolv.conf here; the ISO installer
+        # sets the link after leaving the chroot.
+        print_skip "In a chroot: /etc/resolv.conf link left to the installer"
+    elif [ "$(readlink /etc/resolv.conf)" != ../run/systemd/resolve/stub-resolv.conf ]; then
+        [ -e /etc/resolv.conf ] && [ ! -L /etc/resolv.conf ] && sudo cp -a /etc/resolv.conf "/etc/resolv.conf.bak-$STAMP"
+        sudo ln -sf ../run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+        print_success "/etc/resolv.conf → systemd-resolved stub (NetworkManager restart or reboot applies it)"
+    fi
+fi
+
+# UniFi Teleport client daemon (package from packages/apps.txt)
+if systemctl list-unit-files wifiman-desktop.service &> /dev/null && systemctl cat wifiman-desktop.service &> /dev/null; then
+    systemctl is-enabled -q wifiman-desktop.service 2>/dev/null \
+        || { sudo systemctl enable wifiman-desktop.service && print_success "Enabled wifiman-desktop.service"; }
+fi
+
 # ------------------------------------------------- hide broken sessions ----
 # hyprland ships hyprland-uwsm.desktop; without uwsm that session exits at once
 # and ReGreet drops you back at the login screen. Hide it (pacman NoExtract keeps

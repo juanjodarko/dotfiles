@@ -267,3 +267,10 @@ fi
 # Task Master aliases
 alias tm='task-master'
 alias taskmaster='task-master'
+
+# WiFiman Desktop (UniFi Teleport): make sure the root daemon runs, then start the
+# UI under XWayland (it crashes on native Wayland with "Protocol error 71").
+wifiman() {
+  systemctl is-active -q wifiman-desktop.service || sudo systemctl start wifiman-desktop.service || return
+  GDK_BACKEND=x11 command wifiman-desktop "$@" &>/dev/null &!
+}
